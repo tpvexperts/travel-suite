@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Manual de Usuario — Travel Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:   #F7F4EE;
+  --cream2:  #EDE9DF;
+  --mustard: #B8953A;
+  --amber:   #EFC050;
+  --slate:   #2D3142;
+  --slate2:  #1e2232;
+  --text:    #2D3142;
+  --text2:   #5a6070;
+  --text3:   #8898AA;
+  --border:  #E8E4DC;
+  --surface: #ffffff;
+  --radius:  10px;
+}
+
+html { font-size: 14px; scroll-behavior: smooth; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); color: var(--text); line-height: 1.7; }
+
+/* ── Layout ── */
+.wrap { display: flex; min-height: 100vh; }
+
+/* ── Sidebar nav ── */
+.sidenav {
+  width: 260px; min-width: 260px;
+  background: var(--slate);
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; padding: 0;
+  display: flex; flex-direction: column;
+}
+
+.sidenav-header {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidenav-logo {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+
+.bubble-sm {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1.5px solid var(--mustard);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 13px; color: #fff;
+}
+
+.sidenav-title {
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; color: #fff;
+}
+.sidenav-sub { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+
+.nav-section { padding: 16px 0 8px; }
+.nav-section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(255,255,255,0.25); text-transform: uppercase;
+  padding: 0 24px; margin-bottom: 4px;
+}
+
+.nav-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 24px; font-size: 12.5px; font-weight: 400;
+  color: rgba(255,255,255,0.55); text-decoration: none;
+  transition: all 0.15s; border-left: 2px solid transparent;
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.04); }
+.nav-link.active { color: #fff; border-left-color: var(--amber); background: rgba(255,255,255,0.06); }
+.nav-link .num {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: rgba(255,255,255,0.5);
+}
+
+.sidenav-footer {
+  margin-top: auto; padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.btn-print {
+  width: 100%; padding: 9px; background: var(--mustard);
+  color: #fff; border: none; border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px;
+  font-weight: 500; cursor: pointer; transition: background 0.2s;
+}
+.btn-print:hover { background: var(--amber); }
+
+/* ── Main content ── */
+.content { flex: 1; max-width: 860px; padding: 48px 56px; }
+
+/* ── Hero ── */
+.manual-hero {
+  background: var(--slate);
+  border-radius: 16px;
+  padding: 40px 48px;
+  margin-bottom: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.manual-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(184,149,58,0.15) 0%, transparent 60%);
+}
+.manual-hero-tag {
+  font-size: 10px; font-weight: 600; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--amber);
+  margin-bottom: 12px; position: relative;
+}
+.manual-hero h1 {
+  font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 600;
+  color: #fff; line-height: 1.2; margin-bottom: 12px; position: relative;
+}
+.manual-hero p {
+  font-size: 13.5px; color: rgba(255,255,255,0.55);
+  max-width: 500px; position: relative;
+}
+.manual-hero-version {
+  position: absolute; top: 24px; right: 32px;
+  font-size: 11px; color: rgba(255,255,255,0.3);
+}
+
+/* ── Sections ── */
+.section { margin-bottom: 56px; scroll-margin-top: 24px; }
+
+.section-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--mustard); color: #fff;
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600;
+  margin-right: 10px; flex-shrink: 0;
+}
+
+.section-header {
+  display: flex; align-items: center; margin-bottom: 20px;
+  padding-bottom: 14px; border-bottom: 1.5px solid var(--border);
+}
+
+.section-title {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 600;
+  color: var(--slate);
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 24px; margin-bottom: 14px;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--slate); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.card p { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+.card p:last-child { margin-bottom: 0; }
+
+/* ── Steps ── */
+.steps { list-style: none; counter-reset: step-counter; }
+.steps li {
+  counter-increment: step-counter;
+  display: flex; gap: 14px; margin-bottom: 14px;
+}
+.steps li::before {
+  content: counter(step-counter);
+  min-width: 24px; height: 24px; border-radius: 50%;
+  background: var(--slate); color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.steps li span { font-size: 13px; color: var(--text2); padding-top: 2px; }
+.steps li strong { color: var(--slate); }
+
+/* ── Tips ── */
+.tip {
+  background: #FEF9EC; border: 1px solid #F0D070;
+  border-radius: 8px; padding: 12px 16px;
+  font-size: 12.5px; color: #856404;
+  margin: 12px 0; display: flex; gap: 10px; align-items: flex-start;
+}
+.tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+.info {
+  background: #EBF4FF; border: 1px solid #C0D6F0;
+  border-radius: 8px; padding: 12px 16px;
+  font-size: 12.5px; color: #1A4E8C;
+  margin: 12px 0; display: flex; gap: 10px; align-items: flex-start;
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 10.5px; font-weight: 600; padding: 2px 8px;
+  border-radius: 100px; white-space: nowrap;
+}
+.badge-slate  { background: var(--slate); color: #fff; }
+.badge-amber  { background: #FEF3CD; color: #856404; }
+.badge-green  { background: #D4EDDA; color: #155724; }
+.badge-red    { background: #F8D7DA; color: #721C24; }
+.badge-blue   { background: #EBF4FF; color: #1A4E8C; }
+.badge-gold   { background: var(--mustard); color: #fff; }
+
+/* ── Table ── */
+.manual-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12.5px; margin: 14px 0;
+}
+.manual-table th {
+  background: var(--slate); color: #fff;
+  padding: 9px 14px; text-align: left; font-weight: 500;
+  font-size: 11px; letter-spacing: 0.3px;
+}
+.manual-table th:first-child { border-radius: 8px 0 0 0; }
+.manual-table th:last-child  { border-radius: 0 8px 0 0; }
+.manual-table td {
+  padding: 9px 14px; border-bottom: 1px solid var(--border);
+  color: var(--text2); vertical-align: top;
+}
+.manual-table tr:hover td { background: var(--cream); }
+
+/* ── Keyboard shortcuts ── */
+.kbd {
+  display: inline-flex; align-items: center;
+  background: var(--cream2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 6px;
+  font-size: 11px; font-family: monospace; color: var(--slate);
+  white-space: nowrap;
+}
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+/* ── Quick ref card ── */
+.qr-card {
+  background: var(--slate); border-radius: 12px;
+  padding: 20px 24px; color: #fff;
+}
+.qr-card h3 {
+  font-family: 'Syne', sans-serif; font-size: 14px;
+  color: var(--amber); margin-bottom: 12px;
+}
+.qr-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px;
+}
+.qr-row:last-child { border-bottom: none; }
+.qr-key { color: rgba(255,255,255,0.5); }
+.qr-val { color: #fff; font-weight: 500; }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+/* ── Print ── */
+@media print {
+  .sidenav { display: none; }
+  .content { padding: 20px; max-width: 100%; }
+  .manual-hero { background: #2D3142 !important; -webkit-print-color-adjust: exact; }
+  .btn-print { display: none; }
+  .section { page-break-inside: avoid; }
+}
+
+@media (max-width: 768px) {
+  .sidenav { display: none; }
+  .content { padding: 24px 20px; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<!-- ── SIDEBAR ── -->
+<nav class="sidenav">
+  <div class="sidenav-header">
+    <div class="sidenav-logo">
+      <div class="bubble-sm">i</div>
+      <div class="bubble-sm">t</div>
+      <div class="bubble-sm">e</div>
+      <div class="bubble-sm">r</div>
+    </div>
+    <div class="sidenav-title">Manual de Usuario</div>
+    <div class="sidenav-sub">TRAVEL SUITE</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Introducción</div>
+    <a href="#intro" class="nav-link active"><span class="num">1</span> ¿Qué es Travel Suite?</a>
+    <a href="#acceso" class="nav-link"><span class="num">2</span> Acceso y sesión</a>
+    <a href="#interfaz" class="nav-link"><span class="num">3</span> La interfaz</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Cotizar</div>
+    <a href="#nueva-cot" class="nav-link"><span class="num">4</span> Nueva cotización</a>
+    <a href="#gds" class="nav-link"><span class="num">5</span> Itinerario GDS</a>
+    <a href="#multi" class="nav-link"><span class="num">6</span> Múltiples vuelos</a>
+    <a href="#manual" class="nav-link"><span class="num">7</span> Itinerario Manual</a>
+    <a href="#tramos" class="nav-link"><span class="num">8</span> Cotización por Tramos</a>
+    <a href="#pdf" class="nav-link"><span class="num">9</span> Generar PDF</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Gestión</div>
+    <a href="#historial" class="nav-link"><span class="num">10</span> Historial</a>
+    <a href="#estados" class="nav-link"><span class="num">11</span> Estados y candado</a>
+    <a href="#reportes" class="nav-link"><span class="num">12</span> Reportes PRO</a>
+    <a href="#clientes" class="nav-link"><span class="num">13</span> Empresas y clientes</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Configuración</div>
+    <a href="#config" class="nav-link"><span class="num">14</span> Aeropuertos y logos</a>
+    <a href="#agentes" class="nav-link"><span class="num">15</span> Agentes</a>
+    <a href="#supervisor" class="nav-link"><span class="num">16</span> Rol Supervisor</a>
+  </div>
+
+  <div class="sidenav-footer">
+    <button class="btn-print" onclick="window.print()">⬇ Descargar PDF</button>
+  </div>
+</nav>
+
+<!-- ── CONTENT ── -->
+<main class="content">
+
+  <!-- Hero -->
+  <div class="manual-hero">
+    <div class="manual-hero-version">v1.0 · Abril 2026</div>
+    <div class="manual-hero-tag">Documentación oficial</div>
+    <h1>Manual de Usuario<br/>Travel Suite</h1>
+    <p>Todo lo que necesitás saber para cotizar, gestionar y vender más con Travel Suite.</p>
+  </div>
+
+  <!-- ── 1. QUÉ ES ── -->
+  <section class="section" id="intro">
+    <div class="section-header">
+      <span class="section-num">1</span>
+      <h2 class="section-title">¿Qué es Travel Suite?</h2>
+    </div>
+    <p style="font-size:13.5px;color:var(--text2);margin-bottom:16px;">
+      Travel Suite es una plataforma profesional para agentes de viajes que centraliza la cotización, el historial de ventas y los reportes en un solo lugar.
+    </p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">✈ Cotizar</div>
+        <p>Genera cotizaciones profesionales en segundos desde texto GDS, múltiples vuelos o entrada manual.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Gestionar</div>
+        <p>Historial completo con estados, versiones y control de ventas con candado supervisor.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Reportar</div>
+        <p>Reportes de ventas, aerolíneas más vendidas, destinos y tasa de cierre en tiempo real.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. ACCESO ── -->
+  <section class="section" id="acceso">
+    <div class="section-header">
+      <span class="section-num">2</span>
+      <h2 class="section-title">Acceso y sesión</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">🔐 Iniciar sesión</div>
+      <ol class="steps">
+        <li><span>Ingresá a la URL de Travel Suite que te proporcionó tu administrador.</span></li>
+        <li><span>Escribí tu <strong>correo electrónico</strong> y <strong>contraseña</strong>.</span></li>
+        <li><span>Clic en <strong>Ingresar</strong> — serás redirigido al cotizador automáticamente.</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">🔑 ¿Olvidaste tu contraseña?</div>
+      <ol class="steps">
+        <li><span>En la pantalla de login, ingresá tu email.</span></li>
+        <li><span>Clic en <strong>¿Olvidaste tu contraseña?</strong></span></li>
+        <li><span>Recibirás un email con un link para restablecerla.</span></li>
+      </ol>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">⚠</span>
+      <span>La sesión se cierra automáticamente después de <strong>1 hora de inactividad</strong> por seguridad. Si ves el aviso "Sesión expira en 5 min" en el sidebar, mové el mouse para renovarla.</span>
+    </div>
+    <div class="card">
+      <div class="card-title">⏻ Cerrar sesión</div>
+      <p>Clic en <strong>Cerrar Sesión</strong> al final del menú lateral izquierdo. Siempre cerrá sesión si usás una computadora compartida.</p>
+    </div>
+  </section>
+
+  <!-- ── 3. INTERFAZ ── -->
+  <section class="section" id="interfaz">
+    <div class="section-header">
+      <span class="section-num">3</span>
+      <h2 class="section-title">La interfaz</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">🗂 Barra lateral izquierda</div>
+      <table class="manual-table">
+        <thead><tr><th>Sección</th><th>Para qué sirve</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Cotización Actual</strong></td><td>Vuelve a la cotización en la que estás trabajando sin perder los datos.</td></tr>
+          <tr><td><strong>Nueva Cotización</strong></td><td>Limpia el formulario e inicia una cotización nueva. Pide confirmación.</td></tr>
+          <tr><td><strong>Historial</strong></td><td>Todas las cotizaciones guardadas con sus estados y versiones.</td></tr>
+          <tr><td><strong>Reportes PRO</strong></td><td>Estadísticas de ventas, aerolíneas y destinos. Solo supervisores/admin.</td></tr>
+          <tr><td><strong>Empresas / Clientes</strong></td><td>Base de datos de clientes para autocompletar cotizaciones.</td></tr>
+          <tr><td><strong>Aeropuertos</strong></td><td>Consultar y agregar aeropuertos personalizados.</td></tr>
+          <tr><td><strong>Logos Aerolíneas</strong></td><td>Ver los logos disponibles y subir logos personalizados.</td></tr>
+          <tr><td><strong>Agentes</strong></td><td>Gestionar los datos de perfil de los agentes.</td></tr>
+          <tr><td><strong>Cerrar Sesión</strong></td><td>Cierra la sesión de forma segura.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 4. NUEVA COTIZACIÓN ── -->
+  <section class="section" id="nueva-cot">
+    <div class="section-header">
+      <span class="section-num">4</span>
+      <h2 class="section-title">Nueva cotización</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">📝 Datos de la cotización</div>
+      <table class="manual-table">
+        <thead><tr><th>Campo</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Número</strong></td><td>Se genera automáticamente (COT-2026-001). No se puede editar.</td></tr>
+          <tr><td><strong>Fecha</strong></td><td>Fecha actual. Se asigna automáticamente.</td></tr>
+          <tr><td><strong>Agente</strong></td><td>Seleccioná el agente que cotiza. Aparece en el PDF.</td></tr>
+          <tr><td><strong>Empresa / Cliente</strong></td><td>Dropdown con tus clientes guardados. Al seleccionar, autocompleta el contacto.</td></tr>
+          <tr><td><strong>Nombre del Contacto</strong></td><td>Nombre de la persona que recibe la cotización.</td></tr>
+          <tr><td><strong>Notas internas</strong></td><td>Notas para el agente. Aparecen en el PDF en cuadro amarillo.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">➕ Tipos de opción</div>
+      <p>Podés agregar hasta 5 opciones por cotización. Cada opción puede ser de un tipo distinto:</p>
+      <div class="grid-2" style="margin-top:10px;">
+        <div style="padding:10px 14px;background:var(--cream);border-radius:8px;border:1px solid var(--border);">
+          <div style="font-weight:600;font-size:12.5px;margin-bottom:4px;">✈ Itinerario GDS</div>
+          <div style="font-size:12px;color:var(--text2);">Pega texto crudo de Amadeus, Sabre o Galileo.</div>
+        </div>
+        <div style="padding:10px 14px;background:var(--cream);border-radius:8px;border:1px solid var(--border);">
+          <div style="font-weight:600;font-size:12.5px;margin-bottom:4px;">≡ Múltiples vuelos</div>
+          <div style="font-size:12px;color:var(--text2);">Varias opciones de ida y regreso al mismo precio.</div>
+        </div>
+        <div style="padding:10px 14px;background:var(--cream);border-radius:8px;border:1px solid var(--border);">
+          <div style="font-weight:600;font-size:12.5px;margin-bottom:4px;">✍ Itinerario Manual</div>
+          <div style="font-size:12px;color:var(--text2);">Carga manual de ida y vuelta simple.</div>
+        </div>
+        <div style="padding:10px 14px;background:var(--cream);border-radius:8px;border:1px solid var(--border);">
+          <div style="font-weight:600;font-size:12.5px;margin-bottom:4px;">📊 Cotización por Tramos</div>
+          <div style="font-size:12px;color:var(--text2);">Múltiples segmentos con varias opciones por tramo.</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span>Podés combinar tipos en una misma cotización. Por ejemplo, Opción 1 en GDS y Opción 2 en Múltiples vuelos.</span>
+    </div>
+  </section>
+
+  <!-- ── 5. GDS ── -->
+  <section class="section" id="gds">
+    <div class="section-header">
+      <span class="section-num">5</span>
+      <h2 class="section-title">Itinerario GDS</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">Cómo usar</div>
+      <ol class="steps">
+        <li><span>Clic en <strong>✈ Itinerario GDS</strong> para agregar una opción.</span></li>
+        <li><span>Copiá el texto de disponibilidad de tu GDS (Amadeus, Sabre, Galileo) y pegalo en el campo de texto.</span></li>
+        <li><span>Clic en <strong>Formatear ↗</strong> — el sistema interpreta automáticamente fechas, rutas y horarios.</span></li>
+        <li><span>Completá las <strong>Condiciones de Tarifa</strong> (clase, equipaje, cambios, reembolso, precio).</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">Formato aceptado</div>
+      <p>El sistema acepta el formato estándar de disponibilidad GDS:</p>
+      <div style="background:var(--slate);border-radius:8px;padding:12px 16px;font-family:monospace;font-size:11.5px;color:#E8E4DC;margin-top:8px;line-height:1.8;">
+        1 . AM  875 D  17APR MIDMEX HS1  1518  1713  O  FR<br/>
+        2 . KL 6458 C  24JUL AMSDUS HS1  2135  2225  O  FR
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📝 Notas de la opción</div>
+      <p>Debajo de los vuelos encontrarás un campo de <strong>Notas de la opción</strong>. Solo aparece en el PDF si tiene contenido. Útil para indicar conexiones, restricciones especiales o cualquier dato relevante.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠ Visado requerido</div>
+      <p>Si la opción requiere visado, tildá el checkbox <strong>Requiere visado</strong> en el encabezado de la opción. Aparecerá un badge de advertencia y una leyenda en el PDF.</p>
+    </div>
+  </section>
+
+  <!-- ── 6. MÚLTIPLES VUELOS ── -->
+  <section class="section" id="multi">
+    <div class="section-header">
+      <span class="section-num">6</span>
+      <h2 class="section-title">Múltiples vuelos</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">¿Para qué sirve?</div>
+      <p>Cuando querés ofrecer varias opciones de horario de ida y varias de regreso, todas al mismo precio. El cliente elige la combinación que prefiere y el precio no varía.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Cómo usar</div>
+      <ol class="steps">
+        <li><span>Seleccioná la <strong>aerolínea</strong> del dropdown.</span></li>
+        <li><span>Pegá las opciones de ida en el campo izquierdo (una por línea, formato GDS).</span></li>
+        <li><span>Pegá las opciones de regreso en el campo derecho.</span></li>
+        <li><span>Clic en <strong>Formatear Ida y Regreso ↗</strong> — procesa ambos de una vez.</span></li>
+        <li><span>Los vuelos se ordenan automáticamente por fecha y horario de salida.</span></li>
+      </ol>
+    </div>
+    <div class="info">
+      <span>ℹ</span>
+      <span>En el PDF aparecerá la leyenda: <em>"Independientemente del vuelo de ida o regreso que selecciones, el precio será el mismo."</em></span>
+    </div>
+  </section>
+
+  <!-- ── 7. MANUAL ── -->
+  <section class="section" id="manual">
+    <div class="section-header">
+      <span class="section-num">7</span>
+      <h2 class="section-title">Itinerario Manual</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">¿Para qué sirve?</div>
+      <p>Para cotizar una ruta simple de ida y vuelta cuando no tenés texto GDS disponible. Cargás los datos manualmente campo por campo.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Campos y navegación</div>
+      <table class="manual-table">
+        <thead><tr><th>Campo</th><th>Formato</th><th>Tabulador</th></tr></thead>
+        <tbody>
+          <tr><td>Aerolínea</td><td>Dropdown</td><td>→ Fecha</td></tr>
+          <tr><td>Fecha</td><td>12MAY, 24JUL</td><td>→ Origen</td></tr>
+          <tr><td>Origen</td><td>Escribí MEX, MAD... autocompletado</td><td>→ Destino</td></tr>
+          <tr><td>Destino</td><td>Autocompletado</td><td>→ Sale</td></tr>
+          <tr><td>Sale</td><td>0910 (4 dígitos)</td><td>→ Llega</td></tr>
+          <tr><td>Llega</td><td>1110 (4 dígitos)</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <div class="tip" style="margin-top:10px;">
+        <span class="tip-icon">⌨</span>
+        <span>Usá <span class="kbd">Tab</span> para moverte al siguiente campo y <span class="kbd">Shift+Tab</span> para volver al anterior.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 8. TRAMOS ── -->
+  <section class="section" id="tramos">
+    <div class="section-header">
+      <span class="section-num">8</span>
+      <h2 class="section-title">Cotización por Tramos</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">¿Para qué sirve?</div>
+      <p>Para rutas multi-destino donde cada segmento puede tener varias opciones de vuelo con distintas aerolíneas y precios. Ideal para itinerarios complejos como MEX→MAD→BCN→MEX.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Estructura</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;padding:8px 0;">
+        <span style="background:var(--slate);color:#fff;padding:4px 10px;border-radius:6px;">1er Tramo: MEX → MAD</span>
+        <span style="color:var(--text3);">→</span>
+        <span style="background:var(--cream2);padding:4px 10px;border-radius:6px;">Opción A: AM · 10MAY · 2350–1640</span>
+        <span style="color:var(--text3);">+</span>
+        <span style="background:var(--cream2);padding:4px 10px;border-radius:6px;">Opción B: IB · 10MAY · 2310–1520</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cómo usar</div>
+      <ol class="steps">
+        <li><span>Clic en <strong>+ Agregar tramo</strong>.</span></li>
+        <li><span>Seleccioná el <strong>Origen</strong> y <strong>Destino</strong> del tramo — esto se hereda a todas las opciones del tramo.</span></li>
+        <li><span>Seleccioná la <strong>Moneda</strong> del tramo.</span></li>
+        <li><span>Clic en <strong>+ Opción de vuelo</strong> para agregar vuelos dentro del tramo.</span></li>
+        <li><span>Por cada vuelo: aerolínea, fecha, sale, llega y precio.</span></li>
+        <li><span>Los vuelos se ordenan automáticamente por fecha y hora.</span></li>
+        <li><span>Usá el checkbox del encabezado para mostrar u ocultar el tramo en el PDF.</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">Precios por tipo de aerolínea</div>
+      <table class="manual-table">
+        <thead><tr><th>Aerolínea</th><th>Campos de precio</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-amber">VB · Y4 · U2 · FR</span> Low Cost</td><td>Zero / c/ Equipaje de mano / c/ Maleta documentada</td></tr>
+          <tr><td>Otras aerolíneas</td><td>Precio total</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info">
+      <span>ℹ</span>
+      <span>Al final de los tramos hay una leyenda automática: <em>"Para obtener el precio total, suma el costo del vuelo que elijas en cada tramo."</em></span>
+    </div>
+  </section>
+
+  <!-- ── 9. PDF ── -->
+  <section class="section" id="pdf">
+    <div class="section-header">
+      <span class="section-num">9</span>
+      <h2 class="section-title">Generar PDF</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">Vista previa y descarga</div>
+      <ol class="steps">
+        <li><span>Clic en <strong>Vista Previa / PDF</strong> — se abre una ventana con la cotización formateada.</span></li>
+        <li><span>Revisá que todo esté correcto.</span></li>
+        <li><span>Clic en <strong>Descargar PDF</strong> — se abre el diálogo de impresión de tu navegador.</span></li>
+        <li><span>En destino, seleccioná <strong>Guardar como PDF</strong>.</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">Qué incluye el PDF</div>
+      <p>✓ Logo de la agencia · Número de cotización · Fecha · Cliente y empresa</p>
+      <p>✓ Opciones de vuelo con logos de aerolíneas · Condiciones de tarifa</p>
+      <p>✓ Notas internas (cuadro amarillo) · Aviso de visado si aplica</p>
+      <p>✓ Pie de página: precios por persona · monedas · link a Sherpa para documentos</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Guardar la cotización</div>
+      <p>Antes de generar el PDF, guardá la cotización con el botón <strong>Guardar</strong>. Esto la registra en el historial y permite generar versiones si hacés cambios después.</p>
+    </div>
+  </section>
+
+  <!-- ── 10. HISTORIAL ── -->
+  <section class="section" id="historial">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2 class="section-title">Historial</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">¿Qué es el historial?</div>
+      <p>Registro de todas las cotizaciones que guardaste. Podés buscar, filtrar, reabrir, cambiar estados y regenerar PDFs desde aquí.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Versiones de una cotización</div>
+      <p>Cuando abrís una cotización guardada y la guardás de nuevo, se crea una nueva versión automáticamente:</p>
+      <div style="background:var(--cream);border-radius:8px;padding:12px 16px;font-size:12.5px;margin-top:8px;font-family:monospace;">
+        COT-2026-001 &nbsp;&nbsp; (original)<br/>
+        COT-2026-001-v2 (editada el 20 ABR)<br/>
+        COT-2026-001-v3 (editada el 22 ABR)
+      </div>
+      <p style="margin-top:10px;">El historial muestra la versión más reciente. Clic en <strong>▾ Historial</strong> para ver versiones anteriores.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Acciones disponibles</div>
+      <table class="manual-table">
+        <thead><tr><th>Botón</th><th>Acción</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Abrir</strong></td><td>Carga la cotización en el formulario para editarla.</td></tr>
+          <tr><td><strong>PDF</strong></td><td>Regenera el PDF de esa cotización sin necesidad de abrirla.</td></tr>
+          <tr><td><strong>▾ Historial</strong></td><td>Muestra las versiones anteriores de la cotización.</td></tr>
+          <tr><td><strong>×</strong></td><td>Elimina la cotización del historial. No se puede deshacer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 11. ESTADOS ── -->
+  <section class="section" id="estados">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2 class="section-title">Estados y candado</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">Estados de una cotización</div>
+      <table class="manual-table">
+        <thead><tr><th>Estado</th><th>Significa</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-amber">⏳ Pendiente</span></td><td>Cotización enviada, esperando respuesta del cliente.</td></tr>
+          <tr><td><span class="badge badge-green">✅ Comprada</span></td><td>El cliente confirmó y compró. Habilita campos de monto.</td></tr>
+          <tr><td><span class="badge badge-red">❌ No comprada</span></td><td>El cliente no procedió con esta cotización.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;">Clic en el badge de estado para cambiar al siguiente. El orden es: Pendiente → Comprada → No comprada → Pendiente.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Registrar una venta</div>
+      <ol class="steps">
+        <li><span>Cambiá el estado a <strong>✅ Comprada</strong>.</span></li>
+        <li><span>Seleccioná <strong>¿Qué opción se compró?</strong> — el sistema extrae la aerolínea automáticamente para los reportes.</span></li>
+        <li><span>Seleccioná la <strong>moneda</strong> y escribí el <strong>monto cobrado</strong>.</span></li>
+        <li><span>Clic en <strong>💾</strong> para guardar y bloquear el registro.</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">🔒 Sistema de candado</div>
+      <p>Una vez que hacés clic en <strong>💾</strong>, el registro se bloquea:</p>
+      <ul style="margin:8px 0 0 16px;font-size:13px;color:var(--text2);">
+        <li>No se puede cambiar el estado</li>
+        <li>No se puede editar ni eliminar</li>
+        <li>Solo un <strong>Supervisor</strong> puede desbloquearlo</li>
+      </ul>
+      <div class="tip" style="margin-top:12px;">
+        <span class="tip-icon">🔒</span>
+        <span>Para desbloquear: clic en el ícono 🔒 → ingresá el PIN de supervisor → el registro queda editable nuevamente.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 12. REPORTES ── -->
+  <section class="section" id="reportes">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2 class="section-title">Reportes PRO</h2>
+    </div>
+    <div class="info">
+      <span>ℹ</span>
+      <span>Los Reportes PRO están disponibles solo para usuarios con rol <strong>Supervisor</strong> o <strong>Administrador</strong>.</span>
+    </div>
+    <div class="card">
+      <div class="card-title">KPIs disponibles</div>
+      <div class="grid-3" style="margin-top:8px;">
+        <div style="text-align:center;padding:12px;background:var(--cream);border-radius:8px;">
+          <div style="font-size:20px;font-weight:700;color:var(--slate);">—</div>
+          <div style="font-size:11px;color:var(--text3);">Total cotizaciones</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:var(--cream);border-radius:8px;">
+          <div style="font-size:20px;font-weight:700;color:#155724;">—</div>
+          <div style="font-size:11px;color:var(--text3);">Compradas</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:var(--cream);border-radius:8px;">
+          <div style="font-size:20px;font-weight:700;color:var(--brand-blue);">—%</div>
+          <div style="font-size:11px;color:var(--text3);">Tasa de cierre</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:var(--cream);border-radius:8px;">
+          <div style="font-size:20px;font-weight:700;color:var(--slate);">—</div>
+          <div style="font-size:11px;color:var(--text3);">Venta total</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:var(--cream);border-radius:8px;">
+          <div style="font-size:20px;font-weight:700;color:var(--slate);">—</div>
+          <div style="font-size:11px;color:var(--text3);">Ticket promedio</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:var(--cream);border-radius:8px;">
+          <div style="font-size:20px;font-weight:700;color:var(--slate);">— días</div>
+          <div style="font-size:11px;color:var(--text3);">Tiempo prom. cierre</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Filtros disponibles</div>
+      <p>Podés filtrar los reportes por <strong>agente</strong>, <strong>mes</strong> y <strong>moneda</strong>. Los datos se actualizan en tiempo real.</p>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span>Para que las aerolíneas más vendidas sean precisas, siempre seleccioná <strong>¿Qué opción se compró?</strong> al marcar una cotización como comprada.</span>
+    </div>
+  </section>
+
+  <!-- ── 13. CLIENTES ── -->
+  <section class="section" id="clientes">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <h2 class="section-title">Empresas y clientes</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">Agregar un cliente</div>
+      <ol class="steps">
+        <li><span>Ir a <strong>Empresas / Clientes</strong> en el sidebar.</span></li>
+        <li><span>Completar los campos: nombre de empresa, contacto, email, teléfono y RFC.</span></li>
+        <li><span>Clic en <strong>+ Agregar Empresa</strong>.</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">Usar un cliente en una cotización</div>
+      <p>En el formulario de cotización, seleccioná la empresa del dropdown <strong>Empresa / Cliente</strong>. El nombre del contacto se autocompleta automáticamente.</p>
+    </div>
+  </section>
+
+  <!-- ── 14. CONFIG ── -->
+  <section class="section" id="config">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <h2 class="section-title">Aeropuertos y logos</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">✈ Aeropuertos</div>
+      <p>Travel Suite incluye más de 230 aeropuertos precargados. Si necesitás uno que no está en la lista:</p>
+      <ol class="steps" style="margin-top:8px;">
+        <li><span>Ir a <strong>Aeropuertos</strong> en el sidebar.</span></li>
+        <li><span>En la parte inferior, ingresá el <strong>código IATA</strong> (3 letras) y el nombre de la ciudad.</span></li>
+        <li><span>Clic en <strong>+ Agregar</strong>.</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">🖼 Logos de aerolíneas</div>
+      <p>Travel Suite incluye logos de las principales aerolíneas. Para ver los disponibles, ir a <strong>Logos Aerolíneas</strong> en el sidebar.</p>
+      <div class="tip" style="margin-top:10px;">
+        <span class="tip-icon">💡</span>
+        <span>Los logos aparecen automáticamente en el cotizador y en el PDF cuando el código de aerolínea coincide. No es necesario configurar nada.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 15. AGENTES ── -->
+  <section class="section" id="agentes">
+    <div class="section-header">
+      <span class="section-num">15</span>
+      <h2 class="section-title">Agentes</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">Datos del agente en el PDF</div>
+      <p>Los datos del agente (nombre, empresa, teléfono, email) aparecen en el pie de página del PDF. Para configurarlos:</p>
+      <ol class="steps" style="margin-top:8px;">
+        <li><span>Ir a <strong>Agentes</strong> en el sidebar.</span></li>
+        <li><span>Completar nombre, empresa, teléfono y email.</span></li>
+        <li><span>Clic en <strong>+ Agregar Agente</strong>.</span></li>
+        <li><span>En la cotización, seleccionarlo en el dropdown <strong>Agente</strong>.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── 16. SUPERVISOR ── -->
+  <section class="section" id="supervisor">
+    <div class="section-header">
+      <span class="section-num">16</span>
+      <h2 class="section-title">Rol Supervisor</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">Diferencias con el rol Agente</div>
+      <table class="manual-table">
+        <thead><tr><th>Función</th><th>Agente</th><th>Supervisor</th></tr></thead>
+        <tbody>
+          <tr><td>Ver sus propias cotizaciones</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Ver cotizaciones de todos los agentes</td><td>❌</td><td>✅</td></tr>
+          <tr><td>Acceso a Reportes PRO</td><td>❌</td><td>✅</td></tr>
+          <tr><td>Desbloquear registros con candado</td><td>❌</td><td>✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">🔒 Desbloquear un registro</div>
+      <ol class="steps">
+        <li><span>En el Historial, encontrá el registro bloqueado (ícono 🔒).</span></li>
+        <li><span>Clic en el ícono 🔒.</span></li>
+        <li><span>Ingresá el PIN de supervisor.</span></li>
+        <li><span>El registro queda desbloqueado y editable.</span></li>
+      </ol>
+      <div class="tip" style="margin-top:10px;">
+        <span class="tip-icon">⚠</span>
+        <span>El PIN de supervisor lo configura el administrador de tu agencia. Si no lo tenés, contactá a tu administrador.</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Quick Reference -->
+  <section class="section" id="quickref">
+    <div class="section-header">
+      <span class="section-num" style="background:var(--amber);">★</span>
+      <h2 class="section-title">Referencia rápida</h2>
+    </div>
+    <div class="grid-2">
+      <div class="qr-card">
+        <h3>⌨ Atajos de teclado</h3>
+        <div class="qr-row"><span class="qr-key">Tab</span><span class="qr-val">Siguiente campo</span></div>
+        <div class="qr-row"><span class="qr-key">Shift + Tab</span><span class="qr-val">Campo anterior</span></div>
+        <div class="qr-row"><span class="qr-key">↑ ↓</span><span class="qr-val">Navegar autocomplete</span></div>
+        <div class="qr-row"><span class="qr-key">Enter</span><span class="qr-val">Seleccionar aeropuerto</span></div>
+        <div class="qr-row"><span class="qr-key">Esc</span><span class="qr-val">Cerrar autocomplete</span></div>
+      </div>
+      <div class="qr-card">
+        <h3>📋 Flujo de cotización</h3>
+        <div class="qr-row"><span class="qr-key">1</span><span class="qr-val">Completar datos del cliente</span></div>
+        <div class="qr-row"><span class="qr-key">2</span><span class="qr-val">Agregar opciones de vuelo</span></div>
+        <div class="qr-row"><span class="qr-key">3</span><span class="qr-val">Completar condiciones de tarifa</span></div>
+        <div class="qr-row"><span class="qr-key">4</span><span class="qr-val">Guardar cotización</span></div>
+        <div class="qr-row"><span class="qr-key">5</span><span class="qr-val">Generar y enviar PDF</span></div>
+      </div>
+      <div class="qr-card">
+        <h3>🔄 Estados</h3>
+        <div class="qr-row"><span class="qr-key">⏳ Pendiente</span><span class="qr-val">Enviada al cliente</span></div>
+        <div class="qr-row"><span class="qr-key">✅ Comprada</span><span class="qr-val">Venta confirmada</span></div>
+        <div class="qr-row"><span class="qr-key">❌ No comprada</span><span class="qr-val">No procedió</span></div>
+        <div class="qr-row"><span class="qr-key">💾 Guardar</span><span class="qr-val">Bloquear registro</span></div>
+        <div class="qr-row"><span class="qr-key">🔒 Candado</span><span class="qr-val">Solo supervisor</span></div>
+      </div>
+      <div class="qr-card">
+        <h3>📊 Tipos de opción</h3>
+        <div class="qr-row"><span class="qr-key">✈ GDS</span><span class="qr-val">Pegar texto GDS</span></div>
+        <div class="qr-row"><span class="qr-key">≡ Múltiples</span><span class="qr-val">Varios horarios mismo precio</span></div>
+        <div class="qr-row"><span class="qr-key">✍ Manual</span><span class="qr-val">Ida y vuelta simple</span></div>
+        <div class="qr-row"><span class="qr-key">📊 Tramos</span><span class="qr-val">Multi-destino</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div style="text-align:center;padding:32px 0;font-size:12px;color:var(--text3);">
+    Travel Suite · Manual de Usuario v1.0 · Abril 2026<br/>
+    <span style="color:var(--mustard);">TPV Experts</span> · ventas@tuproximoviaje.com · 5552111878
+  </div>
+
+</main>
+</div>
+
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('.nav-link');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
