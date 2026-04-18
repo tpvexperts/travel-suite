@@ -660,11 +660,15 @@ async function checkAuth() {
   document.getElementById('sidebar-username').textContent = nombre;
   document.getElementById('sidebar-rol').textContent = profile.rol === 'admin' ? 'Administrador' : profile.rol === 'supervisor' ? 'Supervisor' : 'Agente';
   // Load agencia name
-  const { data: agencia } = await sb.from('agencias').select('nombre').eq('id', currentAgenciaId).single();
-  if (agencia) {
-    document.getElementById('sidebar-agencia').textContent = agencia.nombre;
+  if (currentAgenciaId) {
+    const { data: agencia, error: agErr } = await sb.from('agencias').select('nombre').eq('id', currentAgenciaId).single();
+    if (agencia && agencia.nombre) {
+      document.getElementById('sidebar-agencia').textContent = agencia.nombre;
+    } else {
+      document.getElementById('sidebar-agencia').textContent = currentUsuario.email || 'Mi Agencia';
+    }
   } else {
-    document.getElementById('sidebar-agencia').textContent = 'Travel Suite';
+    document.getElementById('sidebar-agencia').textContent = 'Sin agencia asignada';
   }
   return true;
 }
