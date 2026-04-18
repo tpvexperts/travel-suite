@@ -341,6 +341,13 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
       Importar Config
     </button>
     <input type="file" id="import-config-input" accept=".json" style="display:none;" onchange="importarConfig(this)"/>
+    <div style="padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:auto;">
+      <button class="nav-btn" onclick="cerrarSesion()" style="color:rgba(255,255,255,0.5);width:100%;border-radius:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+      <div id="session-timer" style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:6px;"></div>
+    </div>
   </nav>
 </aside>
 
@@ -670,6 +677,8 @@ async function checkAuth() {
   } else {
     document.getElementById('sidebar-agencia').textContent = 'Sin agencia asignada';
   }
+  // Start inactivity timer
+  resetInactivityTimer();
   return true;
 }
 
@@ -677,6 +686,43 @@ async function cerrarSesion() {
   await sb.auth.signOut();
   window.location.href = '/index.html';
 }
+
+// ── AUTO LOGOUT — 1 hora de inactividad ──────────────────────────
+const INACTIVITY_LIMIT = 60 * 60 * 1000; // 1 hora en ms
+const WARN_BEFORE = 5 * 60 * 1000; // aviso 5 min antes
+let inactivityTimer = null;
+let warnTimer = null;
+let sessionEnd = null;
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  clearTimeout(warnTimer);
+  sessionEnd = Date.now() + INACTIVITY_LIMIT;
+
+  // Aviso 5 minutos antes
+  warnTimer = setTimeout(() => {
+    const msg = document.getElementById('session-timer');
+    if (msg) {
+      msg.style.color = 'rgba(239,192,80,0.7)';
+      msg.textContent = '⚠ Sesión expira en 5 min';
+    }
+  }, INACTIVITY_LIMIT - WARN_BEFORE);
+
+  // Cerrar sesión
+  inactivityTimer = setTimeout(async () => {
+    alert('Tu sesión expiró por inactividad. Por seguridad, serás redirigido al login.');
+    await cerrarSesion();
+  }, INACTIVITY_LIMIT);
+
+  // Clear warning if active
+  const msg = document.getElementById('session-timer');
+  if (msg) { msg.style.color = 'rgba(255,255,255,0.2)'; msg.textContent = ''; }
+}
+
+// Detectar actividad del usuario
+['mousemove','keydown','click','touchstart','scroll'].forEach(evt => {
+  document.addEventListener(evt, resetInactivityTimer, { passive: true });
+});
 
 // ── INIT ─────────────────────────────────────────────────────────
 // ── NEW STATE ────────────────────────────────────────────────────
