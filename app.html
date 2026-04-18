@@ -341,12 +341,12 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
       Importar Config
     </button>
     <input type="file" id="import-config-input" accept=".json" style="display:none;" onchange="importarConfig(this)"/>
-    <div style="padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:auto;">
-      <button class="nav-btn" onclick="cerrarSesion()" style="color:rgba(255,255,255,0.5);width:100%;border-radius:8px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;">
+      <button class="nav-btn" onclick="cerrarSesion()" style="color:rgba(255,255,255,0.5);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;opacity:0.7;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Cerrar Sesión
       </button>
-      <div id="session-timer" style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:6px;"></div>
+      <div id="session-timer" style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;padding:4px 20px;"></div>
     </div>
   </nav>
 </aside>
