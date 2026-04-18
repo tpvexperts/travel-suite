@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Travel Suite — Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:   #F7F4EE;
+  --cream2:  #EDE9DF;
+  --mustard: #B8953A;
+  --amber:   #EFC050;
+  --slate:   #2D3142;
+  --slate2:  #1e2232;
+  --text:    #2D3142;
+  --text2:   #6B7280;
+  --radius:  12px;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+}
+
+/* ── Layout ── */
+.wrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ── Left panel — branding ── */
+.left {
+  background: var(--slate);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 80%, rgba(184,149,58,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(239,192,80,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Decorative circles background */
+.deco-circles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.deco-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(184,149,58,0.12);
+}
+
+/* ── Logo bubbles ── */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.bubble {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--mustard);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #F7F4EE;
+  animation: bubbleIn 0.6s ease backwards;
+}
+
+.bubble:nth-child(1) { animation-delay: 0.1s; }
+.bubble:nth-child(2) { animation-delay: 0.2s; }
+.bubble:nth-child(3) { animation-delay: 0.3s; }
+.bubble:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes bubbleIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.logo-sub {
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.logo-travel {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 5px;
+  color: rgba(247,244,238,0.7);
+  text-transform: uppercase;
+}
+
+.logo-suite {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 5px;
+  color: var(--amber);
+  text-transform: uppercase;
+}
+
+/* ── Hero text ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.8s ease 0.5s backwards;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--mustard);
+  border: 1px solid rgba(184,149,58,0.4);
+  border-radius: 100px;
+  padding: 4px 12px;
+  margin-bottom: 24px;
+}
+
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 42px;
+  font-weight: 500;
+  color: #F7F4EE;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--amber);
+}
+
+.hero p {
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(247,244,238,0.55);
+  line-height: 1.7;
+  max-width: 340px;
+}
+
+/* ── Features ── */
+.features {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeUp 0.8s ease 0.7s backwards;
+}
+
+.feat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  font-weight: 300;
+  color: rgba(247,244,238,0.6);
+}
+
+.feat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mustard);
+  flex-shrink: 0;
+}
+
+/* ── Right panel — form ── */
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background: var(--cream);
+}
+
+.form-box {
+  width: 100%;
+  max-width: 380px;
+  animation: fadeUp 0.8s ease 0.3s backwards;
+}
+
+.form-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--slate);
+  margin-bottom: 6px;
+}
+
+.form-sub {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--text2);
+  margin-bottom: 36px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--slate);
+  letter-spacing: 0.3px;
+  margin-bottom: 7px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1.5px solid var(--cream2);
+  border-radius: var(--radius);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  color: var(--slate);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--mustard);
+  box-shadow: 0 0 0 3px rgba(184,149,58,0.12);
+}
+
+input::placeholder { color: #b0aaa0; }
+
+.btn-login {
+  width: 100%;
+  padding: 13px;
+  background: var(--slate);
+  color: #F7F4EE;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-login:hover { background: var(--slate2); }
+.btn-login:active { transform: scale(0.99); }
+.btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-login .btn-text { transition: opacity 0.2s; }
+.btn-login.loading .btn-text { opacity: 0; }
+.btn-login .spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn-login.loading .spinner { opacity: 1; }
+
+.spinner svg {
+  width: 20px; height: 20px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error message */
+.error-msg {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: #dc2626;
+  margin-bottom: 16px;
+  display: none;
+}
+.error-msg.show { display: block; }
+
+/* Success */
+.success-msg {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: #16a34a;
+  margin-bottom: 16px;
+  display: none;
+}
+.success-msg.show { display: block; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--text2);
+  font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--cream2);
+}
+
+.forgot {
+  text-align: right;
+  margin-top: -10px;
+  margin-bottom: 18px;
+}
+
+.forgot a {
+  font-size: 12px;
+  color: var(--mustard);
+  text-decoration: none;
+  font-weight: 400;
+}
+.forgot a:hover { text-decoration: underline; }
+
+.footer-note {
+  margin-top: 32px;
+  font-size: 11px;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .wrap { grid-template-columns: 1fr; }
+  .left { display: none; }
+  .right { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- LEFT — Branding -->
+  <div class="left">
+    <div class="deco-circles">
+      <div class="deco-circle" style="width:300px;height:300px;top:-80px;left:-80px;"></div>
+      <div class="deco-circle" style="width:200px;height:200px;bottom:100px;right:-60px;"></div>
+      <div class="deco-circle" style="width:100px;height:100px;bottom:200px;left:60px;border-color:rgba(239,192,80,0.1);"></div>
+    </div>
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="bubble">i</div>
+      <div class="bubble">t</div>
+      <div class="bubble">e</div>
+      <div class="bubble">r</div>
+      <div class="logo-sub">
+        <span class="logo-travel">travel</span>
+        <span class="logo-suite">suite</span>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-tag">Para agentes de viajes</div>
+      <h1>Cotiza más.<br/><em>Vende más.</em><br/>Pierde menos.</h1>
+      <p>La plataforma que centraliza tus cotizaciones, historial de ventas y reportes en un solo lugar.</p>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feat"><div class="feat-dot"></div>Cotizador GDS, múltiples vuelos y por tramos</div>
+      <div class="feat"><div class="feat-dot"></div>Historial con estados y control de ventas</div>
+      <div class="feat"><div class="feat-dot"></div>Reportes PRO con aerolíneas y destinos</div>
+      <div class="feat"><div class="feat-dot"></div>PDF profesional en segundos</div>
+    </div>
+  </div>
+
+  <!-- RIGHT — Form -->
+  <div class="right">
+    <div class="form-box">
+
+      <div class="form-title">Bienvenido</div>
+      <div class="form-sub">Ingresá tus datos para continuar</div>
+
+      <div class="error-msg" id="error-msg"></div>
+      <div class="success-msg" id="success-msg"></div>
+
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" placeholder="agente@tuagencia.com" autocomplete="email" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') doLogin()" />
+      </div>
+
+      <div class="forgot">
+        <a href="#" onclick="doForgot(event)">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <button class="btn-login" id="btn-login" onclick="doLogin()">
+        <span class="btn-text">Ingresar</span>
+        <span class="spinner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#F7F4EE" stroke-width="2.5" stroke-linecap="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </span>
+      </button>
+
+      <div class="footer-note">
+        ¿Problemas para acceder? Contactá a tu administrador.<br/>
+        <span style="color:var(--mustard);">Travel Suite</span> · TPV Experts
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vexuglctjkwdpcfmomot.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZleHVnbGN0amt3ZHBjZm1vbW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0ODcxNjUsImV4cCI6MjA5MjA2MzE2NX0.6_Tdwl48lE2puZv4hKTMpt4kBIlYbCZatdEtbiA1FUo';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('show');
+  document.getElementById('success-msg').classList.remove('show');
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('success-msg');
+  el.textContent = msg;
+  el.classList.add('show');
+  document.getElementById('error-msg').classList.remove('show');
+}
+
+function clearMsgs() {
+  document.getElementById('error-msg').classList.remove('show');
+  document.getElementById('success-msg').classList.remove('show');
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('btn-login');
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
+}
+
+async function doLogin() {
+  clearMsgs();
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!email || !password) { showError('Completá todos los campos.'); return; }
+
+  setLoading(true);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  setLoading(false);
+
+  if (error) {
+    const msgs = {
+      'Invalid login credentials': 'Email o contraseña incorrectos.',
+      'Email not confirmed': 'Confirmá tu email antes de ingresar.',
+    };
+    showError(msgs[error.message] || 'Error al ingresar. Intentá de nuevo.');
+    return;
+  }
+
+  // Login exitoso — redirigir al cotizador
+  showSuccess('¡Bienvenido! Cargando...');
+  setTimeout(() => { window.location.href = '/app.html'; }, 800);
+}
+
+async function doForgot(e) {
+  e.preventDefault();
+  clearMsgs();
+  const email = document.getElementById('email').value.trim();
+  if (!email) { showError('Ingresá tu email primero.'); return; }
+
+  setLoading(true);
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  setLoading(false);
+
+  if (error) { showError('No se pudo enviar el email. Intentá de nuevo.'); return; }
+  showSuccess('Te enviamos un email para restablecer tu contraseña.');
+}
+
+// Check if already logged in
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) window.location.href = '/app.html';
+})();
+</script>
+</body>
+</html>

@@ -640,7 +640,7 @@ function lsSet(k, v)   { try { localStorage.setItem(k, JSON.stringify(v)); } cat
 async function checkAuth() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    window.location.href = '/';
+    window.location.href = '/index.html';
     return false;
   }
   currentUser = session.user;
@@ -661,13 +661,17 @@ async function checkAuth() {
   document.getElementById('sidebar-rol').textContent = profile.rol === 'admin' ? 'Administrador' : profile.rol === 'supervisor' ? 'Supervisor' : 'Agente';
   // Load agencia name
   const { data: agencia } = await sb.from('agencias').select('nombre').eq('id', currentAgenciaId).single();
-  if (agencia) document.getElementById('sidebar-agencia').textContent = agencia.nombre;
+  if (agencia) {
+    document.getElementById('sidebar-agencia').textContent = agencia.nombre;
+  } else {
+    document.getElementById('sidebar-agencia').textContent = 'Travel Suite';
+  }
   return true;
 }
 
 async function cerrarSesion() {
   await sb.auth.signOut();
-  window.location.href = '/';
+  window.location.href = '/index.html';
 }
 
 // ── INIT ─────────────────────────────────────────────────────────
