@@ -513,7 +513,7 @@ async function doLogin() {
 
   // Login exitoso — redirigir al cotizador
   showSuccess('¡Bienvenido! Cargando...');
-  setTimeout(() => { window.location.href = '/app'; }, 800);
+  setTimeout(() => { window.location.href = '/app.html'; }, 800);
 }
 
 async function doForgot(e) {
@@ -533,7 +533,7 @@ async function doForgot(e) {
 // Check if already logged in
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
-  if (session) window.location.href = '/app';
+  if (session) window.location.href = '/app.html';
 })();
 </script>
 </body>
