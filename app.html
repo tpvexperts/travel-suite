@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Travel Suite — Cotizador</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset & Base ─────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand-red: #D0202A;
+  --brand-blue: #1A4E8C;
+  --brand-dark: #0D1B2E;
+  --brand-mid: #1E3A5F;
+  --accent: #E8323C;
+  --gold: #C8A45A;
+  --bg: #F4F6FA;
+  --surface: #FFFFFF;
+  --surface2: #F0F4F9;
+  --border: #D8E0EC;
+  --text: #0D1B2E;
+  --text2: #4A5568;
+  --text3: #8898AA;
+  --radius: 10px;
+  --shadow: 0 2px 16px rgba(13,27,46,0.10);
+  --shadow-lg: 0 8px 32px rgba(13,27,46,0.14);
+}
+html { font-size: 14px; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── Layout ────────────────────────────────────── */
+.app-wrap { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; min-width: 220px; background: var(--brand-dark); display: flex; flex-direction: column; padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.main { flex: 1; padding: 28px 32px; max-width: 960px; }
+
+/* ── Sidebar ────────────────────────────────────── */
+.sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sidebar-logo img { width: 44px; height: 44px; object-fit: contain; }
+.sidebar-logo .brand { margin-top: 10px; }
+.sidebar-logo .brand-name { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2; letter-spacing: 0.3px; }
+.sidebar-logo .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; }
+.nav-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); padding: 0 20px; margin: 12px 0 6px; text-transform: uppercase; }
+.nav-btn { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.6); cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: all 0.15s; border-left: 3px solid transparent; }
+.nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.08); border-left-color: var(--brand-red); }
+.nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.7; }
+.nav-btn.active svg { opacity: 1; }
+
+/* ── Header ─────────────────────────────────────── */
+.page-header { margin-bottom: 24px; }
+.page-title { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 800; color: var(--brand-dark); letter-spacing: -0.3px; }
+.page-sub { font-size: 12.5px; color: var(--text3); margin-top: 3px; }
+
+/* ── Cards ──────────────────────────────────────── */
+.card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-title { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--brand-mid); letter-spacing: 0.2px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title .num { width: 22px; height: 22px; background: var(--brand-blue); color: #fff; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+
+/* ── Form elements ───────────────────────────────── */
+.form-row { display: grid; gap: 12px; margin-bottom: 12px; }
+.form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--text2); letter-spacing: 0.3px; text-transform: uppercase; }
+.form-group input, .form-group select, .form-group textarea {
+  font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 11px;
+  border: 1px solid var(--border); border-radius: 7px; background: var(--surface);
+  color: var(--text); outline: none; transition: border 0.15s;
+  width: 100%;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--brand-blue); }
+.form-group textarea { resize: vertical; min-height: 56px; }
+.form-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238898AA' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: 'Inter', sans-serif; letter-spacing: 0.2px; }
+.btn-primary { background: var(--brand-blue); color: #fff; }
+.btn-primary:hover { background: #1A3D7A; }
+.btn-danger  { background: var(--brand-red); color: #fff; }
+.btn-danger:hover  { background: #B01A22; }
+.btn-outline { background: transparent; color: var(--brand-blue); border: 1.5px solid var(--brand-blue); }
+.btn-outline:hover { background: var(--brand-blue); color: #fff; }
+.btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--border); }
+.btn-sm { padding: 6px 12px; font-size: 11.5px; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+/* ── Panels ──────────────────────────────────────── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Itinerary section ───────────────────────────── */
+.itin-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
+.itin-block.collapsed .itin-body { display: none; }
+.itin-block.collapsed { box-shadow: none; border-color: var(--border); }
+.collapse-btn { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); font-size: 16px; padding: 0 4px; line-height: 1; transition: transform 0.2s; }
+.itin-block.collapsed .collapse-btn { transform: rotate(-90deg); }
+.itin-summary { font-size: 11px; color: rgba(255,255,255,0.45); margin-left: 6px; font-style: italic; display: none; }
+.itin-block.collapsed .itin-summary { display: inline; }
+.itin-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-mid) 100%); }
+.itin-header-left { display: flex; align-items: center; gap: 10px; }
+.itin-num { width: 26px; height: 26px; background: var(--brand-red); border-radius: 50%; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; }
+.itin-title-input { background: transparent; border: none; color: #fff; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; outline: none; width: 200px; }
+.itin-title-input::placeholder { color: rgba(255,255,255,0.4); }
+.itin-body { padding: 20px; }
+
+/* Parsed flights */
+.flights-out { margin-bottom: 14px; }
+.flights-title { font-size: 11px; font-weight: 700; color: var(--brand-blue); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.flight-list { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.flight-list table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-family: 'Inter', sans-serif; }
+.flight-list tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
+.flight-list tr:last-child { border-bottom: none; }
+.flight-list td { padding: 9px 8px; vertical-align: middle; white-space: nowrap; }
+.flight-list td.fl-logo { width: 68px; padding-left: 14px; }
+.flight-list td.fl-logo img { max-width: 54px; max-height: 24px; object-fit: contain; display: block; }
+.flight-logo-badge { display: inline-flex; width: 40px; height: 20px; background: var(--brand-blue); border-radius: 4px; color: #fff; font-size: 9px; font-weight: 700; align-items: center; justify-content: center; letter-spacing: 1px; }
+.flight-list td.fl-fecha { width: 58px; font-weight: 600; color: var(--brand-dark); }
+.flight-list td.fl-ruta  { color: var(--text2); }
+.flight-list td.fl-sale  { width: 90px; color: var(--text3); text-align: right; }
+.flight-list td.fl-llega { width: 100px; color: var(--text3); text-align: right; padding-right: 14px; }
+/* legacy — keep for multi type refs */
+.flight-txt { display: contents; }
+.fc-fecha { font-weight: 600; color: var(--brand-dark); }
+.fc-ruta  { color: var(--text2); }
+.fc-horas { color: var(--text3); }
+.empty-flights { font-size: 12px; color: var(--text3); font-style: italic; padding: 8px 0; }
+
+/* Conditions */
+.conditions-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 14px; }
+.cond-group { display: flex; flex-direction: column; gap: 4px; }
+.cond-group label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+.cond-group select { font-size: 11.5px; padding: 6px 24px 6px 8px; }
+
+/* Generated text */
+.gen-text-box { background: linear-gradient(135deg, #EBF4FF 0%, #F0F4F9 100%); border: 1px solid #C0D6F0; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: var(--brand-dark); line-height: 1.7; font-style: italic; min-height: 48px; margin-bottom: 14px; }
+
+/* Price row */
+.price-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.price-row .form-group { flex: 1; min-width: 100px; }
+
+/* ── Airport table ───────────────────────────────── */
+.table-wrap { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th { background: var(--surface2); padding: 8px 12px; text-align: left; font-size: 10.5px; font-weight: 700; color: var(--text2); letter-spacing: 0.5px; text-transform: uppercase; position: sticky; top: 0; border-bottom: 1px solid var(--border); }
+td { padding: 6px 12px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+td input { border: none; background: transparent; font-size: 12.5px; width: 100%; font-family: 'Inter', sans-serif; color: var(--text); padding: 2px 4px; }
+td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--brand-blue); }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 15px; line-height: 1; padding: 0 2px; }
+.del-btn:hover { color: var(--brand-red); }
+
+/* ── Logos grid ──────────────────────────────────── */
+.logos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.logo-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
+.logo-card .lcode { font-size: 11px; font-weight: 700; color: var(--text2); }
+.logo-card img { max-width: 80px; max-height: 34px; object-fit: contain; }
+.logo-card .del-btn { position: absolute; top: 5px; right: 5px; font-size: 13px; }
+.drop-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 22px; text-align: center; font-size: 12.5px; color: var(--text3); cursor: pointer; transition: all 0.2s; }
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--brand-blue); background: #EBF4FF; color: var(--brand-blue); }
+.drop-zone input { display: none; }
+
+/* ── Agents ──────────────────────────────────────── */
+.agent-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; }
+.agent-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-blue); color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'Montserrat', sans-serif; }
+.agent-info { flex: 1; }
+.agent-name { font-weight: 600; font-size: 13px; color: var(--text); }
+.agent-detail { font-size: 11.5px; color: var(--text3); margin-top: 2px; }
+.agent-company { font-size: 11px; font-weight: 600; color: var(--brand-blue); margin-top: 3px; }
+
+/* ── Status badge ────────────────────────────────── */
+.saved-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: #27A64A; opacity: 0; transition: opacity 0.4s; margin-left: 10px; }
+
+/* ── Divider ─────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── PDF preview modal ───────────────────────────── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(13,27,46,0.55); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 760px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border); }
+.modal-title { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 700; color: var(--brand-dark); }
+.modal-body { padding: 24px; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 20px; line-height: 1; }
+
+/* ── PDF content preview ─────────────────────────── */
+#pdf-preview { font-family: 'Inter', sans-serif; color: #1a1a2e; }
+.pdf-topbar { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 3px solid var(--brand-red); margin-bottom: 20px; }
+.pdf-logo-area { display: flex; align-items: center; gap: 12px; }
+.pdf-logo-area img { width: 48px; height: 48px; object-fit: contain; }
+.pdf-brand-name { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 800; color: var(--brand-dark); line-height: 1.1; }
+.pdf-brand-sub { font-size: 10px; color: var(--text3); letter-spacing: 1px; }
+.pdf-meta { text-align: right; font-size: 11px; color: var(--text2); line-height: 1.8; }
+.pdf-meta strong { color: var(--brand-dark); }
+.pdf-client-row { display: flex; gap: 20px; background: var(--surface2); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
+.pdf-client-col { flex: 1; }
+.pdf-cl { font-size: 10px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.pdf-cv { font-size: 13px; font-weight: 600; color: var(--brand-dark); }
+.pdf-option { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.pdf-opt-header { background: linear-gradient(135deg, var(--brand-dark), var(--brand-mid)); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+.pdf-opt-title { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: #fff; }
+.pdf-opt-price { font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 800; color: #fff; }
+.pdf-opt-body { padding: 14px 16px; }
+.pdf-flight-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.pdf-flight-item:last-child { border-bottom: none; }
+.pdf-fl-logo { width: 50px; display: flex; align-items: center; justify-content: center; }
+.pdf-fl-logo img { max-width: 50px; max-height: 22px; object-fit: contain; }
+.pdf-fl-badge { background: var(--brand-blue); color: #fff; font-size: 9px; font-weight: 700; border-radius: 4px; padding: 2px 5px; }
+.pdf-fl-date { font-size: 11px; font-weight: 700; color: var(--brand-dark); width: 44px; }
+.pdf-fl-route { font-size: 11px; color: var(--text2); width: 185px; }
+.pdf-fl-times { font-size: 11px; color: var(--text3); }
+.pdf-cond { font-size: 11.5px; color: var(--text2); line-height: 1.6; font-style: italic; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.pdf-footer { margin-top: 24px; padding-top: 14px; border-top: 2px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+.pdf-legal { font-size: 10px; color: var(--text3); max-width: 420px; line-height: 1.6; }
+.pdf-contact { text-align: right; font-size: 11px; color: var(--text2); line-height: 1.7; }
+.pdf-contact strong { color: var(--brand-dark); display: block; font-size: 12px; }
+
+/* ── Condition row ───────────────────────────────── */
+.cond-row-block { transition: box-shadow 0.15s; }
+.cond-row-block:hover { box-shadow: 0 2px 8px rgba(13,27,46,0.08); }
+
+/* ── Historial ───────────────────────────────────── */
+.hist-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: box-shadow 0.15s; }
+.hist-card:hover { box-shadow: var(--shadow); }
+.hist-num { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; color: var(--brand-blue); min-width: 100px; }
+.hist-info { flex: 1; }
+.hist-cliente { font-size: 13px; font-weight: 600; color: var(--text); }
+.hist-empresa { font-size: 11.5px; color: var(--text3); }
+.hist-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.hist-actions { display: flex; gap: 6px; align-items: center; }
+.lock-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:2px 5px; opacity:0.7; transition:all 0.15s; }
+.lock-btn:hover { opacity:1; }
+.hist-locked { opacity:0.6; pointer-events:none; }
+.hist-locked .status-badge { cursor:default; }
+.status-badge { font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 100px; cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; }
+.status-pendiente { background: #FEF3CD; color: #856404; }
+.status-comprada   { background: #D4EDDA; color: #155724; }
+.status-no_comprada{ background: #F8D7DA; color: #721C24; }
+.hist-stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; min-width: 120px; }
+.hist-stat-num { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; color: var(--brand-dark); }
+.hist-stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ── Scrollbar ───────────────────────────────────── */
+.ap-autocomplete { position: relative; }
+.ap-autocomplete input { width: 100%; }
+.ap-dropdown { position: fixed; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); max-height: 220px; overflow-y: auto; z-index: 9999; display: none; min-width: 220px; }
+.ap-dropdown.open { display: block; }
+.ap-option { padding: 7px 10px; font-size: 12px; cursor: pointer; color: var(--text2); }
+.ap-option:hover, .ap-option.selected, .ap-option.active { background: var(--surface2); color: var(--text); }
+.ap-option strong { color: var(--brand-blue); }
+.rep-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
+.rep-kpi { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.rep-kpi-val { font-family:'Montserrat',sans-serif; font-size:26px; font-weight:700; color:var(--brand-dark); line-height:1; }
+.rep-kpi-lbl { font-size:11px; color:var(--text3); margin-top:4px; }
+.rep-section { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin-bottom:16px; }
+.rep-section-title { font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; color:var(--brand-mid); margin-bottom:12px; }
+.rep-row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); font-size:12.5px; }
+.rep-row:last-child { border-bottom:none; }
+.rep-bar-wrap { flex:1; background:var(--surface2); border-radius:4px; height:8px; overflow:hidden; }
+.rep-bar { height:8px; border-radius:4px; background:var(--brand-blue); transition:width 0.4s; }
+.rep-bar.green { background:#27A64A; }
+.rep-label { width:120px; font-weight:500; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rep-count { width:40px; text-align:right; color:var(--text3); font-size:11.5px; }
+.rep-monto { width:100px; text-align:right; font-weight:600; color:var(--brand-dark); font-size:11.5px; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface2); }
+::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-dark); }
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+<!-- ── SIDEBAR ─────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img id="sidebar-logo" src="" alt="TPV" />
+    <div class="brand">
+      <div class="brand-name">Travel Suite</div>
+      <div class="brand-sub" id="sidebar-agencia">Cargando...</div>
+    </div>
+  </div>
+  <div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;">
+    <div style="width:28px;height:28px;border-radius:50%;background:var(--brand-red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;" id="sidebar-avatar">?</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="sidebar-username">...</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);" id="sidebar-rol">...</div>
+    </div>
+    <button onclick="cerrarSesion()" title="Cerrar sesión" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);font-size:16px;padding:2px;line-height:1;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">⏻</button>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Principal</div>
+    <button class="nav-btn active" onclick="showPanel('cotizador',event)" id="btn-cot-actual">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Cotización Actual
+    </button>
+    <button class="nav-btn" onclick="sidebarNuevaCot(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Nueva Cotización
+    </button>
+    <button class="nav-btn" onclick="showPanel('historial',event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Historial
+      <span id="hist-badge" style="background:var(--brand-red);color:#fff;font-size:9px;border-radius:10px;padding:1px 6px;margin-left:auto;display:none;"></span>
+    </button>
+    <button class="nav-btn" onclick="showPanel('reportes',event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Reportes
+      <span style="font-size:8px;background:var(--gold);color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;">PRO</span>
+    </button>
+    <div class="nav-label">Clientes</div>
+    <button class="nav-btn" onclick="showPanel('clientes',event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      Empresas / Clientes
+    </button>
+    <div class="nav-label">Configuración</div>
+    <button class="nav-btn" onclick="showPanel('aeropuertos',event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      Aeropuertos
+    </button>
+    <button class="nav-btn" onclick="showPanel('logos',event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Logos Aerolíneas
+    </button>
+    <button class="nav-btn" onclick="showPanel('agentes',event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Agentes
+    </button>
+    <div class="nav-label">Sistema</div>
+    <button class="nav-btn" onclick="exportarConfig()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar Config
+    </button>
+    <button class="nav-btn" onclick="document.getElementById('import-config-input').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Importar Config
+    </button>
+    <input type="file" id="import-config-input" accept=".json" style="display:none;" onchange="importarConfig(this)"/>
+  </nav>
+</aside>
+
+<!-- ── MAIN ─────────────────────────────────────── -->
+<main class="main">
+
+  <!-- COTIZADOR -->
+  <div class="panel active" id="panel-cotizador">
+    <div class="page-header">
+      <div class="page-title">Nueva Cotización</div>
+      <div class="page-sub">Completa los datos y genera el PDF para tu cliente</div>
+    </div>
+
+    <!-- Encabezado cotización -->
+    <div class="card">
+      <div class="card-title">Datos de la Cotización</div>
+      <div class="form-row cols-4">
+        <div class="form-group">
+          <label>Número de Cotización</label>
+          <input type="text" id="cot-num" placeholder="COT-2025-001" readonly />
+        <input type="hidden" id="cot-parent-id" value="" />
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="text" id="cot-fecha" readonly />
+        </div>
+        <div class="form-group">
+          <label>Agente</label>
+          <select id="cot-agente" onchange="updateAgente()">
+            <option value="">-- Seleccionar --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Empresa / Cliente</label>
+          <select id="cot-empresa" onchange="autocompletarCliente()">
+            <option value="">-- Seleccionar empresa --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row cols-2" style="margin-top:0;">
+        <div class="form-group">
+          <label>Nombre del Contacto</label>
+          <input type="text" id="cot-cliente" placeholder="Ej. Lic. García López" />
+        </div>
+        <div class="form-group">
+          <label>Notas internas</label>
+          <input type="text" id="cot-notas" placeholder="Ej. viaje de negocios, 2 pasajeros..." />
+        </div>
+      </div>
+    </div>
+
+    <!-- Itinerarios -->
+    <div id="itins-container"></div>
+
+    <div class="btn-row" style="margin-bottom:24px;">
+      <div id="add-itin-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;color:var(--text3);">+ Agregar opción:</span>
+        <button class="btn btn-ghost btn-sm" id="btn-add-itin" onclick="addItin('gds')">✈ Itinerario GDS</button>
+        <button class="btn btn-ghost btn-sm" id="btn-add-multi" onclick="addItin('multi')">≡ Múltiples vuelos</button>
+        <button class="btn btn-ghost btn-sm" id="btn-add-lc" onclick="addItin('lowcost')">✍ Itinerario Manual</button>
+        <button class="btn btn-ghost btn-sm" id="btn-add-lct" onclick="addItin('lc_tramos')">📊 Cotización por Tramos</button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="previewPDF()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Vista Previa / PDF
+      </button>
+      <button class="btn btn-outline" onclick="guardarCotizacion()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar
+      </button>
+      <button class="btn btn-ghost" onclick="resetCotizacion(true)">Nueva Cotización</button>
+    </div>
+    <div id="save-msg" style="font-size:12px;color:var(--text3);margin-top:8px;display:none;"></div>
+  </div>
+
+  <!-- AEROPUERTOS -->
+  <div class="panel" id="panel-aeropuertos">
+    <div class="page-header">
+      <div class="page-title">Base de Aeropuertos</div>
+      <div class="page-sub">Edita, agrega o elimina aeropuertos</div>
+    </div>
+    <div class="card">
+      <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
+        <input type="text" id="ap-search" placeholder="Buscar código o ciudad..." style="max-width:220px;" oninput="renderAirports()" />
+        <span style="font-size:12px; color:var(--text3);" id="ap-count"></span>
+        <span class="saved-badge" id="ap-saved">✓ Guardado</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Código IATA</th><th>Ciudad</th><th></th></tr></thead>
+          <tbody id="ap-tbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+        <input type="text" id="new-ap-code" placeholder="Código" maxlength="3" style="width:90px; text-transform:uppercase;" />
+        <input type="text" id="new-ap-city" placeholder="Ciudad" style="width:200px;" />
+        <button class="btn btn-primary btn-sm" onclick="addAirport()">+ Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGOS -->
+  <div class="panel" id="panel-logos">
+    <div class="page-header">
+      <div class="page-title">Logos de Aerolíneas</div>
+      <div class="page-sub">Sube imágenes nombradas con el código IATA (ej: LH.png)</div>
+    </div>
+    <div class="card">
+      <div id="logos-grid" class="logos-grid"></div>
+      <div class="drop-zone" id="drop-zone"
+        onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault(); this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)">
+        <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)" />
+        <div>Arrastra imágenes aquí o haz clic para seleccionar</div>
+        <div style="font-size:11px; margin-top:4px; opacity:0.7;">Nombre del archivo = código IATA (LH.png, AM.png, AA.png…)</div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:14px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="form-group" style="width:80px;">
+          <label>Código</label>
+          <input type="text" id="logo-code-url" maxlength="2" style="text-transform:uppercase;" />
+        </div>
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>URL del logo</label>
+          <input type="text" id="logo-url" placeholder="https://..." />
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="addLogoUrl()" style="margin-bottom:1px;">+ Agregar URL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="panel" id="panel-historial">
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="page-title">Historial de Cotizaciones</div>
+          <div class="page-sub">Todas las cotizaciones guardadas</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="hist-filter" onchange="renderHistorial()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);">
+            <option value="todas">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="comprada">Compradas</option>
+            <option value="no_comprada">No compradas</option>
+          </select>
+          <input type="text" id="hist-search" placeholder="Buscar..." style="font-size:12px;width:180px;" oninput="renderHistorial()" />
+        </div>
+      </div>
+      <div id="hist-stats" style="display:flex;gap:16px;margin-top:14px;"></div>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+
+  <!-- REPORTES -->
+  <div class="panel" id="panel-reportes">
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Reportes <span style="font-size:12px;background:var(--gold);color:#fff;border-radius:6px;padding:2px 8px;vertical-align:middle;">PRO</span></div>
+          <div class="page-sub">Análisis de cotizaciones y ventas</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="rep-filter-agente" onchange="renderReportes()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);">
+            <option value="">Todos los agentes</option>
+          </select>
+          <select id="rep-filter-mes" onchange="renderReportes()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);">
+            <option value="">Todos los meses</option>
+          </select>
+          <select id="rep-filter-moneda" onchange="renderReportes()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);">
+            <option value="">Todas las monedas</option>
+            <option value="MXN">MXN</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="reportes-content"></div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="panel" id="panel-clientes">
+    <div class="page-header">
+      <div class="page-title">Empresas / Clientes</div>
+      <div class="page-sub">Base de clientes para autocompletar cotizaciones</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
+        <input type="text" id="cli-search" placeholder="Buscar empresa..." style="max-width:220px;" oninput="renderClientes()" />
+        <span class="saved-badge" id="cli-saved">✓ Guardado</span>
+      </div>
+      <div class="table-wrap" style="margin-bottom:14px;">
+        <table>
+          <thead><tr><th>Empresa</th><th>Contacto</th><th>Email</th><th>Teléfono</th><th>RFC</th><th></th></tr></thead>
+          <tbody id="cli-tbody"></tbody>
+        </table>
+      </div>
+      <div class="card-title" style="margin-bottom:10px;">Agregar Empresa</div>
+      <div class="form-row cols-3">
+        <div class="form-group"><label>Nombre empresa</label><input type="text" id="new-cli-name" placeholder="Empresa S.A. de C.V." /></div>
+        <div class="form-group"><label>Contacto</label><input type="text" id="new-cli-contact" placeholder="Lic. García" /></div>
+        <div class="form-group"><label>Email</label><input type="text" id="new-cli-email" placeholder="contacto@empresa.com" /></div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Teléfono</label><input type="text" id="new-cli-phone" placeholder="5512345678" /></div>
+        <div class="form-group"><label>RFC</label><input type="text" id="new-cli-rfc" placeholder="EMP123456ABC" style="text-transform:uppercase;" /></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addCliente()">+ Agregar Empresa</button>
+    </div>
+  </div>
+
+  <!-- AGENTES -->
+  <div class="panel" id="panel-agentes">
+    <div class="page-header">
+      <div class="page-title">Agentes</div>
+      <div class="page-sub">Gestiona los datos de los agentes de ventas</div>
+    </div>
+    <div class="card">
+      <div id="agents-list"></div>
+      <div class="divider"></div>
+      <div class="card-title" style="margin-bottom:12px;">Agregar Agente</div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Nombre completo</label><input type="text" id="new-ag-name" placeholder="Juan Pérez" /></div>
+        <div class="form-group"><label>Empresa</label><input type="text" id="new-ag-company" placeholder="TPV Experts" /></div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Teléfono</label><input type="text" id="new-ag-phone" placeholder="5512345678" /></div>
+        <div class="form-group"><label>Email</label><input type="text" id="new-ag-email" placeholder="agente@empresa.com" /></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addAgent()">+ Agregar Agente</button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- ── PDF MODAL ─────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Vista Previa — Cotización</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="pdf-preview"></div>
+      <div class="btn-row" style="margin-top:20px;">
+        <button class="btn btn-primary" onclick="downloadPDF()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar PDF
+        </button>
+        <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── LOGO BASE64 ──────────────────────────────────────────────────
+const LOGO_B64 = 'data:image/gif;base64,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';
+
+// ── STATE ────────────────────────────────────────────────────────
+let ciudades = {};
+let logos    = {};
+let agentes  = [];
+let itins    = [];
+let cotNum   = 1;
+
+// ── DEFAULTS ─────────────────────────────────────────────────────
+const defaultAirports = {
+  ABQ:"Albuquerque",ACA:"Acapulco",ADB:"Izmir",AEP:"Buenos Aires",AGP:"Malaga",AGU:"Aguascalientes",AHO:"Alghero",AKL:"Auckland",ALC:"Alicante",ALG:"Argel",AMM:"Amman",AMS:"Amsterdam",ARN:"Estocolmo",ATH:"Atenas",ATL:"Atlanta",AUH:"Abu Dhabi",AUS:"Austin",AZA:"Mesa",BAQ:"Barranquilla",BCN:"Barcelona",BEL:"Belem",BGI:"Bridgetown",BGO:"Bergen",BGY:"Bergamo",BHI:"Bahia Blanca",BIO:"Bilbao",BJX:"Leon",BKK:"Bangkok",BLB:"Balboa",BLQ:"Bolonia",BNE:"Brisbane",BOD:"Burdeos",BOG:"Bogota",BOM:"Mumbai",BOS:"Boston",BRI:"Bari",BRU:"Bruselas",BSB:"Brasilia",BSL:"Basilea",BUD:"Budapest",CAI:"Cairo",CAS:"Casablanca",CCS:"Caracas",CDG:"Paris",CEN:"Ciudad Obregon",CGH:"Sao Paulo",CGR:"Campo Grande",CHO:"Charlottesville",CJS:"Ciudad Juarez",CLO:"Cali",CLQ:"Colima",CLT:"Charlotte",CMN:"Casablanca",CNF:"Belo Horizonte",COR:"Cordoba",CPE:"Campeche",CPH:"Copenhague",CPT:"Ciudad del Cabo",CTA:"Catania",CTG:"Cartagena",CTM:"Chetumal",CUL:"Culiacan",CUN:"Cancun",CUU:"Chihuahua",CUZ:"Cuzco",CZM:"Cozumel",CWB:"Curitiba",DCA:"Washington",DEN:"Denver",DFW:"Dallas",DGO:"Durango",DKR:"Dakar",DME:"Moscu",DOH:"Doha",DPS:"Bali",DTW:"Detroit",DUB:"Dublin",DUS:"Duesseldorf",EDI:"Edimburgo",ELP:"El Paso",EOH:"Medellin",EWR:"Newark",EZE:"Buenos Aires",FCO:"Roma",FEZ:"Fez",FLL:"Ft. Lauderdale",FLR:"Florencia",FRA:"Frankfurt",FTE:"El Calafate",GDL:"Guadalajara",GIG:"Rio de Janeiro",GRU:"Sao Paulo",GUA:"Guatemala",GVA:"Ginebra",GYE:"Guayaquil",GYM:"Guaymas",HAM:"Hamburgo",HAN:"Hanoi",HAV:"La Habana",HKG:"Hong Kong",HMO:"Hermosillo",HND:"Tokio",HNL:"Honolulu",HUX:"Huatulco",IAD:"Washington",IAH:"Houston",IBZ:"Ibiza",IGU:"Foz do Iguazu",IST:"Estambul",ITM:"Osaka",ITO:"Big Island",JED:"Jeddah",JFK:"New York",JNB:"Johannesburgo",KBP:"Kiev",KEF:"Reykjavic",KHI:"Karachi",KIN:"Kingston",KRK:"Cracovia",KYA:"Konya",LAP:"La Paz",LAS:"Las Vegas",LAX:"Los Angeles",LBB:"Lubbock",LCG:"La Coruna",LCY:"Londres",LGA:"Nueva York",LGW:"Londres",LHR:"Londres",LIM:"Lima",LIN:"Milan",LIS:"Lisboa",LMM:"Los Mochis",LPB:"La Paz",LRD:"Laredo",LTO:"Loreto",LYS:"Lyon",MAA:"Madras",MAD:"Madrid",MAH:"Menorca",MAM:"Matamoros",MAN:"Manchester",MCO:"Orlando",MDE:"Medellin",MDZ:"Mendoza",MED:"Medina",MEL:"Melbourne",MEX:"Mexico",MFE:"McAllen",MGA:"Managua",MIA:"Miami",MID:"Merida",MKE:"Milwaukee",MRS:"Marsella",MSP:"Minneapolis",MSY:"Nueva Orleans",MTT:"Minatitlan",MTY:"Monterrey",MUC:"Munich",MVD:"Montevideo",MXL:"Mexicali",MXP:"Milan",MZT:"Mazatlan",NAP:"Napoles",NAT:"Natal",NBO:"Nairobi",NCE:"Niza",NLD:"Nuevo Laredo",NLU:"Santa Lucia",NRT:"Tokio",OAX:"Oaxaca",ODS:"Odesa",OGG:"Maui",ORD:"Chicago",ORY:"Paris",PBC:"Puebla",PCR:"Puerto Carreno",PDX:"Portland",PDS:"Piedras Negras",PEK:"Beijing",PHL:"Filadelfia",PHX:"Phoenix",PMI:"Palma",POA:"Porto Alegre",PPE:"Puerto Penasco",PQM:"Palenque",PRG:"Praga",PTY:"Panama",PUJ:"Punta Cana",PVG:"Shanghai",PVR:"Puerto Vallarta",PXM:"Puerto Escondido",QRO:"Queretaro",RAK:"Marrakech",REP:"Siem Reap",REX:"Reynosa",ROS:"Rosario",RST:"Rochester",SAL:"San Salvador",SAN:"San Diego",SAP:"San Pedro Sula",SAT:"San Antonio",SCL:"Santiago",SCQ:"Santiago de Compostela",SDF:"Louisville",SDR:"Santander",SEA:"Seattle",SFN:"Santa Fe",SFO:"San Francisco",SJC:"San Jose",SJD:"Los Cabos",SJO:"San Jose",SJU:"San Juan",SKG:"Tesalonica",SLC:"Salt Lake City",SLP:"San Luis Potosi",SLZ:"Sao Luis",SMF:"Sacramento",SSA:"Salvador de Bahia",STL:"St. Louis",STR:"Stuttgart",SVQ:"Sevilla",SYD:"Sydney",TAM:"Tampico",TAP:"Tapachula",TFN:"Tenerife",TGU:"Tegucigalpa",TGZ:"Chiapa de Corzo",TIJ:"Tijuana",TLC:"Toluca",TLV:"Tel Aviv",TNG:"Tanger",TPQ:"Tepic",TQO:"Tulum",TRC:"Torreon",TRN:"Torino",TRU:"Trujillo",TUC:"Tucuman",TUS:"Tucson",TXL:"Berlin",UIO:"Quito",UPN:"Uruapan",UYU:"Uyuni",VCE:"Venecia",VER:"Veracruz",VGO:"Vigo",VIE:"Viena",VLC:"Valencia",VSA:"Villahermosa",VVI:"Santa Cruz",WAW:"Varsovia",XIY:"Xian",XNA:"Fayetteville",XPL:"Tegucigalpa",YLW:"Kelowna",YVR:"Vancouver",YYC:"Calgary",YYZ:"Toronto",ZCL:"Zacatecas",ZIH:"Zihuatanejo",ZRH:"Zurich"
+};
+
+const defaultAgents = [
+  { id: 1, name: "Juan Pablo Arbeletche", phone: "5552111878", email: "ventas@tuproximoviaje.com", company: "Tu Proximo Viaje.com" },
+  { id: 2, name: "Juan Pablo Arbeletche", phone: "5552111878", email: "info@tpvexperts.com.mx",   company: "TPV Experts" }
+];
+
+// ── STORAGE ──────────────────────────────────────────────────────
+// ── SUPABASE ─────────────────────────────────────────────────────
+const { createClient } = supabase;
+const sb = createClient('https://vexuglctjkwdpcfmomot.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZleHVnbGN0amt3ZHBjZm1vbW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0ODcxNjUsImV4cCI6MjA5MjA2MzE2NX0.6_Tdwl48lE2puZv4hKTMpt4kBIlYbCZatdEtbiA1FUo');
+
+let currentUser = null;
+let currentUsuario = null; // profile from usuarios table
+let currentAgenciaId = null;
+
+// localStorage helpers (cache local para velocidad)
+function lsGet(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } }
+function lsSet(k, v)   { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+// ── AUTH CHECK ────────────────────────────────────────────────────
+async function checkAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = '/';
+    return false;
+  }
+  currentUser = session.user;
+  // Load user profile
+  const { data: profile } = await sb.from('usuarios').select('*').eq('id', currentUser.id).single();
+  if (!profile) {
+    // User not in usuarios table yet
+    await cerrarSesion();
+    return false;
+  }
+  currentUsuario = profile;
+  currentAgenciaId = profile.agencia_id;
+  // Update sidebar
+  const nombre = profile.nombre || currentUser.email;
+  const initials = nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sidebar-avatar').textContent = initials;
+  document.getElementById('sidebar-username').textContent = nombre;
+  document.getElementById('sidebar-rol').textContent = profile.rol === 'admin' ? 'Administrador' : profile.rol === 'supervisor' ? 'Supervisor' : 'Agente';
+  // Load agencia name
+  const { data: agencia } = await sb.from('agencias').select('nombre').eq('id', currentAgenciaId).single();
+  if (agencia) document.getElementById('sidebar-agencia').textContent = agencia.nombre;
+  return true;
+}
+
+async function cerrarSesion() {
+  await sb.auth.signOut();
+  window.location.href = '/';
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+// ── NEW STATE ────────────────────────────────────────────────────
+let historial  = [];  // array of saved quotes
+let clientes   = [];  // array of companies/clients
+
+// ── CLIENTES ─────────────────────────────────────────────────────
+function renderClientesSelect() {
+  const sel = document.getElementById('cot-empresa');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Seleccionar empresa --</option>' +
+    clientes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function autocompletarCliente() {
+  const sel = document.getElementById('cot-empresa');
+  const id = parseInt(sel.value);
+  const cli = clientes.find(c => c.id === id);
+  if (cli && cli.contact) {
+    document.getElementById('cot-cliente').value = cli.contact;
+  }
+}
+
+function renderClientes() {
+  const q = (document.getElementById('cli-search')?.value || '').toUpperCase();
+  const list = clientes.filter(c => !q || c.name.toUpperCase().includes(q) || (c.contact||'').toUpperCase().includes(q));
+  document.getElementById('cli-tbody').innerHTML = list.map(c => `
+    <tr>
+      <td><input type="text" value="${c.name}" onchange="updateCliente(${c.id},'name',this.value)" /></td>
+      <td><input type="text" value="${c.contact||''}" onchange="updateCliente(${c.id},'contact',this.value)" /></td>
+      <td><input type="text" value="${c.email||''}" onchange="updateCliente(${c.id},'email',this.value)" /></td>
+      <td><input type="text" value="${c.phone||''}" onchange="updateCliente(${c.id},'phone',this.value)" /></td>
+      <td><input type="text" value="${c.rfc||''}" style="text-transform:uppercase;" onchange="updateCliente(${c.id},'rfc',this.value.toUpperCase())" /></td>
+      <td><button class="del-btn" onclick="delCliente(${c.id})">×</button></td>
+    </tr>`).join('');
+}
+
+async function addCliente() {
+  const name = document.getElementById('new-cli-name').value.trim();
+  if (!name) return;
+  const { data, error } = await sb.from('clientes').insert({
+    agencia_id: currentAgenciaId,
+    nombre:   name,
+    contacto: document.getElementById('new-cli-contact').value.trim(),
+    email:    document.getElementById('new-cli-email').value.trim(),
+    telefono: document.getElementById('new-cli-phone').value.trim(),
+    rfc:      document.getElementById('new-cli-rfc').value.trim().toUpperCase(),
+  }).select().single();
+  if (error) { alert('Error al guardar cliente: ' + error.message); return; }
+  clientes.push({ id: data.id, name: data.nombre, contact: data.contacto, email: data.email, phone: data.telefono, rfc: data.rfc });
+  ['new-cli-name','new-cli-contact','new-cli-email','new-cli-phone','new-cli-rfc'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  renderClientes();
+  renderClientesSelect();
+  showSaved('cli-saved');
+}
+
+function updateCliente(id, field, value) {
+  const c = clientes.find(c => c.id === id);
+  if (c) { c[field] = value; lsSet('tpv_clientes', clientes); renderClientesSelect(); }
+}
+
+function delCliente(id) {
+  clientes = clientes.filter(c => c.id !== id);
+  lsSet('tpv_clientes', clientes);
+  renderClientes(); renderClientesSelect();
+}
+
+// ── GUARDAR COTIZACIÓN ────────────────────────────────────────────
+function getCotizacionData() {
+  const empresaId = parseInt(document.getElementById('cot-empresa')?.value) || null;
+  const empresa = clientes.find(c => c.id === empresaId);
+  const currentId = document.getElementById('cot-num').value;
+  // Detect if this is a revision (id has -vN suffix or parent exists)
+  const parentId = document.getElementById('cot-parent-id')?.value || null;
+  return {
+    id:        currentId,
+    parentId,                        // which original COT this is a revision of
+    fecha:     document.getElementById('cot-fecha').value,
+    fechaISO:  new Date().toISOString(),
+    cliente:   document.getElementById('cot-cliente').value,
+    empresaId,
+    empresa:   empresa ? empresa.name : '',
+    notas:     document.getElementById('cot-notas')?.value || '',
+    agenteId:  document.getElementById('cot-agente').value,
+    itins:     JSON.parse(JSON.stringify(itins)),
+    status:    'pendiente',
+  };
+}
+
+// Helper: extract base ID (COT-2025-047 from COT-2025-047-v2)
+function getBaseId(id) {
+  return id.replace(/-v\d+$/, '');
+}
+
+// Helper: get all versions of a cotizacion (by base ID)
+function getVersions(baseId) {
+  return historial.filter(h => getBaseId(h.id) === baseId).sort((a,b) => a.fechaISO.localeCompare(b.fechaISO));
+}
+
+function guardarCotizacion() {
+  const data = getCotizacionData();
+  if (!data.cliente && !data.empresa) {
+    alert('Agrega al menos el nombre del cliente o empresa antes de guardar.');
+    return;
+  }
+
+  const baseId = getBaseId(data.id);
+  const existingVersions = getVersions(baseId);
+  const isFirstSave = existingVersions.length === 0;
+  const isExactMatch = historial.find(h => h.id === data.id);
+
+  if (isFirstSave) {
+    // Brand new cotizacion — save as-is (cotNum already set when created)
+    data.version = 1;
+    data.parentId = null;
+    historial.unshift(data);
+    // Do NOT increment here — cotNum increments on "Nueva Cotización"
+  } else if (isExactMatch) {
+    // Same ID already saved — create a new version
+    const latestVersion = Math.max(...existingVersions.map(h => h.version || 1));
+    const newVersion = latestVersion + 1;
+    const newId = baseId + '-v' + newVersion;
+    data.id = newId;
+    data.version = newVersion;
+    data.parentId = baseId;
+    data.status = 'pendiente';
+    // Update the field so user sees new ID
+    document.getElementById('cot-num').value = newId;
+    const parentInput = document.getElementById('cot-parent-id');
+    if (parentInput) parentInput.value = baseId;
+    historial.unshift(data);
+  } else {
+    // It's already a vN — create next version
+    const latestVersion = Math.max(...existingVersions.map(h => h.version || 1));
+    const newVersion = latestVersion + 1;
+    const newId = baseId + '-v' + newVersion;
+    data.id = newId;
+    data.version = newVersion;
+    data.parentId = baseId;
+    data.status = 'pendiente';
+    document.getElementById('cot-num').value = newId;
+    const parentInput = document.getElementById('cot-parent-id');
+    if (parentInput) parentInput.value = baseId;
+    historial.unshift(data);
+  }
+
+  lsSet('tpv_historial', historial);
+  updateHistBadge();
+  renderHistorial();
+  const msg = document.getElementById('save-msg');
+  if (msg) {
+    msg.style.display = 'block';
+    const isNew = isFirstSave;
+    msg.innerHTML = isNew
+      ? `✓ Cotización guardada — <strong>${data.id}</strong>`
+      : `✓ Nueva versión guardada — <strong>${data.id}</strong> <span style="color:var(--text3)">(basada en ${baseId})</span>`;
+    setTimeout(() => msg.style.display = 'none', 4000);
+  }
+}
+
+function updateHistBadge() {
+  const badge = document.getElementById('hist-badge');
+  if (!badge) return;
+  const n = historial.length;
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'inline' : 'none';
+}
+
+// ── HISTORIAL ─────────────────────────────────────────────────────
+function renderHistorial() {
+  const filter = document.getElementById('hist-filter')?.value || 'todas';
+  const q = (document.getElementById('hist-search')?.value || '').toLowerCase();
+  let list = historial.filter(h => {
+    if (filter !== 'todas' && h.status !== filter) return false;
+    if (q && !h.id.toLowerCase().includes(q) && !(h.cliente||'').toLowerCase().includes(q) && !(h.empresa||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Stats — count by unique base IDs (latest version per group)
+  const baseIds = [...new Set(historial.map(h => getBaseId(h.id)))];
+  const latestPerBase = baseIds.map(base => {
+    const versions = historial.filter(h => getBaseId(h.id) === base).sort((a,b) => b.fechaISO.localeCompare(a.fechaISO));
+    return versions[0];
+  });
+  const total = latestPerBase.length;
+  const compradas = latestPerBase.filter(h=>h.status==='comprada').length;
+  const noCom = latestPerBase.filter(h=>h.status==='no_comprada').length;
+  const pend = latestPerBase.filter(h=>h.status==='pendiente').length;
+  const cierre = total > 0 ? Math.round((compradas/total)*100) : 0;
+  const statsEl = document.getElementById('hist-stats');
+  if (statsEl) statsEl.innerHTML = [
+    {n:total, l:'Total'},
+    {n:pend, l:'Pendientes'},
+    {n:compradas, l:'Compradas'},
+    {n:noCom, l:'No compradas'},
+    {n:cierre+'%', l:'Tasa de cierre'},
+  ].map(s=>`<div class="hist-stat-card"><div class="hist-stat-num">${s.n}</div><div class="hist-stat-label">${s.l}</div></div>`).join('');
+
+  const el = document.getElementById('hist-list');
+  if (!el) return;
+  if (!list.length) { el.innerHTML = '<div class="empty" style="padding:2rem;text-align:center;color:var(--text3);">No hay cotizaciones guardadas aún</div>'; return; }
+
+  // Group by base ID so versions appear together
+  const groups = {};
+  const groupOrder = [];
+  list.forEach(h => {
+    const base = getBaseId(h.id);
+    if (!groups[base]) { groups[base] = []; groupOrder.push(base); }
+    groups[base].push(h);
+  });
+  // Sort versions within each group newest first
+  Object.values(groups).forEach(g => g.sort((a,b) => b.fechaISO.localeCompare(a.fechaISO)));
+
+  el.innerHTML = groupOrder.map(base => {
+    const versions = groups[base];
+    const latest = versions[0];
+    const hasVersions = versions.length > 1;
+    const versionRows = hasVersions ? versions.slice(1).map(h => `
+      <div style="display:flex;align-items:center;gap:14px;padding:8px 14px 8px 36px;border-top:1px solid var(--border);background:var(--surface2);">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);min-width:130px;">${h.id}</div>
+        <div style="flex:1;font-size:11.5px;color:var(--text3);">${h.fecha} · v${h.version||1}</div>
+        <div style="display:flex;gap:6px;">
+          <span class="status-badge status-${h.status}" style="font-size:10px;padding:3px 8px;">
+            ${h.status==='pendiente'?'⏳':h.status==='comprada'?'✅':'❌'} ${h.status==='pendiente'?'Pendiente':h.status==='comprada'?'Comprada':'No comprada'}
+          </span>
+          <button class="btn btn-ghost btn-sm" style="font-size:10.5px;padding:4px 8px;" onclick="reabrirCotizacion('${h.id}')">Abrir</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:10.5px;padding:4px 8px;" onclick="regenPDF('${h.id}')">PDF</button>
+          <button class="del-btn" onclick="eliminarHist('${h.id}',event)">×</button>
+        </div>
+      </div>`).join('') : '';
+
+    return `
+    <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;box-shadow:var(--shadow);">
+      <div class="hist-card" style="border:none;border-radius:0;margin:0;">
+        <div>
+          <div class="hist-num">${latest.id}
+            ${hasVersions ? `<span style="font-size:9px;background:var(--brand-blue);color:#fff;border-radius:10px;padding:1px 6px;margin-left:6px;">${versions.length} versiones</span>` : ''}
+          </div>
+        </div>
+        <div class="hist-info">
+          <div class="hist-cliente">${latest.cliente || '—'} ${latest.empresa ? '<span style="color:var(--text3);font-weight:400;">· '+latest.empresa+'</span>' : ''}</div>
+          <div class="hist-meta">${latest.fecha} ${latest.notas ? '· '+latest.notas : ''} · ${(latest.itins||[]).length} opción(es)</div>
+        </div>
+        <div class="hist-actions" style="flex-wrap:wrap;gap:6px;">
+          ${latest.locked ? `
+            <!-- LOCKED STATE -->
+            <span class="status-badge status-${latest.status}" style="cursor:default;">
+              ${latest.status==='pendiente'?'⏳ Pendiente':latest.status==='comprada'?'✅ Comprada':'❌ No comprada'}
+            </span>
+            ${latest.status==='comprada' && latest.monto ? `
+              <span style="font-size:11px;color:var(--text2);padding:3px 8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);">
+                ${latest.montoCurrency||'MXN'} ${parseFloat(latest.monto).toLocaleString('es-MX',{minimumFractionDigits:2})}
+              </span>` : ''}
+            <button class="lock-btn" onclick="supervisorUnlock('${latest.id}',event)" title="Desbloquear (supervisor)">🔒</button>
+          ` : `
+            <!-- UNLOCKED STATE -->
+            <button class="status-badge status-${latest.status}" onclick="cycleStatus('${latest.id}',event)">
+              ${latest.status==='pendiente'?'⏳ Pendiente':latest.status==='comprada'?'✅ Comprada':'❌ No comprada'}
+            </button>
+            ${latest.status==='comprada' ? `
+            <select onchange="updateMonto('${latest.id}','opcionComprada',this.value)"
+              style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface);max-width:130px;" onclick="event.stopPropagation()" title="¿Qué opción se compró?">
+              <option value="">¿Qué opción?</option>
+              ${(latest.itins||[]).map((it,i)=>`<option value="${i}" ${latest.opcionComprada==i?'selected':''}>Opción ${i+1}${it.title?' — '+it.title:''}</option>`).join('')}
+            </select>
+            <select onchange="updateMonto('${latest.id}','montoCurrency',this.value)"
+              style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface);width:60px;" onclick="event.stopPropagation()">
+              <option value="MXN" ${(latest.montoCurrency||'MXN')==='MXN'?'selected':''}>MXN</option>
+              <option value="USD" ${(latest.montoCurrency||'')==='USD'?'selected':''}>USD</option>
+              <option value="EUR" ${(latest.montoCurrency||'')==='EUR'?'selected':''}>EUR</option>
+            </select>
+            <input type="text" placeholder="Monto" value="${latest.monto||''}"
+              onchange="updateMonto('${latest.id}','monto',this.value)" onclick="event.stopPropagation()"
+              style="font-size:11px;width:90px;padding:3px 7px;border:1px solid var(--border);border-radius:6px;" />
+            ` : ''}
+            ${latest.status !== 'pendiente' ? `
+            <button class="lock-btn" onclick="lockRegistro('${latest.id}',event)" title="Guardar y bloquear">💾</button>
+            ` : ''}
+          `}
+          <button class="btn btn-ghost btn-sm" onclick="reabrirCotizacion('${latest.id}')">Abrir</button>
+          <button class="btn btn-ghost btn-sm" onclick="regenPDF('${latest.id}')">PDF</button>
+          ${hasVersions ? `<button class="btn btn-ghost btn-sm" onclick="toggleVersions('${base}',event)" id="vtoggle-${base}">▾ Historial</button>` : ''}
+          <button class="del-btn" onclick="eliminarHist('${latest.id}',event)">×</button>
+        </div>
+      </div>
+      <div id="versions-${base}" style="display:none;">${versionRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleVersions(base, e) {
+  e.stopPropagation();
+  const el = document.getElementById('versions-' + base);
+  const btn = document.getElementById('vtoggle-' + base);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (btn) btn.textContent = open ? '▾ Historial' : '▴ Historial';
+}
+
+const SUPERVISOR_PIN = '1111';
+
+async function cycleStatus(id, e) {
+  e.stopPropagation();
+  const h = historial.find(x=>x.id===id);
+  if (!h || h.locked) return;
+  const cycle = { pendiente:'comprada', comprada:'no_comprada', no_comprada:'pendiente' };
+  h.status = cycle[h.status] || 'pendiente';
+  if (h.status === 'comprada') h.fechaCompraISO = new Date().toISOString();
+  // Sync to Supabase
+  if (h.dbId) {
+    await sb.from('cotizaciones').update({
+      status:       h.status,
+      fecha_compra: h.status === 'comprada' ? h.fechaCompraISO : null,
+    }).eq('id', h.dbId);
+  }
+  renderHistorial();
+}
+
+async function lockRegistro(id, e) {
+  e.stopPropagation();
+  const h = historial.find(x=>x.id===id);
+  if (!h) return;
+  h.locked = true;
+  h.lockedAt = new Date().toISOString();
+  if (h.dbId) {
+    await sb.from('cotizaciones').update({
+      locked:    true,
+      locked_at: h.lockedAt,
+      locked_by: currentUser.id,
+      monto:     h.monto || null,
+      moneda:    h.montoCurrency || 'MXN',
+      opcion_comprada:      h.opcionComprada !== undefined ? h.opcionComprada : null,
+      aerolineas_vendidas:  h.aerolineasVendidas || [],
+    }).eq('id', h.dbId);
+  }
+  renderHistorial();
+}
+
+async function supervisorUnlock(id, e) {
+  e.stopPropagation();
+  // In webapp: check if user is supervisor/admin
+  if (!['supervisor','admin'].includes(currentUsuario?.rol)) {
+    const pin = prompt('PIN de supervisor:');
+    if (pin === null) return;
+    if (pin !== SUPERVISOR_PIN) { alert('PIN incorrecto.'); return; }
+  }
+  const h = historial.find(x=>x.id===id);
+  if (!h) return;
+  h.locked = false;
+  if (h.dbId) {
+    await sb.from('cotizaciones').update({ locked: false, locked_at: null, locked_by: null }).eq('id', h.dbId);
+  }
+  renderHistorial();
+}
+
+function updateMonto(id, field, value) {
+  const h = historial.find(x=>x.id===id);
+  if (!h) return;
+  h[field] = value;
+  if (field === 'opcionComprada' && value !== '') {
+    const it = (h.itins||[])[parseInt(value)];
+    if (it) {
+      const airlines = new Set();
+      (it.parsed||[]).forEach(f => { if(f.aerolinea) airlines.add(f.aerolinea); });
+      (it.flightsIda||[]).concat(it.flightsRegreso||[]).forEach(f => { const al=it.airline||it.airlineManual||''; if(al) airlines.add(al); });
+      (it.segmentos||[]).forEach(seg => (seg.opciones||[]).forEach(op => { if(op.airline) airlines.add(op.airline); }));
+      if (it.idas && it.idas[0] && it.idas[0].airline) airlines.add(it.idas[0].airline);
+      h.aerolineasVendidas = [...airlines];
+    }
+  }
+  // Sync to Supabase after a short delay (debounce)
+  clearTimeout(h._montoTimer);
+  h._montoTimer = setTimeout(async () => {
+    if (h.dbId) {
+      await sb.from('cotizaciones').update({
+        monto:               h.monto ? parseFloat(h.monto) : null,
+        moneda:              h.montoCurrency || 'MXN',
+        opcion_comprada:     h.opcionComprada !== undefined ? parseInt(h.opcionComprada) : null,
+        aerolineas_vendidas: h.aerolineasVendidas || [],
+      }).eq('id', h.dbId);
+    }
+  }, 1500);
+  renderHistorial();
+}
+
+function eliminarHist(id, e) {
+  e.stopPropagation();
+  const h = historial.find(x=>x.id===id);
+  if (h && h.locked) {
+    alert('Esta cotización está bloqueada. Solo un supervisor puede desbloquearla.');
+    return;
+  }
+  if (!confirm('¿Eliminar esta cotización del historial?')) return;
+  historial = historial.filter(h=>h.id!==id);
+  lsSet('tpv_historial', historial);
+  updateHistBadge();
+  renderHistorial();
+}
+
+function reabrirCotizacion(id) {
+  const h = historial.find(x=>x.id===id);
+  if (!h) return;
+  if (h.locked) {
+    alert('Esta cotización está bloqueada. Solo un supervisor puede desbloquearla.');
+    return;
+  }
+  document.getElementById('cot-num').value = h.id;
+  // Set parent ID so next save creates a new version
+  const parentInput = document.getElementById('cot-parent-id');
+  if (parentInput) parentInput.value = getBaseId(h.id);
+  const now = new Date();
+  document.getElementById('cot-fecha').value = now.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+  document.getElementById('cot-cliente').value = h.cliente || '';
+  if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = h.notas || '';
+  if (h.empresaId) { const sel = document.getElementById('cot-empresa'); if(sel) sel.value = h.empresaId; }
+  if (h.agenteId)  { const sel = document.getElementById('cot-agente');  if(sel) sel.value = h.agenteId; }
+  itins = JSON.parse(JSON.stringify(h.itins || []));
+  renderItins();
+  checkItinLimit();
+  showPanel('cotizador', null);
+  document.querySelector('.main').scrollTop = 0;
+  // Show indicator that this is a revision
+  const msg = document.getElementById('save-msg');
+  if (msg) {
+    msg.style.display = 'block';
+    msg.innerHTML = `📝 Editando <strong>${h.id}</strong> — al guardar se creará una nueva versión`;
+  }
+}
+
+function regenPDF(id) {
+  const h = historial.find(x=>x.id===id);
+  if (!h) return;
+  // Temporarily swap state and generate PDF
+  const savedItins = itins;
+  const savedNum = document.getElementById('cot-num').value;
+  document.getElementById('cot-num').value = h.id;
+  document.getElementById('cot-cliente').value = h.cliente || '';
+  if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = h.notas || '';
+  itins = JSON.parse(JSON.stringify(h.itins || []));
+  downloadPDF();
+  // Restore
+  setTimeout(() => {
+    itins = savedItins;
+    document.getElementById('cot-num').value = savedNum;
+  }, 500);
+}
+
+// ── EXPORT / IMPORT CONFIG ────────────────────────────────────────
+function exportarConfig() {
+  const config = {
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    airports: ciudades,
+    logos,
+    agents: agentes,
+    clients: clientes,
+    cotNum,
+    // historial NOT exported intentionally (stays local per device)
+  };
+  const blob = new Blob([JSON.stringify(config, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'tpv_config_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importarConfig(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const config = JSON.parse(e.target.result);
+      if (config.airports) { ciudades = config.airports; lsSet('tpv_airports', ciudades); renderAirports(); }
+      if (config.logos)    { logos = config.logos;       lsSet('tpv_logos', logos);    renderLogos(); }
+      if (config.agents)   { agentes = config.agents;    lsSet('tpv_agents', agentes); renderAgentsSelect(); renderAgentsList(); }
+      if (config.clients)  { clientes = config.clients;  lsSet('tpv_clientes', clientes); renderClientes(); renderClientesSelect(); }
+      if (config.cotNum)   { cotNum = config.cotNum;     lsSet('tpv_cotnum', cotNum); }
+      alert('✓ Configuración importada correctamente');
+    } catch(err) { alert('Error al importar: ' + err.message); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ── AIRPORT AUTOCOMPLETE ─────────────────────────────────────────
+function apAutocomplete(inputId, dropId, onSelect) {
+  const input = document.getElementById(inputId);
+  const drop  = document.getElementById(dropId);
+  if (!input || !drop) return;
+
+  function renderOptions(q) {
+    const ql = q.toUpperCase();
+    const matches = Object.entries(ciudades)
+      .filter(([code, city]) => code.includes(ql) || city.toUpperCase().includes(ql))
+      .slice(0, 40);
+    if (!matches.length) { drop.classList.remove('open'); return; }
+    drop.innerHTML = matches.map(([code, city]) =>
+      `<div class="ap-option" onmousedown="selectAP('${inputId}','${dropId}','${code}','${city.replace(/'/g,"\'")}')">
+        <strong>${code}</strong> — ${city}
+      </div>`).join('');
+    drop.classList.add('open');
+  }
+
+  input.addEventListener('input', () => renderOptions(input.value));
+  input.addEventListener('focus', () => { if(input.value) renderOptions(input.value); });
+  input.addEventListener('blur',  () => setTimeout(() => drop.classList.remove('open'), 200));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Tab' || e.key === 'Escape') drop.classList.remove('open');
+    if (e.key === 'Enter') {
+      const first = drop.querySelector('.ap-option');
+      if (first) first.dispatchEvent(new MouseEvent('mousedown'));
+      e.preventDefault();
+    }
+  });
+}
+
+function selectAP(inputId, dropId, code, city) {
+  const input = document.getElementById(inputId);
+  const drop  = document.getElementById(dropId);
+  if (input) { input.value = code + ' — ' + city; input.dataset.code = code; }
+  if (drop) drop.classList.remove('open');
+  // Trigger the stored callback
+  const cb = window._apCallbacks && window._apCallbacks[inputId];
+  if (cb) cb(code);
+}
+
+function apField(id, placeholder, value, itinId, segId, fieldName, nextId, prevId) {
+  const cityName = value && ciudades[value] ? ciudades[value] : '';
+  const displayVal = value ? (cityName ? value + ' — ' + cityName : value) : '';
+  return `<div class="ap-autocomplete">
+    <input type="text" id="${id}" placeholder="${placeholder}" value="${displayVal}"
+      autocomplete="off"
+      data-itin="${itinId}" data-seg="${segId}" data-field="${fieldName}"
+      data-next="${nextId||''}" data-prev="${prevId||''}"
+      oninput="apInput(this)" onfocus="apInput(this)" onblur="apBlur('${id}-drop')"
+      onkeydown="apKeydown(event,'${id}-drop')" />
+    <div id="${id}-drop" class="ap-dropdown"></div>
+  </div>`;
+}
+
+function apInput(input) {
+  const q = input.value.toUpperCase();
+  const dropId = input.id + '-drop';
+  const drop = document.getElementById(dropId);
+  if (!drop) return;
+  if (!q) { drop.classList.remove('open'); return; }
+  // Position dropdown below input using fixed coords
+  const rect = input.getBoundingClientRect();
+  drop.style.top  = (rect.bottom + 2) + 'px';
+  drop.style.left = rect.left + 'px';
+  drop.style.width = Math.max(rect.width, 240) + 'px';
+  const normalize = s => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const nq = normalize(q);
+  const matches = Object.entries(ciudades)
+    .filter(([code, city]) => code.includes(nq) || normalize(city).includes(nq))
+    .sort((a,b) => {
+      const ac = a[0].startsWith(nq) ? 0 : normalize(a[1]).startsWith(nq) ? 1 : a[0].includes(nq) ? 2 : 3;
+      const bc = b[0].startsWith(nq) ? 0 : normalize(b[1]).startsWith(nq) ? 1 : b[0].includes(nq) ? 2 : 3;
+      return ac - bc || a[0].localeCompare(b[0]);
+    })
+    .slice(0, 50);
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop.innerHTML = matches.map(([code, city]) =>
+    `<div class="ap-option" onmousedown="apSelect(event,'${input.id}')">
+      <strong>${code}</strong> — ${city}
+    </div>`).join('');
+  drop.classList.add('open');
+}
+
+function apSelect(e, inputId) {
+  e.preventDefault();
+  const input = document.getElementById(inputId);
+  const drop  = document.getElementById(inputId + '-drop');
+  if (!input || !drop) return;
+  const code = e.currentTarget.querySelector('strong').textContent;
+  const city = ciudades[code] || '';
+  input.value = code + (city ? ' — ' + city : '');
+  drop.classList.remove('open');
+  // Update data model
+  const itinId = parseFloat(input.dataset.itin);
+  const segId  = parseFloat(input.dataset.seg);
+  const field  = input.dataset.field;
+  const nextId = input.dataset.next;
+  if (itinId && segId && field) updateSegmento(itinId, segId, field, code);
+  if (nextId) setTimeout(() => { const n = document.getElementById(nextId); if(n) n.focus(); }, 50);
+}
+
+function apBlur(dropId) {
+  setTimeout(() => { const d = document.getElementById(dropId); if(d) d.classList.remove('open'); }, 200);
+}
+
+function tabToNext(e, nextId) {
+  if (e.key === 'Tab') {
+    const next = document.getElementById(nextId);
+    if (next) { e.preventDefault(); next.focus(); next.select && next.select(); }
+  }
+}
+
+function apKeydown(e, dropId) {
+  const drop = document.getElementById(dropId);
+  if (!drop) return;
+  const options = [...drop.querySelectorAll('.ap-option')];
+  const current = drop.querySelector('.ap-option.active');
+  const idx = options.indexOf(current);
+
+  if (e.key === 'Escape') { drop.classList.remove('open'); return; }
+  if (e.key === 'Tab') {
+    drop.classList.remove('open');
+    const inp = drop.previousElementSibling;
+    if (inp && inp.dataset) {
+      const goId = e.shiftKey ? inp.dataset.prev : inp.dataset.next;
+      if (goId) { e.preventDefault(); setTimeout(() => { const n = document.getElementById(goId); if(n) n.focus(); }, 50); }
+    }
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const next = options[idx + 1] || options[0];
+    options.forEach(o => o.classList.remove('active'));
+    if (next) { next.classList.add('active'); next.scrollIntoView({block:'nearest'}); }
+    return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const prev = options[idx - 1] || options[options.length - 1];
+    options.forEach(o => o.classList.remove('active'));
+    if (prev) { prev.classList.add('active'); prev.scrollIntoView({block:'nearest'}); }
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const selected = current || options[0];
+    if (selected) selected.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+    return;
+  }
+}
+
+// ── REPORTES ─────────────────────────────────────────────────────
+function renderReportes() {
+  const filtAgente  = document.getElementById('rep-filter-agente')?.value || '';
+  const filtMes     = document.getElementById('rep-filter-mes')?.value || '';
+  const filtMoneda  = document.getElementById('rep-filter-moneda')?.value || '';
+
+  // Get latest version per base ID
+  const baseIds = [...new Set(historial.map(h => getBaseId(h.id)))];
+  let cots = baseIds.map(base => {
+    const vers = historial.filter(h => getBaseId(h.id) === base).sort((a,b) => b.fechaISO.localeCompare(a.fechaISO));
+    return vers[0];
+  });
+
+  // Apply filters
+  if (filtAgente) cots = cots.filter(h => h.agenteId == filtAgente);
+  if (filtMes)    cots = cots.filter(h => (h.fechaISO||'').slice(0,7) === filtMes);
+  if (filtMoneda) cots = cots.filter(h => (h.montoCurrency||'MXN') === filtMoneda);
+
+  const total     = cots.length;
+  const compradas = cots.filter(h => h.status === 'comprada');
+  const pendientes= cots.filter(h => h.status === 'pendiente').length;
+  const noCom     = cots.filter(h => h.status === 'no_comprada').length;
+  const cierre    = total > 0 ? Math.round((compradas.length/total)*100) : 0;
+
+  // Revenue
+  const montos = compradas.filter(h => h.monto && !isNaN(parseFloat(h.monto)));
+  const totalVenta = montos.reduce((s,h) => s + parseFloat(h.monto), 0);
+  const ticketProm = montos.length > 0 ? totalVenta / montos.length : 0;
+
+  // Tiempo promedio cotización → compra
+  const tiempos = compradas.filter(h => h.fechaISO && h.fechaCompraISO).map(h => {
+    const d = (new Date(h.fechaCompraISO) - new Date(h.fechaISO)) / (1000*60*60*24);
+    return d;
+  });
+  const tiempoProm = tiempos.length > 0 ? (tiempos.reduce((a,b)=>a+b,0)/tiempos.length).toFixed(1) : '—';
+
+  // Aerolíneas más vendidas — only from the specific opcion that was purchased
+  const alCount = {};
+  compradas.filter(h => h.aerolineasVendidas && h.aerolineasVendidas.length).forEach(h => {
+    h.aerolineasVendidas.forEach(al => { alCount[al] = (alCount[al]||0)+1; });
+  });
+  const alTop = Object.entries(alCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const alMax = alTop[0]?.[1]||1;
+
+  // Destinos más cotizados — use the FURTHEST destination per itinerary
+  // For GDS: last parsed flight destination
+  // For multi: last ida flight destination  
+  // For tramos: last segment destination
+  const destCount = {};
+  cots.forEach(h => {
+    (h.itins||[]).forEach(it => {
+      let finalDest = null;
+      if (it.parsed && it.parsed.length) {
+        // Take midpoint flight destination (outbound leg = first half)
+        const mid = Math.ceil(it.parsed.length / 2) - 1;
+        finalDest = it.parsed[mid]?.ruta?.split('›')[1]?.trim();
+      } else if (it.flightsIda && it.flightsIda.length) {
+        finalDest = it.flightsIda[it.flightsIda.length-1]?.ruta?.split('›')[1]?.trim();
+      } else if (it.segmentos && it.segmentos.length) {
+        const lastSeg = it.segmentos[it.segmentos.length-1];
+        finalDest = ciudades[lastSeg.destino]||lastSeg.destino;
+      } else if (it.idas && it.idas[0] && it.idas[0].destino) {
+        finalDest = ciudades[it.idas[0].destino]||it.idas[0].destino;
+      }
+      if (finalDest) destCount[finalDest] = (destCount[finalDest]||0)+1;
+    });
+  });
+  const destTop = Object.entries(destCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const destMax = destTop[0]?.[1]||1;
+
+  // Populate month filter
+  const meses = [...new Set(historial.map(h=>(h.fechaISO||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  const mesSelect = document.getElementById('rep-filter-mes');
+  if (mesSelect && mesSelect.options.length <= 1) {
+    meses.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; mesSelect.appendChild(o); });
+    if (filtMes) mesSelect.value = filtMes;
+  }
+
+  // Populate agente filter
+  const agSelect = document.getElementById('rep-filter-agente');
+  if (agSelect && agSelect.options.length <= 1) {
+    agentes.forEach(a => { const o=document.createElement('option'); o.value=a.id; o.textContent=a.name+' — '+a.company; agSelect.appendChild(o); });
+    if (filtAgente) agSelect.value = filtAgente;
+  }
+
+  const monedaLabel = filtMoneda || 'MXN';
+  const fmt = n => n.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  document.getElementById('reportes-content').innerHTML = `
+    <div class="rep-kpi-grid">
+      <div class="rep-kpi"><div class="rep-kpi-val">${total}</div><div class="rep-kpi-lbl">Cotizaciones totales</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-val" style="color:#155724;">${compradas.length}</div><div class="rep-kpi-lbl">Compradas</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-val" style="color:#856404;">${pendientes}</div><div class="rep-kpi-lbl">Pendientes</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-val" style="color:#721C24;">${noCom}</div><div class="rep-kpi-lbl">No compradas</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-val" style="color:var(--brand-blue);">${cierre}%</div><div class="rep-kpi-lbl">Tasa de cierre</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-val">${montos.length>0?monedaLabel+' '+fmt(totalVenta):'—'}</div><div class="rep-kpi-lbl">Venta total</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-val">${montos.length>0?monedaLabel+' '+fmt(ticketProm):'—'}</div><div class="rep-kpi-lbl">Ticket promedio</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-val">${tiempoProm}${tiempos.length>0?' días':''}</div><div class="rep-kpi-lbl">Tiempo prom. cierre</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="rep-section">
+        <div class="rep-section-title">✈ Aerolíneas más vendidas</div>
+        ${alTop.length ? alTop.map(([al,n]) => `
+          <div class="rep-row">
+            <div class="rep-label">${al}</div>
+            <div class="rep-bar-wrap"><div class="rep-bar green" style="width:${Math.round(n/alMax*100)}%"></div></div>
+            <div class="rep-count">${n}</div>
+          </div>`).join('') : '<div style="font-size:12px;color:var(--text3);">Sin datos aún</div>'}
+      </div>
+      <div class="rep-section">
+        <div class="rep-section-title">🌍 Destinos más cotizados</div>
+        ${destTop.length ? destTop.map(([dest,n]) => `
+          <div class="rep-row">
+            <div class="rep-label">${dest}</div>
+            <div class="rep-bar-wrap"><div class="rep-bar" style="width:${Math.round(n/destMax*100)}%"></div></div>
+            <div class="rep-count">${n}</div>
+          </div>`).join('') : '<div style="font-size:12px;color:var(--text3);">Sin datos aún</div>'}
+      </div>
+    </div>
+    ${compradas.length > 0 ? `
+    <div class="rep-section" style="margin-top:16px;">
+      <div class="rep-section-title">💰 Detalle de ventas</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:1px solid var(--border);">
+          <th style="text-align:left;padding:6px 8px;color:var(--text3);font-size:10.5px;">Cotización</th>
+          <th style="text-align:left;padding:6px 8px;color:var(--text3);font-size:10.5px;">Cliente</th>
+          <th style="text-align:left;padding:6px 8px;color:var(--text3);font-size:10.5px;">Fecha</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--text3);font-size:10.5px;">Monto</th>
+        </tr></thead>
+        <tbody>
+          ${compradas.map(h => `<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px 8px;font-weight:600;color:var(--brand-blue);">${h.id}</td>
+            <td style="padding:6px 8px;color:var(--text2);">${h.cliente||h.empresa||'—'}</td>
+            <td style="padding:6px 8px;color:var(--text3);">${h.fecha||''}</td>
+            <td style="padding:6px 8px;text-align:right;font-weight:600;">${h.monto?((h.montoCurrency||'MXN')+' '+fmt(parseFloat(h.monto))):'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : ''}`;
+}
+
+async function init() {
+  // Check authentication first
+  const authed = await checkAuth();
+  if (!authed) return;
+
+  document.getElementById('sidebar-logo').src = LOGO_B64;
+
+  // Load airports from Supabase (global + custom for this agency)
+  const { data: apGlobal } = await sb.from('aeropuertos_global').select('codigo,ciudad').eq('activo', true);
+  const { data: apCustom } = await sb.from('aeropuertos_custom').select('codigo,ciudad').eq('agencia_id', currentAgenciaId);
+  ciudades = {};
+  (apGlobal || []).forEach(a => { ciudades[a.codigo] = a.ciudad; });
+  (apCustom || []).forEach(a => { ciudades[a.codigo] = a.ciudad; });
+  // Also keep any cached local ones
+  const localAP = lsGet('tpv_airports_custom_' + currentAgenciaId, {});
+  Object.assign(ciudades, localAP);
+
+  // Load logos from Supabase
+  const { data: logosGlobal } = await sb.from('logos_global').select('codigo,url').eq('activo', true);
+  const { data: logosCustom } = await sb.from('logos_custom').select('codigo,url').eq('agencia_id', currentAgenciaId);
+  logos = {};
+  (logosGlobal || []).forEach(l => { logos[l.codigo] = l.url; });
+  (logosCustom || []).forEach(l => { logos[l.codigo] = l.url; });
+  // Merge with any locally uploaded logos (base64)
+  const localLogos = lsGet('tpv_logos_' + currentAgenciaId, {});
+  Object.assign(logos, localLogos);
+
+  // Load clientes from Supabase
+  const { data: clientesDB } = await sb.from('clientes').select('*').eq('agencia_id', currentAgenciaId).order('nombre');
+  clientes = (clientesDB || []).map(c => ({ id: c.id, name: c.nombre, contact: c.contacto, email: c.email, phone: c.telefono, rfc: c.rfc }));
+
+  // Load agentes from Supabase
+  const { data: agentesDB } = await sb.from('agentes').select('*').eq('agencia_id', currentAgenciaId);
+  agentes = (agentesDB || []).map(a => ({ id: a.id, name: a.nombre, company: a.empresa, phone: a.telefono, email: a.email }));
+
+  // Load historial from Supabase
+  let query = sb.from('cotizaciones').select('*').eq('agencia_id', currentAgenciaId).order('created_at', { ascending: false });
+  // Si es agente, solo sus cotizaciones
+  if (currentUsuario.rol === 'agente') {
+    query = query.eq('agente_id', currentUser.id);
+  }
+  const { data: histDB } = await query;
+  historial = (histDB || []).map(h => ({
+    id:              h.numero + (h.version > 1 ? '-v' + h.version : ''),
+    dbId:            h.id,
+    numero:          h.numero,
+    version:         h.version,
+    parentId:        h.parent_id,
+    fecha:           new Date(h.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' }),
+    fechaISO:        h.fecha_iso || h.created_at,
+    fechaCompraISO:  h.fecha_compra,
+    cliente:         h.cliente_nombre,
+    empresa:         h.empresa_nombre,
+    empresaId:       h.cliente_id,
+    notas:           h.notas,
+    agenteId:        h.agente_id,
+    itins:           h.itinerarios || [],
+    status:          h.status,
+    locked:          h.locked,
+    monto:           h.monto,
+    montoCurrency:   h.moneda,
+    opcionComprada:  h.opcion_comprada,
+    aerolineasVendidas: h.aerolineas_vendidas || [],
+  }));
+
+  // Get cotNum — max numero from DB
+  const { data: maxCot } = await sb.from('cotizaciones')
+    .select('numero').eq('agencia_id', currentAgenciaId)
+    .order('created_at', { ascending: false }).limit(1);
+  if (maxCot && maxCot.length > 0) {
+    const lastNum = parseInt(maxCot[0].numero.split('-')[2]) || 0;
+    cotNum = lastNum;
+  } else {
+    cotNum = lsGet('tpv_cotnum_' + currentAgenciaId, 0);
+  }
+
+  const now = new Date();
+  document.getElementById('cot-fecha').value = now.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+  cotNum++;
+  document.getElementById('cot-num').value = 'COT-' + now.getFullYear() + '-' + String(cotNum).padStart(3,'0');
+
+  renderAgentsSelect();
+  renderAgentsList();
+  renderAirports();
+  renderLogos();
+  renderClientesSelect();
+  renderClientes();
+  renderHistorial();
+  updateHistBadge();
+  addItin();
+}
+
+// ── PANELS ───────────────────────────────────────────────────────
+function showPanel(name, e) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  const btn = e ? e.currentTarget : document.querySelector(`.nav-btn[onclick*="'${name}'"]`);
+  if (btn) btn.classList.add('active');
+  if (name === 'reportes') renderReportes();
+}
+
+// ── AGENTS ───────────────────────────────────────────────────────
+function renderAgentsSelect() {
+  const sel = document.getElementById('cot-agente');
+  sel.innerHTML = '<option value="">-- Seleccionar --</option>' +
+    agentes.map(a => `<option value="${a.id}">${a.name} — ${a.company}</option>`).join('');
+}
+
+function renderAgentsList() {
+  document.getElementById('agents-list').innerHTML = agentes.map(a => `
+    <div class="agent-card">
+      <div class="agent-avatar">${a.name.charAt(0)}</div>
+      <div class="agent-info">
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-detail">${a.phone} · ${a.email}</div>
+        <div class="agent-company">${a.company}</div>
+      </div>
+      <button class="del-btn" onclick="delAgent(${a.id})">×</button>
+    </div>`).join('');
+}
+
+function addAgent() {
+  const name = document.getElementById('new-ag-name').value.trim();
+  const company = document.getElementById('new-ag-company').value.trim();
+  const phone = document.getElementById('new-ag-phone').value.trim();
+  const email = document.getElementById('new-ag-email').value.trim();
+  if (!name) return;
+  const id = Date.now();
+  agentes.push({ id, name, company, phone, email });
+  lsSet('tpv_agents', agentes);
+  renderAgentsSelect(); renderAgentsList();
+  ['new-ag-name','new-ag-company','new-ag-phone','new-ag-email'].forEach(id => document.getElementById(id).value = '');
+}
+
+function delAgent(id) {
+  agentes = agentes.filter(a => a.id !== id);
+  lsSet('tpv_agents', agentes);
+  renderAgentsSelect(); renderAgentsList();
+}
+
+function updateAgente() {}
+
+// ── AIRPORTS ─────────────────────────────────────────────────────
+function renderAirports() {
+  const q = (document.getElementById('ap-search').value || '').toUpperCase();
+  const entries = Object.entries(ciudades).filter(([c,v]) => !q || c.includes(q) || v.toUpperCase().includes(q)).sort((a,b)=>a[0].localeCompare(b[0]));
+  document.getElementById('ap-count').textContent = Object.keys(ciudades).length + ' aeropuertos';
+  document.getElementById('ap-tbody').innerHTML = entries.map(([code,city]) => `
+    <tr>
+      <td><input type="text" value="${code}" maxlength="3" style="width:60px;font-weight:600;text-transform:uppercase;" onchange="renameAP('${code}',this.value.toUpperCase(),null)"/></td>
+      <td><input type="text" value="${city}" onchange="renameAP('${code}',null,this.value)"/></td>
+      <td><button class="del-btn" onclick="delAP('${code}')">×</button></td>
+    </tr>`).join('');
+}
+
+function renameAP(old, newCode, newCity) {
+  if (newCode && newCode !== old) { ciudades[newCode] = ciudades[old]; delete ciudades[old]; }
+  else if (newCity) ciudades[old] = newCity;
+  lsSet('tpv_airports', ciudades);
+  showSaved('ap-saved');
+}
+
+function delAP(code) { delete ciudades[code]; lsSet('tpv_airports', ciudades); renderAirports(); showSaved('ap-saved'); }
+
+function addAirport() {
+  const code = document.getElementById('new-ap-code').value.toUpperCase().trim();
+  const city = document.getElementById('new-ap-city').value.trim();
+  if (!code || !city) return;
+  ciudades[code] = city;
+  document.getElementById('new-ap-code').value = '';
+  document.getElementById('new-ap-city').value = '';
+  lsSet('tpv_airports', ciudades);
+  renderAirports(); showSaved('ap-saved');
+}
+
+function showSaved(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.opacity = '1';
+  setTimeout(() => el.style.opacity = '0', 1600);
+}
+
+// ── LOGOS ────────────────────────────────────────────────────────
+function renderLogos() {
+  const grid = document.getElementById('logos-grid');
+  const entries = Object.entries(logos).sort((a,b)=>a[0].localeCompare(b[0]));
+  grid.innerHTML = entries.length ? entries.map(([code,src]) => `
+    <div class="logo-card">
+      <button class="del-btn" onclick="delLogo('${code}')">×</button>
+      <img src="${src}" alt="${code}" onerror="this.style.display='none'" />
+      <span class="lcode">${code}</span>
+    </div>`).join('') : '<span style="font-size:12px;color:var(--text3);">Sin logos cargados aún.</span>';
+}
+
+function delLogo(code) { delete logos[code]; lsSet('tpv_logos', logos); renderLogos(); refreshAllItins(); }
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+}
+
+function handleFiles(files) {
+  [...files].forEach(file => {
+    const code = file.name.replace(/\.[^.]+$/, '').toUpperCase().slice(0,2);
+    const reader = new FileReader();
+    reader.onload = e => { logos[code] = e.target.result; lsSet('tpv_logos', logos); renderLogos(); refreshAllItins(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function addLogoUrl() {
+  const code = document.getElementById('logo-code-url').value.toUpperCase().trim();
+  const url  = document.getElementById('logo-url').value.trim();
+  if (!code || !url) return;
+  logos[code] = url;
+  document.getElementById('logo-code-url').value = '';
+  document.getElementById('logo-url').value = '';
+  lsSet('tpv_logos', logos); renderLogos(); refreshAllItins();
+}
+
+// ── ITIN MANAGEMENT ──────────────────────────────────────────────
+function checkItinLimit() {
+  const over = itins.length >= 5;
+  ['btn-add-itin','btn-add-multi','btn-add-lc','btn-add-lct'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = over ? 'none' : '';
+  });
+  const lcBtn = document.getElementById('btn-add-lc');
+  if (lcBtn) lcBtn.style.display = over ? 'none' : '';
+}
+
+function addItin(type) {
+  if (itins.length >= 5) return;
+  const id = Date.now();
+  if (type === 'gds') {
+    itins.push({ id, type:'gds', title:'', rawText:'', parsed:[], condRows:[newCondRow()] });
+  } else if (type === 'multi') {
+    itins.push({ id, type:'multi', title:'', airline:'', rawIda:'', rawRegreso:'', flightsIda:[], flightsRegreso:[], notas:'', visado:false, condRows:[newCondRow()] });
+  } else if (type === 'lowcost') {
+    itins.push({ id, type:'lowcost', title:'', idas:[], regresos:[], notas:'', condRows:[newCondRow()] });
+  } else if (type === 'lc_tramos') {
+    itins.push({ id, type:'lc_tramos', title:'', segmentos:[], moneda:'MXN', notas:'', visado:false, condRows:[newCondRow()] });
+  }
+  renderItins();
+  checkItinLimit();
+  // Collapse all previous, expand only the new one
+  setTimeout(() => {
+    document.querySelectorAll('.itin-block').forEach(b => b.classList.add('collapsed'));
+    const last = document.querySelector('.itin-block:last-child');
+    if (last) last.classList.remove('collapsed');
+  }, 50);
+}
+
+function removeItin(id) {
+  itins = itins.filter(i => i.id !== id);
+  renderItins();
+  checkItinLimit();
+}
+
+function renderItins() {
+  // Save which blocks are collapsed BEFORE re-render
+  const collapsed = new Set();
+  document.querySelectorAll('.itin-block.collapsed').forEach(b => {
+    const id = b.id.replace('itin-','');
+    collapsed.add(id);
+  });
+  document.getElementById('itins-container').innerHTML = itins.map((it, idx) => {
+    if (it.type === 'multi')    return buildMultiHTML(it, idx);
+    if (it.type === 'lowcost')  return buildLowcostHTML(it, idx);
+    if (it.type === 'lc_tramos') return buildLCTramosHTML(it, idx);
+    return buildItinHTML(it, idx);
+  }).join('');
+  // Restore collapse state AFTER re-render
+  collapsed.forEach(id => {
+    const b = document.getElementById('itin-' + id);
+    if (b) b.classList.add('collapsed');
+  });
+}
+
+function refreshAllItins() { renderItins(); }
+
+// ── TYPE A: GDS ───────────────────────────────────────────────────
+function buildItinHTML(it, idx) {
+  const flightsHTML = it.parsed.length
+    ? it.parsed.map(f => `
+      <tr>
+        <td class="fl-logo">${getLogoHTML(f.aerolinea)}</td>
+        <td class="fl-fecha">${f.fecha}</td>
+        <td class="fl-ruta">${f.ruta}</td>
+        <td class="fl-sale">Sale ${f.salida}</td>
+        <td class="fl-llega">Llega ${f.llegadaStr}</td>
+      </tr>`).join('')
+    : '<div class="empty-flights">Pega el itinerario arriba y presiona Formatear</div>';
+
+  return `
+  <div class="itin-block" id="itin-${it.id}">
+    ${itinHeader(it, idx, 'GDS')}
+    <div class="itin-body">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Texto del itinerario (GDS)</label>
+        <textarea rows="4" style="font-family:monospace;font-size:12px;" placeholder=" 1 . LH  499 K  10MAY MEXFRA HS1  1950  #1450  O           SU/MO 1   "
+          onchange="updateItinField(${it.id},'rawText',this.value)">${it.rawText}</textarea>
+        <div class="btn-row" style="margin-top:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="parseItin(${it.id})">Formatear ↗</button>
+        </div>
+      </div>
+      <div class="flights-out">
+        <div class="flights-title">Vuelos</div>
+        <div class="flight-list"><table>${flightsHTML}</table></div>
+      </div>
+      ${notasField(it)}
+      ${condRowsSection(it)}
+    </div>
+  </div>`;
+}
+
+// ── TYPE B: MULTIPLE FLIGHTS ─────────────────────────────────────
+function buildMultiHTML(it, idx) {
+  const alCode = it.airline || it.airlineManual || '';
+  const renderFlightGroup = (flights, label) => flights.length
+    ? flights.map((f,i) => `
+      <tr style="border-left:3px solid ${label==='Ida'?'var(--brand-blue)':'var(--brand-red)'};">
+        <td class="fl-logo">${getLogoHTML(alCode)}</td>
+        <td class="fl-fecha" style="color:${label==='Ida'?'var(--brand-blue)':'var(--brand-red)'};width:60px;">${label} ${String(i+1).padStart(2,'0')}</td>
+        <td class="fl-fecha">${f.fecha}</td>
+        <td class="fl-ruta">${f.ruta}</td>
+        <td class="fl-sale">Sale ${f.salida}</td>
+        <td class="fl-llega">Llega ${f.llegadaStr}</td>
+      </tr>`).join('')
+    : ``;
+
+  const airlineCodes = ['AM','CM','UA','IB','LH','TK','AF','AV','KL','AA','DL','LA','UX','AC','BA','VB','Y4','FR','U2'];
+  const airlineNames = {AM:'Aeromexico',CM:'Copa',UA:'United',IB:'Iberia',LH:'Lufthansa',TK:'Turkish',AF:'Air France',AV:'Avianca',KL:'KLM',AA:'American',DL:'Delta',LA:'LATAM',UX:'Air Europa',AC:'Air Canada',BA:'British Airways',VB:'VivaAerobus',Y4:'Volaris',FR:'Ryanair',U2:'EasyJet'};
+
+  return `
+  <div class="itin-block" id="itin-${it.id}">
+    ${itinHeader(it, idx, 'Múltiples vuelos')}
+    <div class="itin-body">
+      <div class="form-row cols-2" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label>Aerolínea</label>
+          <select onchange="updateItinField(${it.id},'airline',this.value);renderItins();">
+            <option value="">-- Seleccionar --</option>
+            ${airlineCodes.map(c => `<option value="${c}" ${it.airline===c?'selected':''}>${c} — ${airlineNames[c]||c}</option>`).join('')}
+            <option value="OTRA">Otra</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Código manual (si no está en lista)</label>
+          <input type="text" maxlength="2" style="text-transform:uppercase;" value="${it.airlineManual||''}" placeholder="XX" onchange="updateItinField(${it.id},'airlineManual',this.value)" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;">
+        <div class="form-group">
+          <label>Opciones de Ida (una por línea)</label>
+          <textarea rows="6" style="font-family:monospace;font-size:11.5px;" placeholder=" 1 . AM  500 Y  20APR MEXCUN HS1  0615   0945  O"
+            id="ta-${it.id}-ida">${it.rawIda||''}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Opciones de Regreso (una por línea)</label>
+          <textarea rows="6" style="font-family:monospace;font-size:11.5px;" placeholder=" 1 . AM  501 Y  22APR CUNMEX HS1  1030   1215  O"
+            id="ta-${it.id}-regreso">${it.rawRegreso||''}</textarea>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-bottom:12px;" onclick="parseMultiAmbos(${it.id})">Formatear Ida y Regreso ↗</button>
+      ${it.flightsIda.length || it.flightsRegreso.length ? `
+      <div class="flights-out">
+        <div class="flights-title" style="color:var(--brand-blue);">Ida</div>
+        <div class="flight-list" style="margin-bottom:12px;"><table>${renderFlightGroup(it.flightsIda,'Ida')}</table></div>
+        ${it.flightsRegreso.length ? `<div class="flights-title" style="color:var(--brand-red);">Regreso</div>
+        <div class="flight-list"><table>${renderFlightGroup(it.flightsRegreso,'Regreso')}</table></div>` : ''}
+      </div>` : ''}
+      ${notasField(it)}
+      ${condRowsSection(it)}
+    </div>
+  </div>`;
+}
+
+// ── TYPE C: LOW COST ──────────────────────────────────────────────
+const LC_AIRLINES = [
+  {code:'VB', name:'VivaAerobus'},
+  {code:'Y4', name:'Volaris'},
+  {code:'FR', name:'Ryanair'},
+  {code:'U2', name:'EasyJet'},
+];
+const LC_LOWCOST_CODES = ['VB','Y4','FR','U2'];
+
+function isLowCostAirline(code) { return LC_LOWCOST_CODES.includes(code); }
+
+function getLCLogoHTML(code, size=44) {
+  if (logos[code]) return `<img src="${logos[code]}" alt="${code}" style="max-width:${size}px;max-height:${Math.round(size*0.55)}px;object-fit:contain;" />`;
+  return `<div style="background:var(--brand-blue);color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:2px 5px;">${code}</div>`;
+}
+
+// ── DATA MODELS ───────────────────────────────────────────────────
+// Tramo = segment (MEX→MAD) with N opciones (flight options)
+// Opcion = one specific flight within a tramo
+function newSegmento() {
+  return { id: Date.now()+Math.random(), origen:'', destino:'', visible:true, opciones:[] };
+}
+
+function newOpcion(origen='', destino='') {
+  return { id: Date.now()+Math.random(), airline:'VB', fecha:'', origen, destino, sale:'', llega:'',
+           precioTotal:'', tarifaZero:'', tarifaBasica:'', tarifaPlus:'' };
+}
+
+// ── BUILD LC TRAMOS HTML ──────────────────────────────────────────
+function buildLCTramosHTML(it, idx) {
+  const allAL = [...LC_AIRLINES,
+    {code:'AM',name:'Aeromexico'},{code:'CM',name:'Copa'},{code:'UA',name:'United'},
+    {code:'IB',name:'Iberia'},{code:'LH',name:'Lufthansa'},{code:'TK',name:'Turkish'},
+    {code:'AF',name:'Air France'},{code:'KL',name:'KLM'},{code:'AA',name:'American'},
+    {code:'DL',name:'Delta'},{code:'LA',name:'LATAM'},{code:'BA',name:'British Airways'},
+    {code:'AV',name:'Avianca'},{code:'AC',name:'Air Canada'},
+  ];
+  const apCodes = Object.keys(ciudades).sort();
+  const segs = it.segmentos || [];
+
+  const segHTML = segs.map((seg, si) => {
+    const segLabel = seg.origen && seg.destino
+      ? `${ciudades[seg.origen]||seg.origen} › ${ciudades[seg.destino]||seg.destino}`
+      : `Tramo ${si+1}`;
+
+    const opcionesHTML = (seg.opciones||[]).map((op, oi) => {
+      const isLC = isLowCostAirline(op.airline);
+      const precios = isLC ? `
+        <div class="cond-group" style="min-width:80px;">
+          <label style="color:#856404;">Zero / Sin equipaje</label>
+          <input type="text" placeholder="999" value="${op.tarifaZero}" onchange="updateOpcion(${it.id},${seg.id},${op.id},'tarifaZero',this.value)" />
+        </div>
+        <div class="cond-group" style="min-width:98px;">
+          <label style="color:#0C5460;">c/ Equipaje de mano</label>
+          <input type="text" placeholder="1299" value="${op.tarifaBasica}" onchange="updateOpcion(${it.id},${seg.id},${op.id},'tarifaBasica',this.value)" />
+        </div>
+        <div class="cond-group" style="min-width:98px;">
+          <label style="color:#155724;">c/ Maleta documentada</label>
+          <input type="text" placeholder="1699" value="${op.tarifaPlus}" onchange="updateOpcion(${it.id},${seg.id},${op.id},'tarifaPlus',this.value)" />
+        </div>` : `
+        <div class="cond-group" style="min-width:110px;">
+          <label>Precio total</label>
+          <input type="text" placeholder="0.00" value="${op.precioTotal}" onchange="updateOpcion(${it.id},${seg.id},${op.id},'precioTotal',this.value)" />
+        </div>`;
+
+      // Preview line
+      const prevPrecios = isLC
+        ? [op.tarifaZero?`<span style="background:#FEF3CD;color:#856404;border-radius:3px;padding:1px 5px;font-size:10.5px;">Zero: ${it.moneda} ${op.tarifaZero}</span>`:'',
+           op.tarifaBasica?`<span style="background:#D1ECF1;color:#0C5460;border-radius:3px;padding:1px 5px;font-size:10.5px;">Básica: ${it.moneda} ${op.tarifaBasica}</span>`:'',
+           op.tarifaPlus?`<span style="background:#D4EDDA;color:#155724;border-radius:3px;padding:1px 5px;font-size:10.5px;">Plus: ${it.moneda} ${op.tarifaPlus}</span>`:''].filter(Boolean).join(' ')
+        : op.precioTotal ? `<span style="font-weight:600;color:var(--brand-dark);">${it.moneda} ${op.precioTotal}</span>` : '';
+
+      return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 12px;margin-bottom:6px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="cond-group" style="min-width:110px;">
+            <label>Aerolínea</label>
+            <select onchange="updateOpcion(${it.id},${seg.id},${op.id},'airline',this.value);renderItins();">
+              ${allAL.map(a=>`<option value="${a.code}" ${op.airline===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="cond-group" style="min-width:76px;">
+            <label>Fecha</label>
+            <input type="text" id="op-fecha-${op.id}" placeholder="12MAY" value="${op.fecha}" style="text-transform:uppercase;"
+              onchange="updateOpcion(${it.id},${seg.id},${op.id},'fecha',this.value)"
+              onkeydown="tabToNext(event,'op-sale-${op.id}')" />
+          </div>
+          <div class="cond-group" style="min-width:72px;">
+            <label>Sale</label>
+            <input type="text" id="op-sale-${op.id}" placeholder="0910" value="${op.sale}" maxlength="4"
+              onchange="updateOpcion(${it.id},${seg.id},${op.id},'sale',this.value)"
+              onkeydown="tabToNext(event,'op-llega-${op.id}')" />
+          </div>
+          <div class="cond-group" style="min-width:72px;">
+            <label>Llega</label>
+            <input type="text" id="op-llega-${op.id}" placeholder="1110" value="${op.llega}" maxlength="4"
+              onchange="updateOpcion(${it.id},${seg.id},${op.id},'llega',this.value)" />
+          </div>
+          ${precios}
+          <button class="del-btn" style="margin-bottom:4px;" onclick="removeOpcion(${it.id},${seg.id},${op.id})">×</button>
+        </div>
+        <div style="margin-top:5px;display:flex;align-items:center;gap:8px;padding:4px 6px;background:var(--surface2);border-radius:4px;font-size:11.5px;flex-wrap:wrap;">
+          ${getLCLogoHTML(op.airline,36)}
+          <span style="font-weight:600;color:var(--brand-dark);">${op.fecha||''}</span>
+          <span style="color:var(--text2);">${op.origen&&op.destino?`${ciudades[op.origen]||op.origen} › ${ciudades[op.destino]||op.destino}`:segLabel}</span>
+          ${op.sale?`<span style="color:var(--text3);">Sale <strong>${op.sale}</strong></span>`:''}
+          ${op.llega?`<span style="color:var(--text3);">– Llega <strong>${op.llega}</strong></span>`:''}
+          ${prevPrecios}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div style="border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <!-- Segment header -->
+      <div style="background:linear-gradient(135deg,var(--brand-dark),var(--brand-mid));padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#fff;font-size:12px;font-weight:600;flex:1;">
+          <input type="checkbox" ${seg.visible?'checked':''} onchange="updateSegmento(${it.id},${seg.id},'visible',this.checked)"
+            style="width:15px;height:15px;cursor:pointer;" />
+          ${['1er','2do','3er','4to','5to','6to'][si]||si+1+'°'} Tramo — <span style="font-weight:400;opacity:0.8;">${segLabel}</span>
+          ${!seg.visible?'<span style="font-size:10px;background:rgba(255,255,255,0.15);border-radius:4px;padding:1px 7px;margin-left:4px;">Oculto en PDF</span>':''}
+        </label>
+        <button class="del-btn" style="color:rgba(255,255,255,0.5);" onclick="removeSegmento(${it.id},${seg.id})">×</button>
+      </div>
+      <!-- Segment origen/destino -->
+      <div style="background:var(--surface2);padding:10px 14px;display:flex;gap:10px;align-items:flex-end;border-bottom:1px solid var(--border);">
+        <div class="cond-group" style="min-width:160px;">
+          <label>Origen del tramo</label>
+          ${apField('ap-seg-orig-'+seg.id, 'Ej: MEX', seg.origen, it.id, seg.id, 'origen', 'ap-seg-dest-'+seg.id, null)}
+        </div>
+        <div style="font-size:16px;color:var(--text3);margin-bottom:6px;">›</div>
+        <div class="cond-group" style="min-width:160px;">
+          <label>Destino del tramo</label>
+          ${apField('ap-seg-dest-'+seg.id, 'Ej: MAD', seg.destino, it.id, seg.id, 'destino', 'moneda-seg-'+seg.id, 'ap-seg-orig-'+seg.id)}
+        </div>
+        <div class="cond-group" style="min-width:80px;">
+          <label>Moneda</label>
+          <select id="moneda-seg-${seg.id}" onchange="updateItinField(${it.id},'moneda',this.value);"
+            onkeydown="if(event.key==='Tab'){ const f=document.getElementById('op-fecha-'+(${JSON.stringify(seg.opciones||[])}[0]||{}).id); if(f){event.preventDefault();f.focus();} }">
+            <option value="MXN" ${it.moneda==='MXN'?'selected':''}>MXN</option>
+            <option value="USD" ${it.moneda==='USD'?'selected':''}>USD</option>
+            <option value="EUR" ${it.moneda==='EUR'?'selected':''}>EUR</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-bottom:1px;" onclick="addOpcion(${it.id},${seg.id})">+ Opción de vuelo</button>
+      </div>
+      <!-- Options -->
+      <div style="padding:10px 14px;">
+        ${opcionesHTML || '<div class="empty-flights">Agrega opciones de vuelo para este tramo</div>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="itin-block" id="itin-${it.id}">
+    ${itinHeader(it, idx, 'Cotización por Tramos')}
+    <div class="itin-body">
+      ${segHTML || '<div class="empty-flights" style="margin-bottom:12px;">Agrega un tramo para comenzar</div>'}
+      <button class="btn btn-ghost btn-sm" onclick="addSegmento(${it.id})">+ Agregar tramo</button>
+      <div style="margin-top:14px;background:#EBF4FF;border:1px solid #C0D6F0;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--brand-blue);">
+        ✦ Para obtener el precio total del itinerario, suma el costo del vuelo que elijas en cada tramo.
+      </div>
+      ${notasField(it)}
+    </div>
+  </div>`;
+}
+
+// ── CRUD SEGMENTOS / OPCIONES ─────────────────────────────────────
+function addSegmento(itinId) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  if (!it.segmentos) it.segmentos = [];
+  // Validate last segment has at least one valid opcion
+  if (it.segmentos.length > 0) {
+    const lastSeg = it.segmentos[it.segmentos.length - 1];
+    if (!lastSeg.origen || !lastSeg.destino) {
+      alert('El tramo anterior no tiene origen y destino definidos.');
+      return;
+    }
+    if (!lastSeg.opciones || lastSeg.opciones.length === 0) {
+      alert('El tramo anterior debe tener al menos una opción de vuelo.');
+      return;
+    }
+    const lastOp = lastSeg.opciones[lastSeg.opciones.length - 1];
+    if (!validateOpcion(lastOp)) {
+      alert('Completa los campos de fecha, hora de salida y llegada del último vuelo antes de agregar un nuevo tramo.');
+      return;
+    }
+  }
+  it.segmentos.push(newSegmento());
+  renderItins();
+  const block = document.getElementById('itin-' + itinId);
+  if (block) block.classList.remove('collapsed');
+  autoguardar();
+}
+
+function removeSegmento(itinId, segId) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  it.segmentos = (it.segmentos||[]).filter(s => s.id !== segId);
+  renderItins();
+  const block = document.getElementById('itin-' + itinId);
+  if (block) block.classList.remove('collapsed');
+}
+
+function updateSegmento(itinId, segId, field, value) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const seg = (it.segmentos||[]).find(s => s.id === segId);
+  if (!seg) return;
+  seg[field] = value;
+  if (['origen','destino'].includes(field)) renderItins();
+}
+
+function validateOpcion(op) {
+  return op.fecha && op.sale && op.llega;
+}
+
+function highlightInvalid(op) {
+  ['fecha','sale','llega'].forEach(field => {
+    const el = document.querySelector(`input[onchange*="${op.id}"][onchange*="'${field}'"]`);
+    if (el) el.style.borderColor = op[field] ? '' : 'var(--brand-red)';
+  });
+}
+
+function addOpcion(itinId, segId) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const seg = (it.segmentos||[]).find(s => s.id === segId);
+  if (!seg) return;
+  if (!seg.opciones) seg.opciones = [];
+  // Validate last opcion before allowing new one
+  if (seg.opciones.length > 0) {
+    const last = seg.opciones[seg.opciones.length - 1];
+    if (!validateOpcion(last)) {
+      highlightInvalid(last);
+      return;
+    }
+  }
+  // Validate segment has origen and destino
+  if (!seg.origen || !seg.destino) {
+    alert('Define primero el origen y destino del tramo.');
+    return;
+  }
+  seg.opciones.push(newOpcion(seg.origen, seg.destino));
+  seg.opciones.sort((a,b) => sortKey(a.fecha,a.sale).localeCompare(sortKey(b.fecha,b.sale)));
+  renderItins();
+  const block = document.getElementById('itin-' + itinId);
+  if (block) block.classList.remove('collapsed');
+  autoguardar();
+}
+
+function removeOpcion(itinId, segId, opId) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const seg = (it.segmentos||[]).find(s => s.id === segId);
+  if (!seg) return;
+  seg.opciones = (seg.opciones||[]).filter(o => o.id !== opId);
+  renderItins();
+  const block = document.getElementById('itin-' + itinId);
+  if (block) block.classList.remove('collapsed');
+}
+
+function updateOpcion(itinId, segId, opId, field, value) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const seg = (it.segmentos||[]).find(s => s.id === segId);
+  if (!seg) return;
+  const op = (seg.opciones||[]).find(o => o.id === opId);
+  if (!op) return;
+  op[field] = value;
+  if (['airline'].includes(field)) renderItins();
+  autoguardar();
+  // Sort by departure time when sale is updated
+  if (['sale','fecha'].includes(field)) seg.opciones.sort((a,b) => sortKey(a.fecha,a.sale).localeCompare(sortKey(b.fecha,b.sale)));
+}
+
+// Keep legacy functions for backward compat
+function newTramo() { return newSegmento(); }
+function updateTramo(itinId, tramoId, field, value) { updateSegmento(itinId, tramoId, field, value); }
+function addTramo(itinId) { addSegmento(itinId); }
+function removeTramo(itinId, tramoId) { removeSegmento(itinId, tramoId); }
+
+function newLCFlight() {
+  return { id: Date.now()+Math.random(), airline:'VB', fecha:'', origen:'', destino:'', sale:'', llega:'' };
+}
+
+function buildLowcostHTML(it, idx) {
+  const allAL = [...LC_AIRLINES,
+    {code:'AM',name:'Aeromexico'},{code:'CM',name:'Copa'},{code:'UA',name:'United'},
+    {code:'IB',name:'Iberia'},{code:'LH',name:'Lufthansa'},{code:'TK',name:'Turkish'},
+    {code:'AF',name:'Air France'},{code:'KL',name:'KLM'},{code:'AA',name:'American'},
+    {code:'DL',name:'Delta'},{code:'LA',name:'LATAM'},{code:'BA',name:'British Airways'},
+    {code:'AV',name:'Avianca'},{code:'AC',name:'Air Canada'},{code:'UX',name:'Air Europa'},
+  ];
+
+  const buildManualFlight = (f, dir) => {
+    const isIda = dir === 'ida';
+    const color = isIda ? 'var(--brand-blue)' : 'var(--brand-red)';
+    const label = isIda ? 'Vuelo de Ida' : 'Vuelo de Regreso';
+    const fidFecha = `lc-${dir}-fecha-${it.id}`;
+    const fidSale  = `lc-${dir}-sale-${it.id}`;
+    const fidLlega = `lc-${dir}-llega-${it.id}`;
+    const fidOrig  = `lc-${dir}-orig-${it.id}`;
+    const fidDest  = `lc-${dir}-dest-${it.id}`;
+    return `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${color};border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:${color};letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">${label}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="cond-group" style="min-width:110px;">
+          <label>Aerolínea</label>
+          <select onchange="updateLCSimple(${it.id},'${dir}','airline',this.value)">
+            ${allAL.map(a=>`<option value="${a.code}" ${(f&&f.airline)===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="cond-group" style="min-width:80px;">
+          <label>Fecha</label>
+          <input type="text" id="${fidFecha}" placeholder="12MAY" value="${f&&f.fecha||''}"
+            style="text-transform:uppercase;"
+            onchange="updateLCSimple(${it.id},'${dir}','fecha',this.value)"
+            onkeydown="tabToNext(event,'${fidOrig}')" />
+        </div>
+        <div class="cond-group" style="min-width:160px;">
+          <label>Origen</label>
+          ${apField(fidOrig, 'Ej: MEX', f&&f.origen||'', null, null, null, fidDest, fidFecha)}
+        </div>
+        <div style="font-size:16px;color:var(--text3);margin-bottom:6px;">›</div>
+        <div class="cond-group" style="min-width:160px;">
+          <label>Destino</label>
+          ${apField(fidDest, 'Ej: MAD', f&&f.destino||'', null, null, null, fidSale, fidOrig)}
+        </div>
+        <div class="cond-group" style="min-width:72px;">
+          <label>Sale</label>
+          <input type="text" id="${fidSale}" placeholder="0910" value="${f&&f.sale||''}" maxlength="4"
+            onchange="updateLCSimple(${it.id},'${dir}','sale',this.value)"
+            onkeydown="tabToNext(event,'${fidLlega}')" />
+        </div>
+        <div class="cond-group" style="min-width:72px;">
+          <label>Llega</label>
+          <input type="text" id="${fidLlega}" placeholder="1110" value="${f&&f.llega||''}" maxlength="4"
+            onchange="updateLCSimple(${it.id},'${dir}','llega',this.value)" />
+        </div>
+      </div>
+      ${f&&f.fecha&&f.origen&&f.destino ? `
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface);border-radius:5px;font-size:12px;">
+        ${getLCLogoHTML(f.airline,40)}
+        <span style="font-weight:600;color:var(--brand-dark);">${f.fecha}</span>
+        <span style="color:var(--text2);">${ciudades[f.origen]||f.origen} › ${ciudades[f.destino]||f.destino}</span>
+        ${f.sale?`<span style="color:var(--text3);">Sale <strong>${f.sale}</strong></span>`:''}
+        ${f.llega?`<span style="color:var(--text3);">– Llega <strong>${f.llega}</strong></span>`:''}
+      </div>` : ''}
+    </div>`;
+  };
+
+  // Ensure idas/regresos have exactly 1 entry
+  if (!it.idas || !it.idas.length) it.idas = [newLCFlight()];
+  if (!it.regresos || !it.regresos.length) it.regresos = [newLCFlight()];
+
+  return `
+  <div class="itin-block" id="itin-${it.id}">
+    ${itinHeader(it, idx, 'Manual')}
+    <div class="itin-body">
+      ${buildManualFlight(it.idas[0], 'ida')}
+      ${buildManualFlight(it.regresos[0], 'regreso')}
+      ${notasField(it)}
+      ${condRowsSection(it)}
+    </div>
+  </div>`;
+}
+
+// Simple update for the manual (single) lowcost flight
+function updateLCSimple(itinId, dir, field, value) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const key = dir === 'ida' ? 'idas' : 'regresos';
+  if (!it[key] || !it[key].length) it[key] = [newLCFlight()];
+  it[key][0][field] = value;
+  if (['airline','origen','destino'].includes(field)) renderItins();
+  autoguardar();
+}
+
+function buildLCFlightRow(itinId, f, fi, dir) {
+  const allAirlines = [
+    ...LC_AIRLINES,
+    {code:'AM',name:'Aeromexico'},{code:'CM',name:'Copa'},{code:'UA',name:'United'},
+    {code:'IB',name:'Iberia'},{code:'LH',name:'Lufthansa'},{code:'AA',name:'American'},
+    {code:'DL',name:'Delta'},{code:'LA',name:'LATAM'},{code:'KL',name:'KLM'},
+  ];
+  const apCodes = Object.keys(ciudades).sort();
+  return `
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="cond-group" style="min-width:110px;">
+        <label>Aerolínea</label>
+        <select onchange="updateLCFlight(${itinId},'${dir}',${f.id},'airline',this.value)">
+          ${allAirlines.map(a => `<option value="${a.code}" ${f.airline===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cond-group" style="min-width:90px;">
+        <label>Fecha</label>
+        <input type="text" placeholder="12MAY" value="${f.fecha}" style="text-transform:uppercase;" onchange="updateLCFlight(${itinId},'${dir}',${f.id},'fecha',this.value)" />
+      </div>
+      <div class="cond-group" style="min-width:110px;">
+        <label>Origen</label>
+        <select onchange="updateLCFlight(${itinId},'${dir}',${f.id},'origen',this.value)">
+          <option value="">-- --</option>
+          ${apCodes.map(c => `<option value="${c}" ${f.origen===c?'selected':''}>${c} — ${ciudades[c]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cond-group" style="min-width:110px;">
+        <label>Destino</label>
+        <select onchange="updateLCFlight(${itinId},'${dir}',${f.id},'destino',this.value)">
+          <option value="">-- --</option>
+          ${apCodes.map(c => `<option value="${c}" ${f.destino===c?'selected':''}>${c} — ${ciudades[c]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cond-group" style="min-width:80px;">
+        <label>Sale</label>
+        <input type="text" placeholder="0910" value="${f.sale}" onchange="updateLCFlight(${itinId},'${dir}',${f.id},'sale',this.value)" />
+      </div>
+      <div class="cond-group" style="min-width:80px;">
+        <label>Llega</label>
+        <input type="text" placeholder="1110" value="${f.llega}" onchange="updateLCFlight(${itinId},'${dir}',${f.id},'llega',this.value)" />
+      </div>
+
+      <button class="del-btn" style="margin-bottom:4px;" onclick="removeLCFlight(${itinId},'${dir}',${f.id})">×</button>
+    </div>
+    <div style="margin-top:6px;font-size:12px;color:var(--text2);font-style:italic;padding:6px 8px;background:var(--surface);border-radius:5px;">
+      ${f.airline?`<strong>${f.airline}</strong> `:''} ${f.fecha} ${f.origen&&f.destino?`${ciudades[f.origen]||f.origen} › ${ciudades[f.destino]||f.destino}`:''}${f.sale?` · Sale ${f.sale}`:''} ${f.llega?` – Llega ${f.llega}`:''}
+    </div>
+  </div>`;
+}
+
+function addLCFlight(itinId, dir) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const key = dir === 'ida' ? 'idas' : 'regresos';
+  if (!it[key]) it[key] = [];
+  it[key].push(newLCFlight());
+  sortLCFlights(it, key);
+  renderItins();
+}
+
+function sortLCFlights(it, key) {
+  if (it[key]) it[key].sort((a,b) => (a.sale||'').localeCompare(b.sale||''));
+}
+
+function removeLCFlight(itinId, dir, flightId) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const key = dir === 'ida' ? 'idas' : 'regresos';
+  it[key] = it[key].filter(f => f.id !== flightId);
+  renderItins();
+}
+
+function updateLCFlight(itinId, dir, flightId, field, value) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const key = dir === 'ida' ? 'idas' : 'regresos';
+  const f = it[key].find(f => f.id === flightId);
+  if (!f) return;
+  f[field] = value;
+  if (['airline','origen','destino'].includes(field)) renderItins();
+  if (field === 'sale') sortLCFlights(it, key);
+}
+
+// ── MULTI PARSER ──────────────────────────────────────────────────
+function parseMultiDir(it, dir) {
+  const rawKey = dir === 'ida' ? 'rawIda' : 'rawRegreso';
+  const resKey = dir === 'ida' ? 'flightsIda' : 'flightsRegreso';
+  const ta = document.getElementById(`ta-${it.id}-${dir}`);
+  if (ta) it[rawKey] = ta.value;
+  let flights = (it[rawKey]||'').split('\n').map(parseMultiLine).filter(Boolean);
+  flights.sort((a,b) => sortKey(a.fecha,a.salida).localeCompare(sortKey(b.fecha,b.salida)));
+  it[resKey] = flights;
+}
+
+function parseMulti(id, dir) {
+  const it = itins.find(i => i.id === id);
+  if (!it) return;
+  parseMultiDir(it, dir);
+  renderItins();
+  const block = document.getElementById('itin-' + id);
+  if (block) block.classList.remove('collapsed');
+}
+
+function parseMultiAmbos(id) {
+  const it = itins.find(i => i.id === id);
+  if (!it) return;
+  // Parse BOTH directions before re-rendering — fixes the overwrite bug
+  parseMultiDir(it, 'ida');
+  parseMultiDir(it, 'regreso');
+  renderItins();
+  const block = document.getElementById('itin-' + id);
+  if (block) block.classList.remove('collapsed');
+  autoguardar();
+}
+
+function parseMultiLine(line) {
+  // Reuse the same GDS parser — same format
+  return parseLine(line);
+}
+
+// ── SHARED HELPERS ────────────────────────────────────────────────
+function itinHeader(it, idx, typeLabel) {
+  const summary = it.parsed&&it.parsed.length ? it.parsed[0].ruta :
+                  it.flightsIda&&it.flightsIda.length ? it.flightsIda[0].ruta :
+                  it.idas&&it.idas.length ? `${ciudades[it.idas[0].origen]||it.idas[0].origen||''}…` : '';
+  const visadoWarning = it.visado ? `<span title="Requiere visado" style="background:#FEF3CD;color:#856404;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;">⚠ Visado</span>` : '';
+  return `
+    <div class="itin-header" onclick="toggleCollapse(${it.id}, event)" style="cursor:pointer;">
+      <div class="itin-header-left">
+        <button class="collapse-btn" title="Colapsar">▾</button>
+        <div class="itin-num">${idx+1}</div>
+        <input class="itin-title-input" value="${it.title||''}" placeholder="Opción ${idx+1} — Nombre opcional"
+          onchange="updateItinField(${it.id},'title',this.value)" onclick="event.stopPropagation()" />
+        <span style="font-size:10px;background:rgba(255,255,255,0.15);border-radius:4px;padding:2px 7px;color:#fff;letter-spacing:0.5px;">${typeLabel}</span>
+        ${visadoWarning}
+        <span class="itin-summary">${it.title || summary}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;" onclick="event.stopPropagation()">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;color:rgba(255,255,255,0.7);font-size:11.5px;white-space:nowrap;">
+          <input type="checkbox" ${it.visado?'checked':''} onchange="updateItinField(${it.id},'visado',this.checked);renderItins();"
+            style="width:14px;height:14px;cursor:pointer;" />
+          Requiere visado
+        </label>
+        <button class="btn btn-danger btn-sm" onclick="removeItin(${it.id})" style="padding:5px 10px;">✕</button>
+      </div>
+    </div>`;
+}
+
+function toggleCollapse(id, e) {
+  const block = document.getElementById('itin-' + id);
+  if (block) block.classList.toggle('collapsed');
+}
+
+function collapseAll() {
+  document.querySelectorAll('.itin-block').forEach(b => b.classList.add('collapsed'));
+}
+
+function notasField(it) {
+  return `
+  <div class="form-group" style="margin-top:12px;">
+    <label style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase;">Notas de la opción</label>
+    <textarea rows="2" style="font-size:12.5px;resize:vertical;" placeholder="Ej: Incluye conexión en Madrid. Tiempo mínimo de conexión 2 horas. Requiere visa Schengen."
+      onchange="updateItinField(${it.id},'notas',this.value)">${it.notas||''}</textarea>
+    <div style="font-size:10.5px;color:var(--text3);margin-top:3px;">Solo aparece en el PDF si tiene contenido.</div>
+  </div>`;
+}
+
+function condRowsSection(it) {
+  const multiLegend = it.type === 'multi' ? `
+    <div style="background:#EBF4FF;border:1px solid #C0D6F0;border-radius:6px;padding:7px 12px;margin-bottom:10px;font-size:11.5px;color:var(--brand-blue);font-style:italic;">
+      ✦ Independientemente del vuelo de ida o regreso que selecciones, el precio será el mismo.
+    </div>` : '';
+  return `
+    <div class="flights-title" style="margin-bottom:8px;margin-top:4px;">Condiciones de Tarifa
+      <button class="btn btn-ghost btn-sm" style="margin-left:10px;font-size:11px;" onclick="addCondRow(${it.id})">+ Agregar tarifa</button>
+    </div>
+    ${multiLegend}
+    <div id="cond-rows-${it.id}">
+      ${(it.condRows||[]).map((row, ri) => buildCondRowHTML(it.id, row, ri, it.condRows.length)).join('')}
+    </div>`;
+}
+
+function newCondRow() {
+  return { id: Date.now() + Math.random(), clase:'', equipaje:'', cambios:'', diferencia:'', reembolso:'', precio:'', moneda:'USD' };
+}
+
+function buildCondRowHTML(itinId, row, ri, total) {
+  const noCambios = row.cambios === 'no-cambios';
+  const genText = buildCondRowText(row);
+  return `
+  <div class="cond-row-block" id="crow-${row.id}" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.5px;">TARIFA ${ri+1}</span>
+      ${total > 1 ? `<button class="del-btn" onclick="removeCondRow(${itinId},${row.id})">×</button>` : ''}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="cond-group" style="min-width:110px;flex:1;">
+        <label>Clase</label>
+        <select onchange="updateCondRow(${itinId},${row.id},'clase',this.value)">
+          <option value="" ${!row.clase?'selected':''}>-- Clase --</option>
+          <option value="Turista" ${row.clase==='Turista'?'selected':''}>Turista</option>
+          <option value="Premium Economy" ${row.clase==='Premium Economy'?'selected':''}>Premium Economy</option>
+          <option value="Business" ${row.clase==='Business'?'selected':''}>Business</option>
+          <option value="First" ${row.clase==='First'?'selected':''}>First</option>
+        </select>
+      </div>
+      <div class="cond-group" style="min-width:150px;flex:1.5;">
+        <label>Equipaje</label>
+        <select onchange="updateCondRow(${itinId},${row.id},'equipaje',this.value)">
+          <option value="" ${!row.equipaje?'selected':''}>-- Equipaje --</option>
+          <option value="solo maleta de mano" ${row.equipaje==='solo maleta de mano'?'selected':''}>Solo maleta de mano</option>
+          <option value="equipaje documentado incluido" ${row.equipaje==='equipaje documentado incluido'?'selected':''}>Equipaje doc. incluido</option>
+        </select>
+      </div>
+      <div class="cond-group" style="min-width:140px;flex:1.5;">
+        <label>Cambios</label>
+        <select onchange="updateCondRowCambios(${itinId},${row.id},this.value)">
+          <option value="" ${!row.cambios?'selected':''}>-- Cambios --</option>
+          <option value="no-cambios" ${row.cambios==='no-cambios'?'selected':''}>No permite cambios</option>
+          <option value="cambios-penalidad" ${row.cambios==='cambios-penalidad'?'selected':''}>Cambios c/penalidad</option>
+          <option value="cambios-sin-penalidad" ${row.cambios==='cambios-sin-penalidad'?'selected':''}>Cambios s/penalidad</option>
+        </select>
+      </div>
+      ${!noCambios ? `
+      <div class="cond-group" style="min-width:140px;flex:1.5;">
+        <label>Diferencia de tarifa</label>
+        <input type="text" value="Podría aplicar" readonly style="background:var(--surface2);color:var(--text3);cursor:default;" />
+      </div>
+      <div class="cond-group" style="min-width:150px;flex:1.5;">
+        <label>Reembolso</label>
+        <select onchange="updateCondRow(${itinId},${row.id},'reembolso',this.value)">
+          <option value="" ${!row.reembolso?'selected':''}>-- Reembolso --</option>
+          <option value="no reembolsable" ${row.reembolso==='no reembolsable'?'selected':''}>No reembolsable</option>
+          <option value="reembolsable con penalidad" ${row.reembolso==='reembolsable con penalidad'?'selected':''}>Reembolsable c/penalidad</option>
+        </select>
+      </div>` : ''}
+      <div class="cond-group" style="min-width:70px;flex:0.7;">
+        <label>Moneda</label>
+        <select onchange="updateCondRow(${itinId},${row.id},'moneda',this.value)">
+          <option value="USD" ${row.moneda==='USD'?'selected':''}>USD</option>
+          <option value="MXN" ${row.moneda==='MXN'?'selected':''}>MXN</option>
+          <option value="EUR" ${row.moneda==='EUR'?'selected':''}>EUR</option>
+        </select>
+      </div>
+      <div class="cond-group" style="min-width:110px;flex:1;">
+        <label>Precio total</label>
+        <input type="text" placeholder="0.00" value="${row.precio}" onchange="updateCondRow(${itinId},${row.id},'precio',this.value)" />
+      </div>
+    </div>
+    <div class="gen-text-box" id="gt-${row.id}" style="margin-top:10px;margin-bottom:0;">${genText || '<span style="color:var(--text3);">Selecciona los campos para generar el texto</span>'}</div>
+  </div>`;
+}
+
+function updateCondRow(itinId, rowId, field, value) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const row = it.condRows.find(r => r.id === rowId);
+  if (!row) return;
+  row[field] = value;
+  const gt = document.getElementById('gt-' + rowId);
+  if (gt) gt.innerHTML = buildCondRowText(row) || '<span style="color:var(--text3);">Selecciona los campos para generar el texto</span>';
+}
+
+function updateCondRowCambios(itinId, rowId, value) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  const row = it.condRows.find(r => r.id === rowId);
+  if (!row) return;
+  row.cambios = value;
+  if (value === 'no-cambios') { row.diferencia = ''; row.reembolso = ''; }
+  else { row.diferencia = 'podría aplicar diferencia de tarifa'; }
+  const container = document.getElementById('cond-rows-' + itinId);
+  if (container) container.innerHTML = it.condRows.map((r,ri) => buildCondRowHTML(itinId, r, ri, it.condRows.length)).join('');
+}
+
+function addCondRow(itinId) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it) return;
+  it.condRows.push(newCondRow());
+  const container = document.getElementById('cond-rows-' + itinId);
+  if (container) container.innerHTML = it.condRows.map((r,ri) => buildCondRowHTML(itinId, r, ri, it.condRows.length)).join('');
+}
+
+function removeCondRow(itinId, rowId) {
+  const it = itins.find(i => i.id === itinId);
+  if (!it || it.condRows.length <= 1) return;
+  it.condRows = it.condRows.filter(r => r.id !== rowId);
+  const container = document.getElementById('cond-rows-' + itinId);
+  if (container) container.innerHTML = it.condRows.map((r,ri) => buildCondRowHTML(itinId, r, ri, it.condRows.length)).join('');
+}
+
+function updateItinField(id, field, value) {
+  const it = itins.find(i => i.id === id);
+  if (it) it[field] = value;
+}
+
+function buildCondRowText(row) {
+  const parts = [];
+  if (row.clase)    parts.push(`Tarifa en clase <strong>${row.clase}</strong>`);
+  if (row.equipaje) parts.push(`incluye ${row.equipaje}`);
+  if (row.cambios) {
+    const cMap = { 'no-cambios':'no permite cambios', 'cambios-penalidad':'permite cambios con penalidad', 'cambios-sin-penalidad':'permite cambios sin penalidad' };
+    parts.push(cMap[row.cambios]);
+    if (row.cambios !== 'no-cambios' && row.diferencia) parts.push(row.diferencia);
+  }
+  if (row.cambios !== 'no-cambios' && row.reembolso) parts.push(row.reembolso);
+  if (!parts.length) return '';
+  return parts.join(', ') + '.';
+}
+
+function parseItin(id) {
+  const it = itins.find(i => i.id === id);
+  if (!it) return;
+  const textarea = document.querySelector(`#itin-${id} textarea`);
+  it.rawText = textarea ? textarea.value : it.rawText;
+  it.parsed = it.rawText.split('\n').map(parseLine).filter(Boolean);
+  renderItins();
+  autoguardar();
+}
+
+let _autoguardTimer = null;
+function autoguardar() {
+  const num = document.getElementById('cot-num')?.value;
+  if (!num) return;
+  clearTimeout(_autoguardTimer);
+  _autoguardTimer = setTimeout(async () => {
+    const idx = historial.findIndex(h => h.id === num);
+    if (idx < 0) return;
+    const data = getCotizacionData();
+    data.status = historial[idx].status;
+    const dbId = historial[idx].dbId;
+    historial[idx] = { ...historial[idx], ...data };
+    // Sync to Supabase
+    if (dbId) {
+      await sb.from('cotizaciones').update({
+        itinerarios:    data.itins,
+        cliente_nombre: data.cliente,
+        empresa_nombre: data.empresa,
+        notas:          data.notas,
+      }).eq('id', dbId);
+    }
+    const msg = document.getElementById('save-msg');
+    if (msg) { msg.style.display='block'; msg.style.color='var(--text3)'; msg.textContent='✓ Autoguardado'; setTimeout(()=>{ msg.style.display='none'; msg.style.color=''; },2000); }
+  }, 2000);
+}
+
+const MESES_ES = {JAN:'ENE',FEB:'FEB',MAR:'MAR',APR:'ABR',MAY:'MAY',JUN:'JUN',JUL:'JUL',AUG:'AGO',SEP:'SEP',OCT:'OCT',NOV:'NOV',DEC:'DIC'};
+const MESES_NUM = {ENE:'01',FEB:'02',MAR:'03',ABR:'04',MAY:'05',JUN:'06',JUL:'07',AGO:'08',SEP:'09',OCT:'10',NOV:'11',DIC:'12',
+                   JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'};
+
+function sortKey(fecha, hora) {
+  // fecha = "16AGO", hora = "0800" → "08-16-0800" sortable string
+  if (!fecha) return '99-99-9999';
+  const dia = fecha.slice(0,2);
+  const mesStr = fecha.slice(2).toUpperCase();
+  const mesNum = MESES_NUM[mesStr] || '99';
+  const h = (hora||'9999').padStart(4,'0');
+  return `${mesNum}-${dia}-${h}`;
+}
+function traducirMes(fecha) {
+  const mes = fecha.slice(2).toUpperCase();
+  return fecha.slice(0,2) + (MESES_ES[mes] || mes);
+}
+
+function parseLine(linea) {
+  linea = linea.trim();
+  if (!linea) return null;
+  const m = linea.match(/^\d+\s*\.\s*([A-Z0-9]{2})\s+\d+\s+\S+\s+(\d{2}\w{3})\s+(\w{3})(\w{3})\s+\S+\s+(\S+)\s+(\S+)/);
+  if (!m) return null;
+  const [, aerolinea, fechaRaw, orig, dest, sal, lleg] = m;
+  const fecha   = traducirMes(fechaRaw);
+  const origen  = ciudades[orig.toUpperCase()] || orig.toUpperCase();
+  const destino = ciudades[dest.toUpperCase()] || dest.toUpperCase();
+  const salida  = sal.replace('#','');
+  const llegada = lleg.replace('#','');
+  const nextDay = /[A-Z]{2}\/[A-Z]{2}/.test(linea);
+  let llegadaStr = llegada;
+  if (nextDay) {
+    const dia = String(parseInt(fechaRaw)+1).padStart(2,'0');
+    llegadaStr = `${llegada} (${dia}${fecha.slice(2)})`;
+  }
+  return { aerolinea, fecha, ruta:`${origen} › ${destino}`, salida, llegadaStr };
+}
+
+function getLogoHTML(code) {
+  if (logos[code]) return `<img src="${logos[code]}" alt="${code}" onerror="this.parentNode.innerHTML='<div class=\\'flight-logo-badge\\'>${code}</div>'" />`;
+  return `<div class="flight-logo-badge">${code}</div>`;
+}
+
+// ── PDF ──────────────────────────────────────────────────────────
+function getAgente() {
+  const sel = document.getElementById('cot-agente');
+  const id = parseInt(sel.value);
+  return agentes.find(a => a.id === id) || null;
+}
+
+function buildPDFHTML() {
+  const cliente = document.getElementById('cot-cliente').value || '—';
+  const fecha   = document.getElementById('cot-fecha').value;
+  const num     = document.getElementById('cot-num').value;
+  const notasVal = document.getElementById('cot-notas')?.value || '';
+  const agente  = getAgente();
+  const empresaId = parseInt(document.getElementById('cot-empresa')?.value) || null;
+  const empresaObj = clientes.find(c => c.id === empresaId);
+  const empresaNombre = empresaObj ? empresaObj.name : '';
+
+  const optionsHTML = itins.filter(it => it.parsed&&it.parsed.length || it.flightsIda&&it.flightsIda.length || it.idas&&it.idas.length || it.segmentos&&it.segmentos.length || (it.condRows&&it.condRows.some(r=>r.clase))).map((it, idx) => {
+    let flightsHTML = '';
+    if (it.type === 'gds' && it.parsed) {
+      flightsHTML = it.parsed.map(f => `
+        <div class="pdf-flight-item">
+          <div class="pdf-fl-logo">${logos[f.aerolinea] ? `<img src="${logos[f.aerolinea]}" alt="${f.aerolinea}" />` : `<span class="pdf-fl-badge">${f.aerolinea}</span>`}</div>
+          <div class="pdf-fl-date">${f.fecha}</div>
+          <div class="pdf-fl-route">${f.ruta}</div>
+          <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
+        </div>`).join('');
+    } else if (it.type === 'multi') {
+      const al = it.airline || it.airlineManual || '';
+      const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:44px;max-height:20px;object-fit:contain;" />` : `<span class="pdf-fl-badge">${al}</span>`;
+      const idaRows = (it.flightsIda||[]).map((f,i) => `
+        <div class="pdf-flight-item">
+          <div class="pdf-fl-logo">${logoH}</div>
+          <div class="pdf-fl-date" style="color:var(--brand-blue);font-weight:700;">Ida ${String(i+1).padStart(2,'0')}</div>
+          <div class="pdf-fl-date">${f.fecha}</div>
+          <div class="pdf-fl-route">${f.ruta}</div>
+          <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
+        </div>`).join('');
+      const regRows = (it.flightsRegreso||[]).map((f,i) => `
+        <div class="pdf-flight-item">
+          <div class="pdf-fl-logo">${logoH}</div>
+          <div class="pdf-fl-date" style="color:var(--brand-red);font-weight:700;">Reg ${String(i+1).padStart(2,'0')}</div>
+          <div class="pdf-fl-date">${f.fecha}</div>
+          <div class="pdf-fl-route">${f.ruta}</div>
+          <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
+        </div>`).join('');
+      flightsHTML = idaRows + regRows;
+    } else if (it.type === 'lowcost') {
+      const mkRow = (f, label) => {
+        const al = f.airline || '';
+        const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:44px;max-height:20px;object-fit:contain;" />` : `<span class="pdf-fl-badge">${al}</span>`;
+        return `<div class="pdf-flight-item">
+          <div class="pdf-fl-logo">${logoH}</div>
+          <div class="pdf-fl-date">${f.fecha||''}</div>
+          <div class="pdf-fl-route">${ciudades[f.origen]||f.origen||''} › ${ciudades[f.destino]||f.destino||''}</div>
+          <div class="pdf-fl-times">Sale ${f.sale||''} · Llega ${f.llega||''}</div>
+        </div>`;
+      };
+      flightsHTML = (it.idas||[]).map(f=>mkRow(f,'Ida')).join('') + (it.regresos||[]).map(f=>mkRow(f,'Regreso')).join('');
+    } else if (it.type === 'lc_tramos') {
+      const mon = it.moneda || 'MXN';
+      flightsHTML = (it.segmentos||[]).filter(seg => seg.visible !== false).map((seg, si) => {
+        const segLabel = seg.origen && seg.destino
+          ? `${ciudades[seg.origen]||seg.origen} › ${ciudades[seg.destino]||seg.destino}`
+          : `Tramo ${si+1}`;
+        const ordinalMap = ['1er','2do','3er','4to','5to','6to','7mo','8vo','9no','10mo'];
+        const ordinal = ordinalMap[si] || `${si+1}°`;
+        const segHeader = `<div style="background:linear-gradient(135deg,#0D1B2E,#1E3A5F);padding:6px 10px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;font-weight:700;color:#fff;">${ordinal} Tramo</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.6);">— ${segLabel}</span>
+        </div>`;
+        const opRows = (seg.opciones||[]).map((op,oi) => {
+          const al = op.airline||'';
+          const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:42px;max-height:18px;object-fit:contain;" />` : `<span style="background:#1A4E8C;color:#fff;font-size:7px;font-weight:700;border-radius:3px;padding:2px 4px;">${al}</span>`;
+          const ruta = `${ciudades[op.origen||seg.origen]||op.origen||seg.origen||''} › ${ciudades[op.destino||seg.destino]||op.destino||seg.destino||''}`;
+          const isLC = LC_LOWCOST_CODES.includes(al);
+          const preciosHTML = isLC
+            ? [op.tarifaZero?`<span style="background:#FEF3CD;color:#856404;border-radius:3px;padding:1px 5px;font-size:9.5px;font-weight:600;">Zero: ${mon} ${op.tarifaZero}</span>`:'',
+               op.tarifaBasica?`<span style="background:#D1ECF1;color:#0C5460;border-radius:3px;padding:1px 5px;font-size:9.5px;font-weight:600;">Básica: ${mon} ${op.tarifaBasica}</span>`:'',
+               op.tarifaPlus?`<span style="background:#D4EDDA;color:#155724;border-radius:3px;padding:1px 5px;font-size:9.5px;font-weight:600;">Plus: ${mon} ${op.tarifaPlus}</span>`:''].filter(Boolean).join(' ')
+            : op.precioTotal ? `<span style="font-weight:600;color:#0D1B2E;">${mon} ${op.precioTotal}</span>` : '';
+          return `<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid #D8E0EC;font-size:10px;">
+            <div style="width:46px;">${logoH}</div>
+            <div style="width:40px;color:#8898AA;">${op.fecha||''}</div>
+            <div style="flex:1;color:#4A5568;">${ruta}</div>
+            <div style="color:#8898AA;width:90px;">${op.sale?'Sale '+op.sale:''} ${op.llega?'– Llega '+op.llega:''}</div>
+            <div style="text-align:right;">${preciosHTML}</div>
+          </div>`;
+        }).join('');
+        return segHeader + (opRows || `<div style="padding:6px 10px;font-size:10px;color:#8898AA;font-style:italic;">Sin opciones</div>`);
+      }).join('');
+    }
+    const multiLegendPDF = it.type === 'multi' ? '<div style="font-size:10px;font-style:italic;color:#1A4E8C;margin-bottom:6px;padding:4px 8px;background:#EBF4FF;border-radius:4px;">✦ Independientemente del vuelo de ida o regreso que selecciones, el precio será el mismo.</div>' : '';
+    const condRowsHTML = (it.condRows || []).map((row, ri) => {
+      const text = buildCondRowText(row);
+      const precio = row.precio ? `<strong>${row.moneda} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</strong>` : '';
+      if (!text && !precio) return '';
+      return `<div style="padding:6px 0;border-bottom:1px dashed #D8E0EC;font-size:10.5px;line-height:1.6;">
+        ${(it.condRows.length > 1) ? `<span style="font-size:9px;font-weight:700;color:#1A4E8C;margin-right:6px;">TARIFA ${ri+1}</span>` : ''}
+        ${text ? `<span style="font-style:italic;color:#4A5568;">${text}</span>` : ''}
+        ${precio ? `<span style="margin-left:10px;color:#0D1B2E;">${precio}</span>` : ''}
+      </div>`;
+    }).join('');
+    return `
+    <div class="pdf-option">
+      <div class="pdf-opt-header">
+        <div class="pdf-opt-title">Opción ${idx+1}${it.title ? ' — '+it.title : ''}</div>
+      </div>
+      <div class="pdf-opt-body">
+        ${flightsHTML}
+        ${it.visado ? `<div style="background:#FEF3CD;border:1px solid #F0A000;border-radius:5px;padding:6px 10px;margin-top:8px;font-size:11px;font-weight:700;color:#856404;">⚠ Esta opción requiere visado.</div>` : ''}
+        ${it.notas ? `<div style="background:#FFFBEA;border:1px solid #F0D070;border-radius:5px;padding:6px 10px;margin-top:8px;font-size:10.5px;color:#856404;">📝 ${it.notas}</div>` : ''}
+        ${(multiLegendPDF || condRowsHTML) ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #D8E0EC;">${multiLegendPDF}${condRowsHTML}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div id="pdf-preview">
+    <div class="pdf-topbar">
+      <div class="pdf-logo-area">
+        <img src="${LOGO_B64}" alt="TPV" />
+        <div>
+          <div class="pdf-brand-name">TPV Experts</div>
+          <div class="pdf-brand-sub">TU PRÓXIMO VIAJE</div>
+        </div>
+      </div>
+      <div class="pdf-meta">
+        <div><strong>${num}</strong></div>
+        <div>${fecha}</div>
+      </div>
+    </div>
+    <div class="pdf-client-row">
+      <div class="pdf-client-col"><div class="pdf-cl">Cliente</div><div class="pdf-cv">${cliente}</div></div>
+      <div class="pdf-client-col"><div class="pdf-cl">Empresa</div><div class="pdf-cv">${empresaNombre||'—'}</div></div>
+      <div class="pdf-client-col"><div class="pdf-cl">Agente</div><div class="pdf-cv">${agente ? agente.name : '—'}</div></div>
+      <div class="pdf-client-col"><div class="pdf-cl">Cotización</div><div class="pdf-cv">${num}</div></div>
+    </div>
+    ${notasVal ? `<div style="background:#FFF8E6;border:1px solid #F0D070;border-radius:6px;padding:7px 12px;margin-bottom:14px;font-size:11px;color:#856404;">📝 ${notasVal}</div>` : ''}
+    ${optionsHTML || '<div style="color:var(--text3);font-size:13px;padding:16px 0;">Sin opciones de itinerario aún.</div>'}
+    <div class="pdf-footer">
+      <div class="pdf-legal">
+        <strong>Precios expresados por persona.</strong> Tarifas sujetas a disponibilidad al momento de la emisión. Los precios pueden variar sin previo aviso. TPV Experts no se hace responsable por cambios en las tarifas después de la fecha de cotización.<br/>
+        MXN = Peso Mexicano · USD = Dólar Americano · EUR = Euro.<br/>
+        <a href="https://apply.joinsherpa.com/travel-restrictions?affiliateId=tuproximoviaje&language=es-XL" style="color:#1A4E8C;">Revisa los documentos necesarios para tu viaje aquí →</a>
+      </div>
+      ${agente ? `<div class="pdf-contact"><strong>${agente.name}</strong>${agente.phone}<br>${agente.email}<br>${agente.company}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function previewPDF() {
+  document.getElementById('pdf-preview').innerHTML = buildPDFHTML();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function downloadPDF() {
+  const num = document.getElementById('cot-num').value;
+  const html = buildPDFHTML();
+  const printStyles = `
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, Helvetica, sans-serif; color: #0D1B2E; font-size: 12px; padding: 20px; }
+      :root { --brand-red:#D0202A; --brand-blue:#1A4E8C; --brand-dark:#0D1B2E; --brand-mid:#1E3A5F; --border:#D8E0EC; --surface2:#F0F4F9; --text:#0D1B2E; --text2:#4A5568; --text3:#8898AA; }
+      .pdf-topbar { display:flex; align-items:center; justify-content:space-between; padding-bottom:12px; border-bottom:3px solid #D0202A; margin-bottom:16px; }
+      .pdf-logo-area { display:flex; align-items:center; gap:10px; }
+      .pdf-logo-area img { width:44px; height:44px; object-fit:contain; }
+      .pdf-brand-name { font-family: Arial, Helvetica, sans-serif; font-size:18px; font-weight:800; color:#0D1B2E; }
+      .pdf-brand-sub { font-size:9px; color:#8898AA; letter-spacing:1px; }
+      .pdf-meta { text-align:right; font-size:10px; color:#4A5568; line-height:1.8; }
+      .pdf-meta strong { color:#0D1B2E; }
+      .pdf-client-row { display:flex; gap:16px; background:#F0F4F9; border-radius:6px; padding:10px 14px; margin-bottom:16px; }
+      .pdf-client-col { flex:1; }
+      .pdf-cl { font-size:9px; color:#8898AA; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
+      .pdf-cv { font-size:12px; font-weight:600; color:#0D1B2E; }
+      .pdf-option { margin-bottom:14px; border:1px solid #D8E0EC; border-radius:6px; overflow:hidden; page-break-inside:avoid; }
+      .pdf-opt-header { background:linear-gradient(135deg,#0D1B2E,#1E3A5F); padding:9px 14px; }
+      .pdf-opt-title { font-family:'Montserrat',Arial,sans-serif; font-size:12px; font-weight:700; color:#fff; }
+      .pdf-opt-body { padding:12px 14px; }
+      .pdf-flight-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #D8E0EC; font-size:11px; }
+      .pdf-flight-item:last-child { border-bottom:none; }
+      .pdf-fl-logo { width:46px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+      .pdf-fl-logo img { max-width:46px; max-height:20px; object-fit:contain; }
+      .pdf-fl-badge { background:#1A4E8C; color:#fff; font-size:8px; font-weight:700; border-radius:3px; padding:2px 4px; }
+      .pdf-fl-date { font-size:10px; font-weight:700; color:#0D1B2E; width:42px; flex-shrink:0; }
+      .pdf-fl-route { font-size:10.5px; color:#4A5568; flex:1; }
+      .pdf-fl-times { font-size:10px; color:#8898AA; white-space:nowrap; }
+      .pdf-cond { font-size:10.5px; color:#4A5568; line-height:1.6; font-style:italic; margin-top:8px; padding-top:8px; border-top:1px dashed #D8E0EC; }
+      .pdf-footer { margin-top:20px; padding-top:12px; border-top:2px solid #D8E0EC; display:flex; justify-content:space-between; align-items:flex-start; }
+      .pdf-legal { font-size:9px; color:#8898AA; max-width:400px; line-height:1.6; }
+      .pdf-contact { text-align:right; font-size:10px; color:#4A5568; line-height:1.7; }
+      .pdf-contact strong { color:#0D1B2E; display:block; font-size:11px; }
+      .pdf-multi-label { font-size:9px; font-weight:700; letter-spacing:0.5px; padding:2px 0; }
+      .pdf-section-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; padding:4px 0 2px; color:#1A4E8C; border-bottom:1px solid #D8E0EC; margin-bottom:4px; }
+      @media print { body { padding: 10px; } }
+    </style>`;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${num}</title>${printStyles}</head><body>${html}</body></html>`);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+}
+
+function sidebarNuevaCot(event) {
+  showPanel('cotizador', event);
+  resetCotizacion(true); // always confirm
+}
+
+function resetCotizacion(confirm_needed) {
+  if (confirm_needed !== false && !confirm('¿Iniciar una nueva cotización? Se perderán los datos actuales.')) return;
+  cotNum++;
+  lsSet('tpv_cotnum_' + (currentAgenciaId||'local'), cotNum);
+  const now = new Date();
+  document.getElementById('cot-num').value = 'COT-' + now.getFullYear() + '-' + String(cotNum).padStart(3,'0');
+  document.getElementById('cot-fecha').value = now.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+  document.getElementById('cot-cliente').value = '';
+  if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = '';
+  if (document.getElementById('cot-empresa')) document.getElementById('cot-empresa').value = '';
+  document.getElementById('cot-agente').value = '';
+  const pi = document.getElementById('cot-parent-id'); if(pi) pi.value = '';
+  itins = [];
+  renderItins();
+  checkItinLimit();
+  addItin();
+}
+
+init();
+</script>
+</body>
+</html>
