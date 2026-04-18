@@ -673,14 +673,21 @@ async function checkAuth() {
   document.getElementById('sidebar-rol').textContent = profile.rol === 'admin' ? 'Administrador' : profile.rol === 'supervisor' ? 'Supervisor' : 'Agente';
   // Load agencia name
   if (currentAgenciaId) {
-    const { data: agencia, error: agErr } = await sb.from('agencias').select('nombre').eq('id', currentAgenciaId).single();
+    const { data: agencia, error: agErr } = await sb.from('agencias').select('nombre,logo_url').eq('id', currentAgenciaId).single();
     if (agencia && agencia.nombre) {
       document.getElementById('sidebar-agencia').textContent = agencia.nombre;
+      window.currentAgenciaNombre = agencia.nombre;
+      window.currentAgenciaLogo = agencia.logo_url || null;
+      if (agencia.logo_url) document.getElementById('sidebar-logo').src = agencia.logo_url;
     } else {
       document.getElementById('sidebar-agencia').textContent = currentUsuario.email || 'Mi Agencia';
+      window.currentAgenciaNombre = currentUsuario.email || 'Mi Agencia';
+      window.currentAgenciaLogo = null;
     }
   } else {
     document.getElementById('sidebar-agencia').textContent = 'Sin agencia asignada';
+    window.currentAgenciaNombre = 'Sin agencia';
+    window.currentAgenciaLogo = null;
   }
   // Start inactivity timer
   resetInactivityTimer();
@@ -1514,6 +1521,7 @@ async function init() {
   if (!authed) return;
 
   document.getElementById('sidebar-logo').src = LOGO_B64;
+  // Will be updated after agencia loads
 
   // Load airports from Supabase (global + custom for this agency)
   const { data: apGlobal } = await sb.from('aeropuertos_global').select('codigo,ciudad').eq('activo', true);
@@ -2781,10 +2789,10 @@ function buildPDFHTML() {
   <div id="pdf-preview">
     <div class="pdf-topbar">
       <div class="pdf-logo-area">
-        <img src="${LOGO_B64}" alt="TPV" />
+        <img src="${window.currentAgenciaLogo || LOGO_B64}" alt="Logo" />
         <div>
-          <div class="pdf-brand-name">TPV Experts</div>
-          <div class="pdf-brand-sub">TU PRÓXIMO VIAJE</div>
+          <div class="pdf-brand-name">${window.currentAgenciaNombre || 'TPV Experts'}</div>
+          <div class="pdf-brand-sub">TRAVEL SUITE</div>
         </div>
       </div>
       <div class="pdf-meta">
