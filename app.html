@@ -208,8 +208,8 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
 .pdf-opt-body { padding: 14px 16px; }
 .pdf-flight-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
 .pdf-flight-item:last-child { border-bottom: none; }
-.pdf-fl-logo { width: 80px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.pdf-fl-logo img { max-width: 78px; max-height: 26px; object-fit: contain; }
+.pdf-fl-logo { width: 72px; min-width: 72px; max-width: 72px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.pdf-fl-logo img { max-width: 70px; max-height: 22px; width: auto; height: auto; object-fit: contain; display: block; }
 .pdf-fl-badge { background: var(--brand-blue); color: #fff; font-size: 9px; font-weight: 700; border-radius: 4px; padding: 2px 5px; }
 .pdf-fl-date { font-size: 11px; font-weight: 700; color: var(--brand-dark); width: 44px; }
 .pdf-fl-route { font-size: 11px; color: var(--text2); width: 185px; }
@@ -3033,7 +3033,7 @@ function buildPDFHTML() {
         </div>`).join('');
     } else if (it.type === 'multi') {
       const al = it.airline || it.airlineManual || '';
-      const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:68px;max-height:30px;object-fit:contain;" />` : `<span class="pdf-fl-badge">${al}</span>`;
+      const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:70px;max-height:20px;width:auto;height:auto;object-fit:contain;display:block;" />` : `<span class="pdf-fl-badge">${al}</span>`;
       const idaRows = (it.flightsIda||[]).map((f,i) => `
         <div class="pdf-flight-item">
           <div class="pdf-fl-logo">${logoH}</div>
@@ -3054,7 +3054,7 @@ function buildPDFHTML() {
     } else if (it.type === 'lowcost') {
       const mkRow = (f, label) => {
         const al = f.airline || '';
-        const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:68px;max-height:30px;object-fit:contain;" />` : `<span class="pdf-fl-badge">${al}</span>`;
+        const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:70px;max-height:20px;width:auto;height:auto;object-fit:contain;display:block;" />` : `<span class="pdf-fl-badge">${al}</span>`;
         return `<div class="pdf-flight-item">
           <div class="pdf-fl-logo">${logoH}</div>
           <div class="pdf-fl-date">${f.fecha||''}</div>
@@ -3077,7 +3077,7 @@ function buildPDFHTML() {
         </div>`;
         const opRows = (seg.opciones||[]).map((op,oi) => {
           const al = op.airline||'';
-          const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:68px;max-height:30px;object-fit:contain;" />` : `<span style="background:#1A4E8C;color:#fff;font-size:7px;font-weight:700;border-radius:3px;padding:2px 4px;">${al}</span>`;
+          const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:70px;max-height:20px;width:auto;height:auto;object-fit:contain;display:block;" />` : `<span style="background:#1A4E8C;color:#fff;font-size:7px;font-weight:700;border-radius:3px;padding:2px 4px;">${al}</span>`;
           const ruta = `${ciudades[op.origen||seg.origen]||op.origen||seg.origen||''} › ${ciudades[op.destino||seg.destino]||op.destino||seg.destino||''}`;
           const isLC = LC_LOWCOST_CODES.includes(al);
           const preciosHTML = isLC
@@ -3188,8 +3188,8 @@ function downloadPDF() {
       .pdf-opt-body { padding:12px 14px; }
       .pdf-flight-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #D8E0EC; font-size:11px; }
       .pdf-flight-item:last-child { border-bottom:none; }
-      .pdf-fl-logo { width:70px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-      .pdf-fl-logo img { max-width:68px; max-height:22px; object-fit:contain; }
+      .pdf-fl-logo { width:72px; min-width:72px; max-width:72px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
+      .pdf-fl-logo img { max-width:70px; max-height:20px; width:auto; height:auto; object-fit:contain; display:block; }
       .pdf-fl-badge { background:#1A4E8C; color:#fff; font-size:8px; font-weight:700; border-radius:3px; padding:2px 4px; }
       .pdf-fl-date { font-size:10px; font-weight:700; color:#0D1B2E; width:42px; flex-shrink:0; }
       .pdf-fl-route { font-size:10.5px; color:#4A5568; flex:1; }
