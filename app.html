@@ -1619,10 +1619,11 @@ function apBlur(dropId) {
   setTimeout(() => { const d = document.getElementById(dropId); if(d) d.classList.remove('open'); }, 200);
 }
 
-function tabToNext(e, nextId) {
+function tabToNext(e, nextId, prevId) {
   if (e.key === 'Tab') {
-    const next = document.getElementById(nextId);
-    if (next) { e.preventDefault(); next.focus(); next.select && next.select(); }
+    const targetId = e.shiftKey ? prevId : nextId;
+    const target = targetId ? document.getElementById(targetId) : null;
+    if (target) { e.preventDefault(); target.focus(); target.select && target.select(); }
   }
 }
 
@@ -2544,22 +2545,31 @@ function buildLowcostHTML(it, idx) {
         <div class="cond-group" style="min-width:160px;">
           <label>Origen</label>
           ${apField(fidOrig, 'Ej: MEX', f&&f.origen||'', null, null, null, fidDest, fidFecha)}
+          <script>
+            if (!window._apCallbacks) window._apCallbacks = {};
+            window._apCallbacks['${fidOrig}'] = code => updateLCSimple(${it.id},'${dir}','origen',code);
+          </script>
         </div>
         <div style="font-size:16px;color:var(--text3);margin-bottom:6px;">›</div>
         <div class="cond-group" style="min-width:160px;">
           <label>Destino</label>
           ${apField(fidDest, 'Ej: MAD', f&&f.destino||'', null, null, null, fidSale, fidOrig)}
+          <script>
+            if (!window._apCallbacks) window._apCallbacks = {};
+            window._apCallbacks['${fidDest}'] = code => updateLCSimple(${it.id},'${dir}','destino',code);
+          </script>
         </div>
         <div class="cond-group" style="min-width:72px;">
           <label>Sale</label>
           <input type="text" id="${fidSale}" placeholder="0910" value="${f&&f.sale||''}" maxlength="4"
             onchange="updateLCSimple(${it.id},'${dir}','sale',this.value)"
-            onkeydown="tabToNext(event,'${fidLlega}')" />
+            onkeydown="tabToNext(event,'${fidLlega}','${fidDest}')" />
         </div>
         <div class="cond-group" style="min-width:72px;">
           <label>Llega</label>
           <input type="text" id="${fidLlega}" placeholder="1110" value="${f&&f.llega||''}" maxlength="4"
-            onchange="updateLCSimple(${it.id},'${dir}','llega',this.value)" />
+            onchange="updateLCSimple(${it.id},'${dir}','llega',this.value)"
+            onkeydown="tabToNext(event,'${isIda ? 'lc-regreso-fecha-'+it.id : ''}','${fidSale}')" />
         </div>
       </div>
       ${f&&f.fecha&&f.origen&&f.destino ? `
