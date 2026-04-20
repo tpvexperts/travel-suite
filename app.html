@@ -2119,6 +2119,16 @@ function renderItins() {
     const b = document.getElementById('itin-' + id);
     if (b) b.classList.add('collapsed');
   });
+  // Register AP callbacks for manual lowcost fields
+  if (!window._apCallbacks) window._apCallbacks = {};
+  itins.filter(i => i.type === 'lowcost').forEach(itin => {
+    ['ida','regreso'].forEach(dir => {
+      const fidOrig = `lc-${dir}-orig-${itin.id}`;
+      const fidDest = `lc-${dir}-dest-${itin.id}`;
+      window._apCallbacks[fidOrig] = code => updateLCSimple(itin.id, dir, 'origen', code);
+      window._apCallbacks[fidDest] = code => updateLCSimple(itin.id, dir, 'destino', code);
+    });
+  });
 }
 
 function refreshAllItins() { renderItins(); }
@@ -2545,19 +2555,11 @@ function buildLowcostHTML(it, idx) {
         <div class="cond-group" style="min-width:160px;">
           <label>Origen</label>
           ${apField(fidOrig, 'Ej: MEX', f&&f.origen||'', null, null, null, fidDest, fidFecha)}
-          <script>
-            if (!window._apCallbacks) window._apCallbacks = {};
-            window._apCallbacks['${fidOrig}'] = code => updateLCSimple(${it.id},'${dir}','origen',code);
-          </script>
         </div>
         <div style="font-size:16px;color:var(--text3);margin-bottom:6px;">›</div>
         <div class="cond-group" style="min-width:160px;">
           <label>Destino</label>
           ${apField(fidDest, 'Ej: MAD', f&&f.destino||'', null, null, null, fidSale, fidOrig)}
-          <script>
-            if (!window._apCallbacks) window._apCallbacks = {};
-            window._apCallbacks['${fidDest}'] = code => updateLCSimple(${it.id},'${dir}','destino',code);
-          </script>
         </div>
         <div class="cond-group" style="min-width:72px;">
           <label>Sale</label>
@@ -2569,7 +2571,8 @@ function buildLowcostHTML(it, idx) {
           <label>Llega</label>
           <input type="text" id="${fidLlega}" placeholder="1110" value="${f&&f.llega||''}" maxlength="4"
             onchange="updateLCSimple(${it.id},'${dir}','llega',this.value)"
-            onkeydown="tabToNext(event,'${isIda ? 'lc-regreso-fecha-'+it.id : ''}','${fidSale}')" />
+            onkeydown="tabToNext(event, this.dataset.isida==='1' ? 'lc-regreso-fecha-'+this.dataset.itid : '','${fidSale}')"
+            data-isida="${isIda ? '1' : '0'}" data-itid="${it.id}" />
         </div>
       </div>
       ${f&&f.fecha&&f.origen&&f.destino ? `
@@ -2997,7 +3000,7 @@ function parseLine(linea) {
 }
 
 function getLogoHTML(code) {
-  if (logos[code]) return `<img src="${logos[code]}" alt="${code}" onerror="this.parentNode.innerHTML='<div class=\\'flight-logo-badge\\'>${code}</div>'" />`;
+  if (logos[code]) return `<img src="${logos[code]}" alt="${code}" onerror="this.style.display='none'" />`;
   return `<div class="flight-logo-badge">${code}</div>`;
 }
 
