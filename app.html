@@ -295,6 +295,10 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
   </div>
   <nav class="sidebar-nav">
     <div class="nav-label">Principal</div>
+    <button class="nav-btn" onclick="showPanel('avisos',event)" id="btn-avisos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      Centro de Avisos
+    </button>
     <button class="nav-btn active" onclick="showPanel('cotizador',event)" id="btn-cot-actual">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       Cotización Actual
@@ -346,6 +350,10 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       Manual de Usuario
     </button>
+    <button class="nav-btn" onclick="showPanel('soporte',event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Soporte
+    </button>
     <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;">
       <button class="nav-btn" onclick="cerrarSesion()" style="color:rgba(255,255,255,0.5);">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;opacity:0.7;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -360,6 +368,87 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
 <main class="main">
 
   <!-- COTIZADOR -->
+  <!-- CENTRO DE AVISOS -->
+  <div class="panel" id="panel-avisos">
+    <div class="page-header">
+      <div class="page-title">Centro de Avisos</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px;" id="avisos-grid">
+      <!-- TAIS News -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
+          <span style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--brand-dark);">TAIS News</span>
+          <span style="font-size:10px;color:var(--text3);margin-left:auto;">Últimos 7 días</span>
+        </div>
+        <div id="tais-news-list"></div>
+      </div>
+      <!-- Conexión Agencia -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--brand-blue);"></div>
+          <span style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--brand-dark);" id="conexion-title">Conexión</span>
+          <button id="btn-nuevo-aviso" onclick="mostrarFormAviso()" style="display:none;margin-left:auto;font-size:11px;background:var(--brand-blue);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;">+ Nuevo aviso</button>
+        </div>
+        <div id="agencia-avisos-list"></div>
+        <!-- Formulario nuevo aviso (solo supervisor/admin) -->
+        <div id="form-aviso" style="display:none;background:var(--surface2);border-radius:10px;padding:16px;margin-top:12px;">
+          <div style="font-size:12px;font-weight:600;color:var(--brand-dark);margin-bottom:10px;">Nuevo aviso</div>
+          <input type="text" id="aviso-titulo" placeholder="Título del aviso" style="width:100%;margin-bottom:8px;padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;" />
+          <textarea id="aviso-texto" placeholder="Escribe el mensaje..." rows="3" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button onclick="publicarAviso()" style="background:var(--brand-blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;font-weight:600;">Publicar</button>
+            <button onclick="ocultarFormAviso()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOPORTE -->
+  <div class="panel" id="panel-soporte">
+    <div class="page-header">
+      <div class="page-title">Soporte</div>
+      <div class="page-sub">Reportá una incidencia y nos contactaremos a la brevedad</div>
+    </div>
+    <div style="max-width:560px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-top:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Nombre</label>
+          <input type="text" id="sop-nombre" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" readonly />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Agencia</label>
+          <input type="text" id="sop-agencia" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" readonly />
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Tipo de incidencia</label>
+        <select id="sop-tipo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);">
+          <option value="">-- Seleccionar --</option>
+          <option>Error en la aplicación</option>
+          <option>Problema con el PDF</option>
+          <option>Datos incorrectos</option>
+          <option>Problema de acceso</option>
+          <option>Solicitud de nueva función</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Descripción</label>
+        <textarea id="sop-descripcion" rows="4" placeholder="Describe el problema con el mayor detalle posible..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Email de contacto</label>
+        <input type="email" id="sop-email" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" />
+      </div>
+      <button onclick="enviarSoporte()" style="width:100%;padding:11px;background:var(--brand-dark);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+        Enviar reporte
+      </button>
+      <div id="sop-msg" style="display:none;margin-top:12px;font-size:12px;text-align:center;"></div>
+    </div>
+  </div>
+
   <div class="panel active" id="panel-cotizador">
     <div class="page-header">
       <div class="page-title">Nueva Cotización</div>
@@ -427,6 +516,10 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
         Guardar
       </button>
       <button class="btn btn-ghost" onclick="resetCotizacion(true)">Nueva Cotización</button>
+      <button class="btn btn-ghost" onclick="cerrarCotizacion()" id="btn-cerrar-cot" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Cerrar Cotización
+      </button>
     </div>
     <div id="save-msg" style="font-size:12px;color:var(--text3);margin-top:8px;display:none;"></div>
   </div>
@@ -697,6 +790,172 @@ async function checkAuth() {
 async function cerrarSesion() {
   await sb.auth.signOut();
   window.location.href = '/index.html';
+}
+
+// ── CERRAR COTIZACIÓN ─────────────────────────────────────────────
+async function cerrarCotizacion() {
+  await guardarCotizacion();
+  // Mostrar mensaje de cierre
+  const msg = document.getElementById('save-msg');
+  if (msg) {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--brand-blue)';
+    msg.innerHTML = '✓ Cotización guardada y cerrada correctamente';
+  }
+  // Ir al Centro de Avisos después de 1.5s
+  setTimeout(() => {
+    if (msg) msg.style.display = 'none';
+    showPanel('avisos', null);
+    // Highlight Centro de Avisos in sidebar
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-avisos')?.classList.add('active');
+  }, 1500);
+}
+
+// ── CENTRO DE AVISOS ─────────────────────────────────────────────
+const TAIS_NEWS = [
+  { fecha: '2026-04-20', titulo: 'Logos de agencias en PDF', texto: 'Cada agencia ahora ve su propio logo en las cotizaciones PDF.' },
+  { fecha: '2026-04-20', titulo: 'Centro de Avisos', texto: 'Nueva sección para comunicados internos y noticias de TAIS.' },
+  { fecha: '2026-04-20', titulo: 'Botón Cerrar Cotización', texto: 'Nuevo botón para cerrar el proceso de cotización y volver al inicio.' },
+  { fecha: '2026-04-20', titulo: 'Formulario de Soporte', texto: 'Ya podés reportar incidencias directamente desde la app.' },
+  { fecha: '2026-04-19', titulo: 'Fix empresa y contacto en PDF', texto: 'Se corrigió el problema donde la empresa y contacto no aparecían en el PDF.' },
+  { fecha: '2026-04-19', titulo: 'Destinos más cotizados', texto: 'Los reportes ahora excluyen conexiones y muestran el destino real.' },
+  { fecha: '2026-04-19', titulo: 'Dominio tais.mx activo', texto: 'La plataforma ya está disponible en www.tais.mx.' },
+  { fecha: '2026-04-18', titulo: 'Lanzamiento TAIS Travel Suite', texto: 'Primera versión en producción con autenticación, cotizador y base de datos en la nube.' },
+];
+
+function renderTaisNews() {
+  const hace7dias = new Date();
+  hace7dias.setDate(hace7dias.getDate() - 7);
+  const recientes = TAIS_NEWS.filter(n => new Date(n.fecha) >= hace7dias);
+  const el = document.getElementById('tais-news-list');
+  if (!el) return;
+  if (!recientes.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:16px 0;">Sin noticias recientes.</div>';
+    return;
+  }
+  el.innerHTML = recientes.map(n => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="font-size:12.5px;font-weight:600;color:var(--brand-dark);">${n.titulo}</div>
+        <div style="font-size:10px;color:var(--text3);white-space:nowrap;">${formatFechaAviso(n.fecha)}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${n.texto}</div>
+    </div>
+  `).join('');
+}
+
+async function renderAgenciaAvisos() {
+  const el = document.getElementById('agencia-avisos-list');
+  const titleEl = document.getElementById('conexion-title');
+  const btnNuevo = document.getElementById('btn-nuevo-aviso');
+  if (!el) return;
+
+  // Set title
+  if (titleEl && window.currentAgenciaNombre) {
+    titleEl.textContent = 'Conexión ' + window.currentAgenciaNombre;
+  }
+
+  // Show new aviso button for supervisor/admin
+  if (btnNuevo && ['supervisor','admin'].includes(currentUsuario?.rol)) {
+    btnNuevo.style.display = 'block';
+  }
+
+  // Load from Supabase
+  const { data, error } = await sb.from('avisos_agencia')
+    .select('*')
+    .eq('agencia_id', currentAgenciaId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data || !data.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:16px 0;">Sin avisos publicados.</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(a => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="font-size:12.5px;font-weight:600;color:var(--brand-dark);">${a.titulo}</div>
+        <div style="font-size:10px;color:var(--text3);white-space:nowrap;">${formatFechaAviso(a.created_at)}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${a.texto}</div>
+      ${['supervisor','admin'].includes(currentUsuario?.rol) ? `<button onclick="eliminarAviso('${a.id}')" style="margin-top:8px;font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;">× Eliminar</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function formatFechaAviso(fecha) {
+  const d = new Date(fecha);
+  return d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function mostrarFormAviso() {
+  document.getElementById('form-aviso').style.display = 'block';
+  document.getElementById('btn-nuevo-aviso').style.display = 'none';
+}
+
+function ocultarFormAviso() {
+  document.getElementById('form-aviso').style.display = 'none';
+  document.getElementById('btn-nuevo-aviso').style.display = ['supervisor','admin'].includes(currentUsuario?.rol) ? 'block' : 'none';
+}
+
+async function publicarAviso() {
+  const titulo = document.getElementById('aviso-titulo').value.trim();
+  const texto = document.getElementById('aviso-texto').value.trim();
+  if (!titulo || !texto) { alert('Completá el título y el mensaje.'); return; }
+  const { error } = await sb.from('avisos_agencia').insert({
+    agencia_id: currentAgenciaId,
+    autor_id:   currentUser.id,
+    titulo, texto
+  });
+  if (error) { alert('Error al publicar: ' + error.message); return; }
+  document.getElementById('aviso-titulo').value = '';
+  document.getElementById('aviso-texto').value = '';
+  ocultarFormAviso();
+  renderAgenciaAvisos();
+}
+
+async function eliminarAviso(id) {
+  if (!confirm('¿Eliminar este aviso?')) return;
+  await sb.from('avisos_agencia').delete().eq('id', id);
+  renderAgenciaAvisos();
+}
+
+// ── SOPORTE ───────────────────────────────────────────────────────
+async function enviarSoporte() {
+  const tipo = document.getElementById('sop-tipo').value;
+  const desc = document.getElementById('sop-descripcion').value.trim();
+  const email = document.getElementById('sop-email').value.trim();
+  const msg = document.getElementById('sop-msg');
+
+  if (!tipo || !desc || !email) {
+    msg.style.display = 'block';
+    msg.style.color = '#dc2626';
+    msg.textContent = 'Por favor completá todos los campos.';
+    return;
+  }
+
+  // Save to Supabase
+  const { error } = await sb.from('reportes_soporte').insert({
+    agencia_id:   currentAgenciaId,
+    usuario_id:   currentUser.id,
+    nombre:       currentUsuario.nombre,
+    agencia:      window.currentAgenciaNombre,
+    tipo, desc, email,
+  });
+
+  if (error) {
+    msg.style.display = 'block';
+    msg.style.color = '#dc2626';
+    msg.textContent = 'Error al enviar. Intentá de nuevo.';
+    return;
+  }
+
+  msg.style.display = 'block';
+  msg.style.color = '#16a34a';
+  msg.textContent = '✓ Reporte enviado correctamente. Te contactaremos a la brevedad.';
+  document.getElementById('sop-descripcion').value = '';
+  document.getElementById('sop-tipo').value = '';
 }
 
 // ── AUTO LOGOUT — 1 hora de inactividad ──────────────────────────
@@ -1621,6 +1880,23 @@ async function init() {
   renderHistorial();
   updateHistBadge();
   addItin();
+
+  // Prefill soporte form
+  const sopNombre = document.getElementById('sop-nombre');
+  const sopAgencia = document.getElementById('sop-agencia');
+  const sopEmail = document.getElementById('sop-email');
+  if (sopNombre) sopNombre.value = currentUsuario.nombre || '';
+  if (sopAgencia) sopAgencia.value = window.currentAgenciaNombre || '';
+  if (sopEmail) sopEmail.value = currentUsuario.email || '';
+
+  // Render avisos
+  renderTaisNews();
+  renderAgenciaAvisos();
+
+  // Start on Centro de Avisos
+  showPanel('avisos', null);
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-avisos')?.classList.add('active');
 }
 
 // ── PANELS ───────────────────────────────────────────────────────
@@ -1631,6 +1907,7 @@ function showPanel(name, e) {
   const btn = e ? e.currentTarget : document.querySelector(`.nav-btn[onclick*="'${name}'"]`);
   if (btn) btn.classList.add('active');
   if (name === 'reportes') renderReportes();
+  if (name === 'avisos') { renderTaisNews(); renderAgenciaAvisos(); }
 }
 
 // ── AGENTS ───────────────────────────────────────────────────────
