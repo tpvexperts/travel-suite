@@ -1962,23 +1962,36 @@ function renderAgentsList() {
     </div>`).join('');
 }
 
-function addAgent() {
-  const name = document.getElementById('new-ag-name').value.trim();
+async function addAgent() {
+  const name    = document.getElementById('new-ag-name').value.trim();
   const company = document.getElementById('new-ag-company').value.trim();
-  const phone = document.getElementById('new-ag-phone').value.trim();
-  const email = document.getElementById('new-ag-email').value.trim();
+  const phone   = document.getElementById('new-ag-phone').value.trim();
+  const email   = document.getElementById('new-ag-email').value.trim();
   if (!name) return;
-  const id = Date.now();
-  agentes.push({ id, name, company, phone, email });
-  lsSet('tpv_agents', agentes);
-  renderAgentsSelect(); renderAgentsList();
+
+  const { data, error } = await sb.from('agentes').insert({
+    agencia_id: currentAgenciaId,
+    usuario_id: currentUser.id,
+    nombre:     name,
+    empresa:    company,
+    telefono:   phone,
+    email:      email,
+  }).select().single();
+
+  if (error) { alert('Error al guardar agente: ' + error.message); return; }
+
+  agentes.push({ id: data.id, name: data.nombre, company: data.empresa, phone: data.telefono, email: data.email });
+  renderAgentsSelect();
+  renderAgentsList();
   ['new-ag-name','new-ag-company','new-ag-phone','new-ag-email'].forEach(id => document.getElementById(id).value = '');
 }
 
-function delAgent(id) {
-  agentes = agentes.filter(a => a.id !== id);
-  lsSet('tpv_agents', agentes);
-  renderAgentsSelect(); renderAgentsList();
+async function delAgent(id) {
+  // Delete from Supabase
+  await sb.from('agentes').delete().eq('id', id);
+  agentes = agentes.filter(a => String(a.id) !== String(id));
+  renderAgentsSelect();
+  renderAgentsList();
 }
 
 function updateAgente() {}
@@ -3007,8 +3020,8 @@ function getLogoHTML(code) {
 // ── PDF ──────────────────────────────────────────────────────────
 function getAgente() {
   const sel = document.getElementById('cot-agente');
-  const id = parseInt(sel.value);
-  return agentes.find(a => a.id === id) || null;
+  const id = sel.value;
+  return agentes.find(a => String(a.id) === String(id)) || null;
 }
 
 function buildPDFHTML() {
