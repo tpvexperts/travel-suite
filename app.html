@@ -2016,17 +2016,34 @@ function renameAP(old, newCode, newCity) {
   showSaved('ap-saved');
 }
 
-function delAP(code) { delete ciudades[code]; lsSet('tpv_airports', ciudades); renderAirports(); showSaved('ap-saved'); }
-
-function addAirport() {
+async function addAirport() {
   const code = document.getElementById('new-ap-code').value.toUpperCase().trim();
   const city = document.getElementById('new-ap-city').value.trim();
   if (!code || !city) return;
+
+  const { error } = await sb.from('aeropuertos_custom').insert({
+    agencia_id: currentAgenciaId,
+    codigo:     code,
+    ciudad:     city,
+  });
+
+  if (error) { alert('Error al guardar aeropuerto: ' + error.message); return; }
+
   ciudades[code] = city;
   document.getElementById('new-ap-code').value = '';
   document.getElementById('new-ap-city').value = '';
-  lsSet('tpv_airports', ciudades);
-  renderAirports(); showSaved('ap-saved');
+  renderAirports();
+  showSaved('ap-saved');
+}
+
+async function delAP(code) {
+  // Only delete from custom table — don't touch global airports
+  await sb.from('aeropuertos_custom').delete()
+    .eq('agencia_id', currentAgenciaId)
+    .eq('codigo', code);
+  delete ciudades[code];
+  renderAirports();
+  showSaved('ap-saved');
 }
 
 function showSaved(id) {
