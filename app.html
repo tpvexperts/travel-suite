@@ -1144,6 +1144,9 @@ function guardarCotizacion() {
   lsSet('tpv_historial', historial);
   updateHistBadge();
   renderHistorial();
+  // Mostrar botón cerrar cotización
+  const btnCerrar = document.getElementById('btn-cerrar-cot');
+  if (btnCerrar) btnCerrar.style.display = 'inline-flex';
   const msg = document.getElementById('save-msg');
   if (msg) {
     msg.style.display = 'block';
