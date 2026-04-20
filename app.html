@@ -751,10 +751,10 @@ function renderClientesSelect() {
 
 function autocompletarCliente() {
   const sel = document.getElementById('cot-empresa');
-  const id = parseInt(sel.value);
-  const cli = clientes.find(c => c.id === id);
-  if (cli && cli.contact) {
-    document.getElementById('cot-cliente').value = cli.contact;
+  const id = sel.value;
+  const cli = clientes.find(c => String(c.id) === String(id));
+  if (cli) {
+    if (cli.contact) document.getElementById('cot-cliente').value = cli.contact;
   }
 }
 
@@ -804,8 +804,9 @@ function delCliente(id) {
 
 // ── GUARDAR COTIZACIÓN ────────────────────────────────────────────
 function getCotizacionData() {
-  const empresaId = parseInt(document.getElementById('cot-empresa')?.value) || null;
-  const empresa = clientes.find(c => c.id === empresaId);
+  const empresaId = document.getElementById('cot-empresa')?.value || null;
+  // Support both UUID strings and legacy numeric IDs
+  const empresa = clientes.find(c => String(c.id) === String(empresaId));
   const currentId = document.getElementById('cot-num').value;
   // Detect if this is a revision (id has -vN suffix or parent exists)
   const parentId = document.getElementById('cot-parent-id')?.value || null;
@@ -1427,9 +1428,23 @@ function renderReportes() {
     (h.itins||[]).forEach(it => {
       let finalDest = null;
       if (it.parsed && it.parsed.length) {
-        // Take midpoint flight destination (outbound leg = first half)
-        const mid = Math.ceil(it.parsed.length / 2) - 1;
-        finalDest = it.parsed[mid]?.ruta?.split('›')[1]?.trim();
+        // For GDS: take the destination of the LAST flight
+        // IST → FRA → MEX = last flight destination is MEX (correct)
+        // MEX → AMS → FRA = last flight destination is FRA (correct)
+        // For round trips MEX → MAD → MEX: last is MEX (origin)
+        // so we take the destination of the flight at the midpoint
+        const last = it.parsed[it.parsed.length - 1];
+        const first = it.parsed[0];
+        const originCity = first?.ruta?.split('›')[0]?.trim();
+        const lastDest = last?.ruta?.split('›')[1]?.trim();
+        // If last destination = origin city, it's a round trip — take midpoint
+        if (lastDest && lastDest !== originCity) {
+          finalDest = lastDest; // one way or last leg
+        } else {
+          // Round trip — destination is the farthest point (midpoint)
+          const mid = Math.floor(it.parsed.length / 2);
+          finalDest = it.parsed[mid > 0 ? mid-1 : 0]?.ruta?.split('›')[1]?.trim();
+        }
       } else if (it.flightsIda && it.flightsIda.length) {
         finalDest = it.flightsIda[it.flightsIda.length-1]?.ruta?.split('›')[1]?.trim();
       } else if (it.segmentos && it.segmentos.length) {
@@ -2681,8 +2696,8 @@ function buildPDFHTML() {
   const num     = document.getElementById('cot-num').value;
   const notasVal = document.getElementById('cot-notas')?.value || '';
   const agente  = getAgente();
-  const empresaId = parseInt(document.getElementById('cot-empresa')?.value) || null;
-  const empresaObj = clientes.find(c => c.id === empresaId);
+  const empresaId = document.getElementById('cot-empresa')?.value || null;
+  const empresaObj = clientes.find(c => String(c.id) === String(empresaId));
   const empresaNombre = empresaObj ? empresaObj.name : '';
 
   const optionsHTML = itins.filter(it => it.parsed&&it.parsed.length || it.flightsIda&&it.flightsIda.length || it.idas&&it.idas.length || it.segmentos&&it.segmentos.length || (it.condRows&&it.condRows.some(r=>r.clase))).map((it, idx) => {
