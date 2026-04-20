@@ -3102,7 +3102,7 @@ function buildPDFHTML() {
             <div style="width:72px;min-width:72px;overflow:hidden;display:flex;align-items:center;">${logoH}</div>
             <div style="width:40px;color:#8898AA;">${op.fecha||''}</div>
             <div style="flex:1;color:#4A5568;">${ruta}</div>
-            <div style="color:#8898AA;width:90px;">${op.sale?'Sale '+op.sale:''} ${op.llega?'– Llega '+op.llega:''}</div>
+            <div style="color:#8898AA;width:130px;white-space:nowrap;">${op.sale?'Sale '+op.sale:''} ${op.llega?'– Llega '+op.llega:''}</div>
             <div style="text-align:right;">${preciosHTML}</div>
           </div>`;
         }).join('');
