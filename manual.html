@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Manual de Usuario — Travel Suite</title>
+<title>Manual de Usuario — TAIS Travel Suite</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -197,18 +197,18 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); c
   margin: 12px 0; display: flex; gap: 10px; align-items: flex-start;
 }
 
-/* ── Badge ── */
-.badge {
+/* ── Etiqueta ── */
+.etiqueta {
   display: inline-flex; align-items: center;
   font-size: 10.5px; font-weight: 600; padding: 2px 8px;
   border-radius: 100px; white-space: nowrap;
 }
-.badge-slate  { background: var(--slate); color: #fff; }
-.badge-amber  { background: #FEF3CD; color: #856404; }
-.badge-green  { background: #D4EDDA; color: #155724; }
-.badge-red    { background: #F8D7DA; color: #721C24; }
-.badge-blue   { background: #EBF4FF; color: #1A4E8C; }
-.badge-gold   { background: var(--mustard); color: #fff; }
+.etiqueta-slate  { background: var(--slate); color: #fff; }
+.etiqueta-amber  { background: #FEF3CD; color: #856404; }
+.etiqueta-green  { background: #D4EDDA; color: #155724; }
+.etiqueta-red    { background: #F8D7DA; color: #721C24; }
+.etiqueta-blue   { background: #EBF4FF; color: #1A4E8C; }
+.etiqueta-gold   { background: var(--mustard); color: #fff; }
 
 /* ── Table ── */
 .manual-table {
@@ -339,7 +339,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); c
   <div class="manual-hero">
     <div class="manual-hero-version">v1.0 · Abril 2026</div>
     <div class="manual-hero-tag">Documentación oficial</div>
-    <h1>Manual de Usuario<br/>Travel Suite</h1>
+    <h1>Manual de Usuario<br/>TAIS Travel Suite</h1>
     <p>Todo lo que necesitás saber para cotizar, gestionar y vender más con Travel Suite.</p>
   </div>
 
@@ -350,7 +350,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); c
       <h2 class="section-title">¿Qué es Travel Suite?</h2>
     </div>
     <p style="font-size:13.5px;color:var(--text2);margin-bottom:16px;">
-      Travel Suite es una plataforma profesional para agentes de viajes que centraliza la cotización, el historial de ventas y los reportes en un solo lugar.
+      TAIS Travel Suite es una plataforma profesional para agentes de viajes que centraliza la cotización, el historial de ventas y los reportes en un solo lugar.
     </p>
     <div class="grid-3">
       <div class="card">
@@ -502,7 +502,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); c
     </div>
     <div class="card">
       <div class="card-title">⚠ Visado requerido</div>
-      <p>Si la opción requiere visado, tildá el checkbox <strong>Requiere visado</strong> en el encabezado de la opción. Aparecerá un badge de advertencia y una leyenda en el PDF.</p>
+      <p>Si la opción requiere visado, tildá el checkbox <strong>Requiere visado</strong> en el encabezado de la opción. Aparecerá un etiqueta de advertencia y una leyenda en el PDF.</p>
     </div>
   </section>
 
@@ -599,7 +599,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); c
       <table class="manual-table">
         <thead><tr><th>Aerolínea</th><th>Campos de precio</th></tr></thead>
         <tbody>
-          <tr><td><span class="badge badge-amber">VB · Y4 · U2 · FR</span> Low Cost</td><td>Zero / c/ Equipaje de mano / c/ Maleta documentada</td></tr>
+          <tr><td><span class="etiqueta etiqueta-amber">VB · Y4 · U2 · FR</span> Low Cost</td><td>Zero / c/ Equipaje de mano / c/ Maleta documentada</td></tr>
           <tr><td>Otras aerolíneas</td><td>Precio total</td></tr>
         </tbody>
       </table>
@@ -683,12 +683,12 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); c
       <table class="manual-table">
         <thead><tr><th>Estado</th><th>Significa</th></tr></thead>
         <tbody>
-          <tr><td><span class="badge badge-amber">⏳ Pendiente</span></td><td>Cotización enviada, esperando respuesta del cliente.</td></tr>
-          <tr><td><span class="badge badge-green">✅ Comprada</span></td><td>El cliente confirmó y compró. Habilita campos de monto.</td></tr>
-          <tr><td><span class="badge badge-red">❌ No comprada</span></td><td>El cliente no procedió con esta cotización.</td></tr>
+          <tr><td><span class="etiqueta etiqueta-amber">⏳ Pendiente</span></td><td>Cotización enviada, esperando respuesta del cliente.</td></tr>
+          <tr><td><span class="etiqueta etiqueta-green">✅ Comprada</span></td><td>El cliente confirmó y compró. Habilita campos de monto.</td></tr>
+          <tr><td><span class="etiqueta etiqueta-red">❌ No comprada</span></td><td>El cliente no procedió con esta cotización.</td></tr>
         </tbody>
       </table>
-      <p style="margin-top:10px;">Clic en el badge de estado para cambiar al siguiente. El orden es: Pendiente → Comprada → No comprada → Pendiente.</p>
+      <p style="margin-top:10px;">Clic en el etiqueta de estado para cambiar al siguiente. El orden es: Pendiente → Comprada → No comprada → Pendiente.</p>
     </div>
     <div class="card">
       <div class="card-title">Registrar una venta</div>
@@ -903,7 +903,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); c
   </section>
 
   <div style="text-align:center;padding:32px 0;font-size:12px;color:var(--text3);">
-    Travel Suite · Manual de Usuario v1.0 · Abril 2026<br/>
+    TAIS Travel Suite · Manual de Usuario v1.0 · Abril 2026<br/>
     <span style="color:var(--mustard);">TPV Experts</span> · ventas@tuproximoviaje.com · 5552111878
   </div>
 
