@@ -795,21 +795,27 @@ async function cerrarSesion() {
 // ── CERRAR COTIZACIÓN ─────────────────────────────────────────────
 async function cerrarCotizacion() {
   await guardarCotizacion();
-  // Mostrar mensaje de cierre
-  const msg = document.getElementById('save-msg');
-  if (msg) {
-    msg.style.display = 'block';
-    msg.style.color = 'var(--brand-blue)';
-    msg.innerHTML = '✓ Cotización guardada y cerrada correctamente';
-  }
-  // Ir al Centro de Avisos después de 1.5s
+  // Esperar un momento y mostrar mensaje de cierre
   setTimeout(() => {
-    if (msg) msg.style.display = 'none';
+    const msg = document.getElementById('save-msg');
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.color = 'var(--brand-blue)';
+      msg.innerHTML = '✓ Cotización guardada y cerrada correctamente';
+    }
+    // Ocultar botón cerrar
+    const btnCerrar = document.getElementById('btn-cerrar-cot');
+    if (btnCerrar) btnCerrar.style.display = 'none';
+  }, 500);
+
+  // Ir al Centro de Avisos después de 2s
+  setTimeout(() => {
     showPanel('avisos', null);
-    // Highlight Centro de Avisos in sidebar
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('btn-avisos')?.classList.add('active');
-  }, 1500);
+    renderTaisNews();
+    renderAgenciaAvisos();
+  }, 2000);
 }
 
 // ── CENTRO DE AVISOS ─────────────────────────────────────────────
@@ -1094,7 +1100,7 @@ function getVersions(baseId) {
   return historial.filter(h => getBaseId(h.id) === baseId).sort((a,b) => a.fechaISO.localeCompare(b.fechaISO));
 }
 
-function guardarCotizacion() {
+async function guardarCotizacion() {
   const data = getCotizacionData();
   if (!data.cliente && !data.empresa) {
     alert('Agrega al menos el nombre del cliente o empresa antes de guardar.');
@@ -1104,56 +1110,78 @@ function guardarCotizacion() {
   const baseId = getBaseId(data.id);
   const existingVersions = getVersions(baseId);
   const isFirstSave = existingVersions.length === 0;
-  const isExactMatch = historial.find(h => h.id === data.id);
 
-  if (isFirstSave) {
-    // Brand new cotizacion — save as-is (cotNum already set when created)
-    data.version = 1;
-    data.parentId = null;
-    historial.unshift(data);
-    // Do NOT increment here — cotNum increments on "Nueva Cotización"
-  } else if (isExactMatch) {
-    // Same ID already saved — create a new version
+  let version = 1;
+  let parentDbId = null;
+
+  if (!isFirstSave) {
     const latestVersion = Math.max(...existingVersions.map(h => h.version || 1));
-    const newVersion = latestVersion + 1;
-    const newId = baseId + '-v' + newVersion;
-    data.id = newId;
-    data.version = newVersion;
-    data.parentId = baseId;
-    data.status = 'pendiente';
-    // Update the field so user sees new ID
-    document.getElementById('cot-num').value = newId;
+    version = latestVersion + 1;
+    const parentRec = existingVersions.find(h => h.version === 1);
+    parentDbId = parentRec ? parentRec.dbId : null;
+    data.id = baseId + '-v' + version;
+    document.getElementById('cot-num').value = data.id;
     const parentInput = document.getElementById('cot-parent-id');
     if (parentInput) parentInput.value = baseId;
-    historial.unshift(data);
-  } else {
-    // It's already a vN — create next version
-    const latestVersion = Math.max(...existingVersions.map(h => h.version || 1));
-    const newVersion = latestVersion + 1;
-    const newId = baseId + '-v' + newVersion;
-    data.id = newId;
-    data.version = newVersion;
-    data.parentId = baseId;
-    data.status = 'pendiente';
-    document.getElementById('cot-num').value = newId;
-    const parentInput = document.getElementById('cot-parent-id');
-    if (parentInput) parentInput.value = baseId;
-    historial.unshift(data);
   }
 
-  lsSet('tpv_historial', historial);
+  // Guardar en Supabase
+  const payload = {
+    numero:         baseId,
+    version:        version,
+    parent_id:      parentDbId,
+    agencia_id:     currentAgenciaId,
+    agente_id:      currentUser.id,
+    cliente_nombre: data.cliente,
+    empresa_nombre: data.empresa,
+    cliente_id:     data.empresaId || null,
+    notas:          data.notas,
+    itinerarios:    data.itins,
+    status:         'pendiente',
+    fecha_iso:      new Date().toISOString(),
+  };
+
+  const { data: saved, error } = await sb.from('cotizaciones').insert(payload).select().single();
+
+  if (error) {
+    alert('Error al guardar: ' + error.message);
+    console.error('Supabase error:', error);
+    return;
+  }
+
+  // Agregar al historial local
+  const localRecord = {
+    id:       data.id,
+    dbId:     saved.id,
+    numero:   baseId,
+    version,
+    parentId: !isFirstSave ? baseId : null,
+    fecha:    new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' }),
+    fechaISO: saved.fecha_iso,
+    cliente:  data.cliente,
+    empresa:  data.empresa,
+    empresaId: data.empresaId,
+    notas:    data.notas,
+    agenteId: currentUser.id,
+    itins:    data.itins,
+    status:   'pendiente',
+    locked:   false,
+  };
+  historial.unshift(localRecord);
+
   updateHistBadge();
   renderHistorial();
+
   // Mostrar botón cerrar cotización
   const btnCerrar = document.getElementById('btn-cerrar-cot');
   if (btnCerrar) btnCerrar.style.display = 'inline-flex';
+
   const msg = document.getElementById('save-msg');
   if (msg) {
     msg.style.display = 'block';
-    const isNew = isFirstSave;
-    msg.innerHTML = isNew
+    msg.innerHTML = isFirstSave
       ? `✓ Cotización guardada — <strong>${data.id}</strong>`
-      : `✓ Nueva versión guardada — <strong>${data.id}</strong> <span style="color:var(--text3)">(basada en ${baseId})</span>`;
+      : `✓ Nueva versión guardada — <strong>${data.id}</strong>`;
     setTimeout(() => msg.style.display = 'none', 4000);
   }
 }
