@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TAIS Travel Suite</title>
+<title>Travel Suite — TAIS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
@@ -1251,7 +1251,8 @@ async function guardarCotizacion() {
 function updateHistBadge() {
   const badge = document.getElementById('hist-badge');
   if (!badge) return;
-  const n = historial.length;
+  const uniqueIds = new Set(historial.map(h => getBaseId(h.id)));
+  const n = uniqueIds.size;
   badge.textContent = n;
   badge.style.display = n > 0 ? 'inline' : 'none';
 }
@@ -1300,6 +1301,12 @@ function renderHistorial() {
   });
   // Sort versions within each group newest first
   Object.values(groups).forEach(g => g.sort((a,b) => b.fechaISO.localeCompare(a.fechaISO)));
+  // Sort groups by COT number descending (COT-2026-036 before COT-2026-001)
+  groupOrder.sort((a, b) => {
+    const numA = parseInt(a.split('-')[2]) || 0;
+    const numB = parseInt(b.split('-')[2]) || 0;
+    return numB - numA;
+  });
 
   el.innerHTML = groupOrder.map(base => {
     const versions = groups[base];
@@ -1315,7 +1322,7 @@ function renderHistorial() {
           </span>
           <button class="btn btn-ghost btn-sm" style="font-size:10.5px;padding:4px 8px;" onclick="reabrirCotizacion('${h.id}')">Abrir</button>
           <button class="btn btn-ghost btn-sm" style="font-size:10.5px;padding:4px 8px;" onclick="regenPDF('${h.id}')">PDF</button>
-          <button class="del-btn" onclick="eliminarHist('${h.id}',event)">×</button>
+          ${['supervisor','admin'].includes(currentUsuario?.rol) ? `<button class="del-btn" onclick="eliminarHist('${h.id}',event)">×</button>` : ''}
         </div>
       </div>`).join('') : '';
 
@@ -1363,6 +1370,16 @@ function renderHistorial() {
               onchange="updateMonto('${latest.id}','monto',this.value)" onclick="event.stopPropagation()"
               style="font-size:11px;width:90px;padding:3px 7px;border:1px solid var(--border);border-radius:6px;" />
             ` : ''}
+            ${latest.status === 'no_comprada' ? `
+            <select onchange="updateMonto('${latest.id}','razonNoCierre',this.value)"
+              style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface);max-width:160px;" onclick="event.stopPropagation()" title="Razón de no cierre">
+              <option value="">¿Por qué no se cerró?</option>
+              <option value="precio" ${latest.razonNoCierre==='precio'?'selected':''}>Precio alto</option>
+              <option value="fechas" ${latest.razonNoCierre==='fechas'?'selected':''}>Fechas no convenientes</option>
+              <option value="destino" ${latest.razonNoCierre==='destino'?'selected':''}>Cambió de destino</option>
+              <option value="competencia" ${latest.razonNoCierre==='competencia'?'selected':''}>Se fue con otra agencia</option>
+              <option value="postergado" ${latest.razonNoCierre==='postergado'?'selected':''}>Postergó el viaje</option>
+            </select>` : ''}
             ${latest.status !== 'pendiente' ? `
             <button class="lock-btn" onclick="lockRegistro('${latest.id}',event)" title="Guardar y bloquear">💾</button>
             ` : ''}
@@ -1370,7 +1387,7 @@ function renderHistorial() {
           <button class="btn btn-ghost btn-sm" onclick="reabrirCotizacion('${latest.id}')">Abrir</button>
           <button class="btn btn-ghost btn-sm" onclick="regenPDF('${latest.id}')">PDF</button>
           ${hasVersions ? `<button class="btn btn-ghost btn-sm" onclick="toggleVersions('${base}',event)" id="vtoggle-${base}">▾ Historial</button>` : ''}
-          <button class="del-btn" onclick="eliminarHist('${latest.id}',event)">×</button>
+          ${['supervisor','admin'].includes(currentUsuario?.rol) ? `<button class="del-btn" onclick="eliminarHist('${latest.id}',event)" title="Eliminar (solo supervisor/admin)">×</button>` : ''}
         </div>
       </div>
       <div id="versions-${base}" style="display:none;">${versionRows}</div>
@@ -1448,6 +1465,11 @@ function updateMonto(id, field, value) {
   const h = historial.find(x=>x.id===id);
   if (!h) return;
   h[field] = value;
+  if (field === 'razonNoCierre') {
+    // Sync to Supabase
+    if (h.dbId) sb.from('cotizaciones').update({ notas: (h.notas||'') + (value ? ' [Razón: '+value+']' : '') }).eq('id', h.dbId);
+    return;
+  }
   if (field === 'opcionComprada' && value !== '') {
     const it = (h.itins||[])[parseInt(value)];
     if (it) {
@@ -1521,19 +1543,30 @@ function reabrirCotizacion(id) {
 function regenPDF(id) {
   const h = historial.find(x=>x.id===id);
   if (!h) return;
-  // Temporarily swap state and generate PDF
+  // Save current state
   const savedItins = itins;
-  const savedNum = document.getElementById('cot-num').value;
+  const savedNum    = document.getElementById('cot-num').value;
+  const savedCliente = document.getElementById('cot-cliente').value;
+  const savedNotas  = document.getElementById('cot-notas')?.value || '';
+  const savedEmpresa = document.getElementById('cot-empresa')?.value || '';
+  const savedAgente  = document.getElementById('cot-agente')?.value || '';
+  // Set historial record state
   document.getElementById('cot-num').value = h.id;
   document.getElementById('cot-cliente').value = h.cliente || '';
   if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = h.notas || '';
+  if (document.getElementById('cot-empresa') && h.empresaId) document.getElementById('cot-empresa').value = h.empresaId;
+  if (document.getElementById('cot-agente') && h.agenteId) document.getElementById('cot-agente').value = h.agenteId;
   itins = JSON.parse(JSON.stringify(h.itins || []));
   downloadPDF();
-  // Restore
+  // Restore after PDF opens
   setTimeout(() => {
     itins = savedItins;
     document.getElementById('cot-num').value = savedNum;
-  }, 500);
+    document.getElementById('cot-cliente').value = savedCliente;
+    if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = savedNotas;
+    if (document.getElementById('cot-empresa')) document.getElementById('cot-empresa').value = savedEmpresa;
+    if (document.getElementById('cot-agente')) document.getElementById('cot-agente').value = savedAgente;
+  }, 800);
 }
 
 // ── EXPORT / IMPORT CONFIG ────────────────────────────────────────
@@ -2317,13 +2350,37 @@ function buildMultiHTML(it, idx) {
 }
 
 // ── TYPE C: LOW COST ──────────────────────────────────────────────
-const LC_AIRLINES = [
+const LC_AIRLINES_BASE = [
   {code:'VB', name:'VivaAerobus'},
   {code:'Y4', name:'Volaris'},
   {code:'FR', name:'Ryanair'},
   {code:'U2', name:'EasyJet'},
 ];
 const LC_LOWCOST_CODES = ['VB','Y4','FR','U2'];
+
+// Función que devuelve todas las aerolíneas disponibles (logos cargados + base)
+function getAllAirlines() {
+  const fromLogos = Object.keys(logos).map(code => ({ code, name: code }));
+  const base = [
+    {code:'AM',name:'Aeromexico'},{code:'CM',name:'Copa'},{code:'UA',name:'United'},
+    {code:'IB',name:'Iberia'},{code:'LH',name:'Lufthansa'},{code:'TK',name:'Turkish'},
+    {code:'AF',name:'Air France'},{code:'KL',name:'KLM'},{code:'AA',name:'American'},
+    {code:'DL',name:'Delta'},{code:'LA',name:'LATAM'},{code:'BA',name:'British Airways'},
+    {code:'AV',name:'Avianca'},{code:'AC',name:'Air Canada'},{code:'UX',name:'Air Europa'},
+    {code:'VB',name:'VivaAerobus'},{code:'Y4',name:'Volaris'},{code:'FR',name:'Ryanair'},
+    {code:'U2',name:'EasyJet'},
+  ];
+  // Merge — logos first, then base, deduplicate by code
+  const seen = new Set();
+  return [...fromLogos, ...base].filter(a => {
+    if (seen.has(a.code)) return false;
+    seen.add(a.code);
+    return true;
+  }).sort((a,b) => a.code.localeCompare(b.code));
+}
+
+// Keep LC_AIRLINES for backwards compat
+const LC_AIRLINES = LC_AIRLINES_BASE;
 
 function isLowCostAirline(code) { return LC_LOWCOST_CODES.includes(code); }
 
@@ -2346,13 +2403,7 @@ function newOpcion(origen='', destino='') {
 
 // ── BUILD LC TRAMOS HTML ──────────────────────────────────────────
 function buildLCTramosHTML(it, idx) {
-  const allAL = [...LC_AIRLINES,
-    {code:'AM',name:'Aeromexico'},{code:'CM',name:'Copa'},{code:'UA',name:'United'},
-    {code:'IB',name:'Iberia'},{code:'LH',name:'Lufthansa'},{code:'TK',name:'Turkish'},
-    {code:'AF',name:'Air France'},{code:'KL',name:'KLM'},{code:'AA',name:'American'},
-    {code:'DL',name:'Delta'},{code:'LA',name:'LATAM'},{code:'BA',name:'British Airways'},
-    {code:'AV',name:'Avianca'},{code:'AC',name:'Air Canada'},
-  ];
+  const allAL = getAllAirlines();
   const apCodes = Object.keys(ciudades).sort();
   const segs = it.segmentos || [];
 
@@ -2604,13 +2655,7 @@ function newLCFlight() {
 }
 
 function buildLowcostHTML(it, idx) {
-  const allAL = [...LC_AIRLINES,
-    {code:'AM',name:'Aeromexico'},{code:'CM',name:'Copa'},{code:'UA',name:'United'},
-    {code:'IB',name:'Iberia'},{code:'LH',name:'Lufthansa'},{code:'TK',name:'Turkish'},
-    {code:'AF',name:'Air France'},{code:'KL',name:'KLM'},{code:'AA',name:'American'},
-    {code:'DL',name:'Delta'},{code:'LA',name:'LATAM'},{code:'BA',name:'British Airways'},
-    {code:'AV',name:'Avianca'},{code:'AC',name:'Air Canada'},{code:'UX',name:'Air Europa'},
-  ];
+  const allAL = getAllAirlines();
 
   const buildManualFlight = (f, dir) => {
     const isIda = dir === 'ida';
