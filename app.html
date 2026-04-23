@@ -300,7 +300,7 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       Centro de Avisos
     </button>
-    <button class="nav-btn active" onclick="showPanel('cotizador',event)" id="btn-cot-actual">
+    <button class="nav-btn active" onclick="irACotizacionActual(event)" id="btn-cot-actual">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       Cotización Actual
     </button>
@@ -452,8 +452,8 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
 
   <div class="panel active" id="panel-cotizador">
     <div class="page-header">
-      <div class="page-title">Nueva Cotización</div>
-      <div class="page-sub">Completa los datos y genera el PDF para tu cliente</div>
+      <div class="page-title" id="cot-page-title">Nueva Cotización</div>
+      <div class="page-sub" id="cot-page-sub">Completa los datos y genera el PDF para tu cliente</div>
     </div>
 
     <!-- Encabezado cotización -->
@@ -507,22 +507,35 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
       </div>
     </div>
 
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="previewPDF()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Vista Previa / PDF
-      </button>
-      <button class="btn btn-outline" onclick="guardarCotizacion()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        Guardar
-      </button>
-      <button class="btn btn-ghost" onclick="resetCotizacion(true)">Nueva Cotización</button>
-      <button class="btn btn-ghost" onclick="cerrarCotizacion()" id="btn-cerrar-cot" style="display:none;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        Cerrar Cotización
-      </button>
-    </div>
+    <div style="height:64px;"></div><!-- Espacio para barra flotante -->
     <div id="save-msg" style="font-size:12px;color:var(--text3);margin-top:8px;display:none;"></div>
+  </div>
+
+  <!-- BARRA FLOTANTE DE COTIZACIÓN -->
+  <div id="floating-bar" style="
+    position:fixed; bottom:0; left:220px; right:0; z-index:100;
+    background:#fff; border-top:1px solid var(--border);
+    padding:10px 24px; display:flex; align-items:center; gap:10px;
+    box-shadow:0 -2px 12px rgba(0,0,0,0.08);
+  ">
+    <button class="btn btn-primary" onclick="previewPDF()" style="font-size:12.5px;padding:8px 14px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Vista Previa / PDF
+    </button>
+    <button class="btn btn-outline" onclick="guardarCotizacion()" style="font-size:12.5px;padding:8px 14px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Guardar
+    </button>
+    <button class="btn btn-ghost" onclick="resetCotizacion(true)" style="font-size:12.5px;padding:8px 14px;">Nueva Cotización</button>
+    <button class="btn btn-ghost" onclick="cerrarCotizacion()" id="btn-cerrar-cot" style="display:none;font-size:12.5px;padding:8px 14px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Cerrar Cotización
+    </button>
+    <button class="btn btn-ghost" onclick="ignorarCotizacion()" id="btn-ignorar-cot" style="display:none;font-size:12.5px;padding:8px 14px;color:var(--text3);">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Ignorar
+    </button>
+    <div id="float-save-msg" style="font-size:12px;color:var(--text3);margin-left:8px;"></div>
   </div>
 
   <!-- AEROPUERTOS -->
@@ -718,6 +731,7 @@ let logos    = {};
 let agentes  = [];
 let itins    = [];
 let cotNum   = 1;
+let cotActiva = false; // true cuando hay una cotización en proceso
 
 // ── DEFAULTS ─────────────────────────────────────────────────────
 const defaultAirports = {
@@ -794,29 +808,67 @@ async function cerrarSesion() {
 }
 
 // ── CERRAR COTIZACIÓN ─────────────────────────────────────────────
-async function cerrarCotizacion() {
-  await guardarCotizacion();
-  // Esperar un momento y mostrar mensaje de cierre
-  setTimeout(() => {
-    const msg = document.getElementById('save-msg');
-    if (msg) {
-      msg.style.display = 'block';
-      msg.style.color = 'var(--brand-blue)';
-      msg.innerHTML = '✓ Cotización guardada y cerrada correctamente';
-    }
-    // Ocultar botón cerrar
-    const btnCerrar = document.getElementById('btn-cerrar-cot');
-    if (btnCerrar) btnCerrar.style.display = 'none';
-  }, 500);
+function cerrarCotizacion() {
+  // Solo navega al dashboard — no guarda, no genera nuevo ID
+  cotActiva = false;
+  document.getElementById('cot-num').value = '';
+  document.getElementById('cot-num').placeholder = 'Se asignará al guardar';
+  actualizarTituloCotizador(null);
+  const btnCerrar = document.getElementById('btn-cerrar-cot');
+  if (btnCerrar) btnCerrar.style.display = 'none';
+  const btnIgnorar = document.getElementById('btn-ignorar-cot');
+  if (btnIgnorar) btnIgnorar.style.display = 'none';
+  showPanel('avisos', null);
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-avisos')?.classList.add('active');
+  renderTaisNews();
+  renderAgenciaAvisos();
+}
 
-  // Ir al Centro de Avisos después de 2s
-  setTimeout(() => {
-    showPanel('avisos', null);
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-avisos')?.classList.add('active');
-    renderTaisNews();
-    renderAgenciaAvisos();
-  }, 2000);
+function ignorarCotizacion() {
+  if (cotActiva) {
+    if (!confirm('¿Ignorar esta cotización? Si ya fue guardada, permanecerá en el historial pero el formulario se limpiará.')) return;
+  }
+  // Limpiar formulario sin generar nuevo ID
+  cotActiva = false;
+  document.getElementById('cot-num').value = '';
+  document.getElementById('cot-num').placeholder = 'Se asignará al guardar';
+  document.getElementById('cot-cliente').value = '';
+  if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = '';
+  if (document.getElementById('cot-empresa')) document.getElementById('cot-empresa').value = '';
+  document.getElementById('cot-agente').value = '';
+  const pi = document.getElementById('cot-parent-id'); if(pi) pi.value = '';
+  itins = [];
+  renderItins();
+  checkItinLimit();
+  addItin();
+  actualizarTituloCotizador(null);
+  const btnCerrar = document.getElementById('btn-cerrar-cot');
+  if (btnCerrar) btnCerrar.style.display = 'none';
+  const btnIgnorar = document.getElementById('btn-ignorar-cot');
+  if (btnIgnorar) btnIgnorar.style.display = 'none';
+}
+
+function actualizarTituloCotizador(numero) {
+  const title = document.getElementById('cot-page-title');
+  const sub = document.getElementById('cot-page-sub');
+  if (numero) {
+    if (title) title.textContent = numero;
+    if (sub) sub.textContent = 'Editando cotización — al guardar se creará una nueva versión';
+  } else {
+    if (title) title.textContent = 'Nueva Cotización';
+    if (sub) sub.textContent = 'Completa los datos y genera el PDF para tu cliente';
+  }
+}
+
+function showSaveMsg(html, color) {
+  const msg = document.getElementById('save-msg');
+  if (msg) {
+    msg.style.display = 'block';
+    msg.style.color = color || 'var(--text3)';
+    msg.innerHTML = html;
+    setTimeout(() => { msg.style.display = 'none'; msg.style.color = ''; }, 4000);
+  }
 }
 
 // ── CENTRO DE AVISOS ─────────────────────────────────────────────
@@ -1108,16 +1160,34 @@ async function guardarCotizacion() {
     return;
   }
 
-  const baseId = getBaseId(data.id);
-  const existingVersions = getVersions(baseId);
-  const isFirstSave = existingVersions.length === 0;
+  const currentId = document.getElementById('cot-num').value;
+  const isFirstSave = !currentId || !cotActiva;
 
   let version = 1;
+  let numero = currentId ? getBaseId(currentId) : null;
   let parentDbId = null;
 
-  if (!isFirstSave) {
+  if (isFirstSave) {
+    // Obtener número de Supabase — atómico, imposible duplicar
+    const anio = new Date().getFullYear();
+    const { data: seqData, error: seqError } = await sb.rpc('siguiente_cot_num', {
+      p_agencia: currentAgenciaId,
+      p_anio: anio
+    });
+    if (seqError) { alert('Error al obtener número: ' + seqError.message); return; }
+    const num = seqData;
+    numero = 'COT-' + anio + '-' + String(num).padStart(3, '0');
+    data.id = numero;
+    document.getElementById('cot-num').value = numero;
+    cotActiva = true;
+    actualizarTituloCotizador(numero);
+  } else {
+    // Nueva versión de cotización existente
+    const baseId = getBaseId(currentId);
+    const existingVersions = getVersions(baseId);
     const latestVersion = Math.max(...existingVersions.map(h => h.version || 1));
     version = latestVersion + 1;
+    numero = baseId;
     const parentRec = existingVersions.find(h => h.version === 1);
     parentDbId = parentRec ? parentRec.dbId : null;
     data.id = baseId + '-v' + version;
@@ -1128,8 +1198,8 @@ async function guardarCotizacion() {
 
   // Guardar en Supabase
   const payload = {
-    numero:         baseId,
-    version:        version,
+    numero,
+    version,
     parent_id:      parentDbId,
     agencia_id:     currentAgenciaId,
     agente_id:      currentUser.id,
@@ -1143,48 +1213,39 @@ async function guardarCotizacion() {
   };
 
   const { data: saved, error } = await sb.from('cotizaciones').insert(payload).select().single();
-
-  if (error) {
-    alert('Error al guardar: ' + error.message);
-    console.error('Supabase error:', error);
-    return;
-  }
+  if (error) { alert('Error al guardar: ' + error.message); console.error(error); return; }
 
   // Agregar al historial local
   const localRecord = {
-    id:       data.id,
-    dbId:     saved.id,
-    numero:   baseId,
+    id:        data.id,
+    dbId:      saved.id,
+    numero,
     version,
-    parentId: !isFirstSave ? baseId : null,
-    fecha:    new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' }),
-    fechaISO: saved.fecha_iso,
-    cliente:  data.cliente,
-    empresa:  data.empresa,
+    parentId:  !isFirstSave ? numero : null,
+    fecha:     new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' }),
+    fechaISO:  saved.fecha_iso,
+    cliente:   data.cliente,
+    empresa:   data.empresa,
     empresaId: data.empresaId,
-    notas:    data.notas,
-    agenteId: currentUser.id,
-    itins:    data.itins,
-    status:   'pendiente',
-    locked:   false,
+    notas:     data.notas,
+    agenteId:  currentUser.id,
+    itins:     data.itins,
+    status:    'pendiente',
+    locked:    false,
   };
   historial.unshift(localRecord);
-
   updateHistBadge();
   renderHistorial();
 
-  // Mostrar botón cerrar cotización
+  // Mostrar botón cerrar, ocultar ignorar
   const btnCerrar = document.getElementById('btn-cerrar-cot');
   if (btnCerrar) btnCerrar.style.display = 'inline-flex';
+  const btnIgnorar = document.getElementById('btn-ignorar-cot');
+  if (btnIgnorar) btnIgnorar.style.display = 'none';
 
-  const msg = document.getElementById('save-msg');
-  if (msg) {
-    msg.style.display = 'block';
-    msg.innerHTML = isFirstSave
-      ? `✓ Cotización guardada — <strong>${data.id}</strong>`
-      : `✓ Nueva versión guardada — <strong>${data.id}</strong>`;
-    setTimeout(() => msg.style.display = 'none', 4000);
-  }
+  showSaveMsg(isFirstSave
+    ? `✓ Cotización guardada — <strong>${data.id}</strong>`
+    : `✓ Nueva versión guardada — <strong>${data.id}</strong>`);
 }
 
 function updateHistBadge() {
@@ -1888,21 +1949,12 @@ async function init() {
     aerolineasVendidas: h.aerolineas_vendidas || [],
   }));
 
-  // Get cotNum — max numero from DB
-  const { data: maxCot } = await sb.from('cotizaciones')
-    .select('numero').eq('agencia_id', currentAgenciaId)
-    .order('created_at', { ascending: false }).limit(1);
-  if (maxCot && maxCot.length > 0) {
-    const lastNum = parseInt(maxCot[0].numero.split('-')[2]) || 0;
-    cotNum = lastNum;
-  } else {
-    cotNum = lsGet('tpv_cotnum_' + currentAgenciaId, 0);
-  }
-
+  // No asignamos número al iniciar — se asigna solo al guardar
   const now = new Date();
   document.getElementById('cot-fecha').value = now.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
-  cotNum++;
-  document.getElementById('cot-num').value = 'COT-' + now.getFullYear() + '-' + String(cotNum).padStart(3,'0');
+  document.getElementById('cot-num').value = '';
+  document.getElementById('cot-num').placeholder = 'Se asignará al guardar';
+  cotActiva = false;
 
   renderAgentsSelect();
   renderAgentsList();
@@ -1930,6 +1982,7 @@ async function init() {
   showPanel('avisos', null);
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-avisos')?.classList.add('active');
+  toggleFloatingBar(false);
 }
 
 // ── PANELS ───────────────────────────────────────────────────────
@@ -1941,6 +1994,8 @@ function showPanel(name, e) {
   if (btn) btn.classList.add('active');
   if (name === 'reportes') renderReportes();
   if (name === 'avisos') { renderTaisNews(); renderAgenciaAvisos(); }
+  // Mostrar/ocultar barra flotante solo en cotizador
+  toggleFloatingBar(name === 'cotizador');
 }
 
 // ── AGENTS ───────────────────────────────────────────────────────
@@ -2968,6 +3023,12 @@ function parseItin(id) {
 
 let _autoguardTimer = null;
 function autoguardar() {
+  // Mostrar botón ignorar si hay algo escrito
+  const btnIgnorar = document.getElementById('btn-ignorar-cot');
+  const btnCerrar = document.getElementById('btn-cerrar-cot');
+  const cliente = document.getElementById('cot-cliente')?.value;
+  const hasContent = itins.length > 0 || cliente;
+  if (btnIgnorar && hasContent && !cotActiva) btnIgnorar.style.display = 'inline-flex';
   const num = document.getElementById('cot-num')?.value;
   if (!num) return;
   clearTimeout(_autoguardTimer);
@@ -3242,25 +3303,26 @@ function downloadPDF() {
 
 function sidebarNuevaCot(event) {
   showPanel('cotizador', event);
-  resetCotizacion(true); // always confirm
+  toggleFloatingBar(true);
+  resetCotizacion(true);
+}
+
+function irACotizacionActual(event) {
+  showPanel('cotizador', event);
+  toggleFloatingBar(true);
+  if (!cotActiva) {
+    actualizarTituloCotizador(null);
+  }
+}
+
+function toggleFloatingBar(show) {
+  const bar = document.getElementById('floating-bar');
+  if (bar) bar.style.display = show ? 'flex' : 'none';
 }
 
 function resetCotizacion(confirm_needed) {
   if (confirm_needed !== false && !confirm('¿Iniciar una nueva cotización? Se perderán los datos actuales.')) return;
-  cotNum++;
-  lsSet('tpv_cotnum_' + (currentAgenciaId||'local'), cotNum);
-  const now = new Date();
-  document.getElementById('cot-num').value = 'COT-' + now.getFullYear() + '-' + String(cotNum).padStart(3,'0');
-  document.getElementById('cot-fecha').value = now.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
-  document.getElementById('cot-cliente').value = '';
-  if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = '';
-  if (document.getElementById('cot-empresa')) document.getElementById('cot-empresa').value = '';
-  document.getElementById('cot-agente').value = '';
-  const pi = document.getElementById('cot-parent-id'); if(pi) pi.value = '';
-  itins = [];
-  renderItins();
-  checkItinLimit();
-  addItin();
+  ignorarCotizacion();
 }
 
 init();
