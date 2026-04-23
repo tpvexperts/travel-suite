@@ -2560,7 +2560,6 @@ function addSegmento(itinId) {
   renderItins();
   const block = document.getElementById('itin-' + itinId);
   if (block) block.classList.remove('collapsed');
-  autoguardar();
 }
 
 function removeSegmento(itinId, segId) {
@@ -2616,7 +2615,6 @@ function addOpcion(itinId, segId) {
   renderItins();
   const block = document.getElementById('itin-' + itinId);
   if (block) block.classList.remove('collapsed');
-  autoguardar();
 }
 
 function removeOpcion(itinId, segId, opId) {
@@ -2639,7 +2637,6 @@ function updateOpcion(itinId, segId, opId, field, value) {
   if (!op) return;
   op[field] = value;
   if (['airline'].includes(field)) renderItins();
-  autoguardar();
   // Sort by departure time when sale is updated
   if (['sale','fecha'].includes(field)) seg.opciones.sort((a,b) => sortKey(a.fecha,a.sale).localeCompare(sortKey(b.fecha,b.sale)));
 }
@@ -2741,7 +2738,6 @@ function updateLCSimple(itinId, dir, field, value) {
   if (!it[key] || !it[key].length) it[key] = [newLCFlight()];
   it[key][0][field] = value;
   if (['airline','origen','destino'].includes(field)) renderItins();
-  autoguardar();
 }
 
 function buildLCFlightRow(itinId, f, fi, dir) {
@@ -2858,7 +2854,6 @@ function parseMultiAmbos(id) {
   renderItins();
   const block = document.getElementById('itin-' + id);
   if (block) block.classList.remove('collapsed');
-  autoguardar();
 }
 
 function parseMultiLine(line) {
@@ -3063,39 +3058,6 @@ function parseItin(id) {
   it.rawText = textarea ? textarea.value : it.rawText;
   it.parsed = it.rawText.split('\n').map(parseLine).filter(Boolean);
   renderItins();
-  autoguardar();
-}
-
-let _autoguardTimer = null;
-function autoguardar() {
-  // Mostrar botón ignorar si hay algo escrito
-  const btnIgnorar = document.getElementById('btn-ignorar-cot');
-  const btnCerrar = document.getElementById('btn-cerrar-cot');
-  const cliente = document.getElementById('cot-cliente')?.value;
-  const hasContent = itins.length > 0 || cliente;
-  if (btnIgnorar && hasContent && !cotActiva) btnIgnorar.style.display = 'inline-flex';
-  const num = document.getElementById('cot-num')?.value;
-  if (!num) return;
-  clearTimeout(_autoguardTimer);
-  _autoguardTimer = setTimeout(async () => {
-    const idx = historial.findIndex(h => h.id === num);
-    if (idx < 0) return;
-    const data = getCotizacionData();
-    data.status = historial[idx].status;
-    const dbId = historial[idx].dbId;
-    historial[idx] = { ...historial[idx], ...data };
-    // Sync to Supabase
-    if (dbId) {
-      await sb.from('cotizaciones').update({
-        itinerarios:    data.itins,
-        cliente_nombre: data.cliente,
-        empresa_nombre: data.empresa,
-        notas:          data.notas,
-      }).eq('id', dbId);
-    }
-    const msg = document.getElementById('save-msg');
-    if (msg) { msg.style.display='block'; msg.style.color='var(--text3)'; msg.textContent='✓ Autoguardado'; setTimeout(()=>{ msg.style.display='none'; msg.style.color=''; },2000); }
-  }, 2000);
 }
 
 const MESES_ES = {JAN:'ENE',FEB:'FEB',MAR:'MAR',APR:'ABR',MAY:'MAY',JUN:'JUN',JUL:'JUL',AUG:'AGO',SEP:'SEP',OCT:'OCT',NOV:'NOV',DEC:'DIC'};
