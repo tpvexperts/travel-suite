@@ -3264,6 +3264,14 @@ function buildPDFHTML() {
           <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
         </div>`).join('');
     } else if (it.type === 'multi') {
+      const idaHeader = (it.flightsIda||[]).length ? `
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;padding:4px 0;border-bottom:1px solid #D8E0EC;">
+          <span style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--brand-blue);text-transform:uppercase;">✈ Vuelos de Ida</span>
+        </div>` : '';
+      const regHeader = (it.flightsRegreso||[]).length ? `
+        <div style="display:flex;align-items:center;gap:8px;margin:12px 0 4px;padding:4px 0;border-bottom:1px solid #D8E0EC;">
+          <span style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--brand-red);text-transform:uppercase;">✈ Vuelos de Regreso</span>
+        </div>` : '';
       const idaRows = (it.flightsIda||[]).map((f,i) => {
         const al = f.aerolinea || it.airline || it.airlineManual || '';
         const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:70px;max-height:18px;width:auto;height:auto;object-fit:contain;display:block;" />` : `<span class="pdf-fl-badge">${al}</span>`;
@@ -3286,7 +3294,7 @@ function buildPDFHTML() {
           <div class="pdf-fl-route">${f.ruta}</div>
           <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
         </div>`;}).join('');
-      flightsHTML = idaRows + regRows;
+      flightsHTML = idaHeader + idaRows + regHeader + regRows;
     } else if (it.type === 'lowcost') {
       const mkRow = (f, label) => {
         const al = f.airline || '';
