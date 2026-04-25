@@ -797,6 +797,15 @@ async function checkAuth() {
     window.currentAgenciaNombre = 'Sin agencia';
     window.currentAgenciaLogo = null;
   }
+  // Mostrar botón Ignorar cuando el usuario escribe algo
+  ['cot-cliente','cot-notas','cot-empresa','cot-agente'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => {
+      const btnIgnorar = document.getElementById('btn-ignorar-cot');
+      if (btnIgnorar && !cotActiva) btnIgnorar.style.display = 'inline-flex';
+    });
+  });
+
   // Start inactivity timer
   resetInactivityTimer();
   return true;
@@ -2222,6 +2231,9 @@ function addItin(type) {
   }
   renderItins();
   checkItinLimit();
+  // Mostrar botón ignorar
+  const btnIgnorar = document.getElementById('btn-ignorar-cot');
+  if (btnIgnorar) btnIgnorar.style.display = 'inline-flex';
   // Collapse all previous, expand only the new one
   setTimeout(() => {
     document.querySelectorAll('.itin-block').forEach(b => b.classList.add('collapsed'));
