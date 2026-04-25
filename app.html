@@ -3303,7 +3303,7 @@ function buildPDFHTML() {
           <div class="pdf-fl-logo">${logoH}</div>
           <div class="pdf-fl-date">${f.fecha||''}</div>
           <div class="pdf-fl-route">${ciudades[f.origen]||f.origen||''} › ${ciudades[f.destino]||f.destino||''}</div>
-          <div class="pdf-fl-times">Sale ${f.sale||''} · Llega ${f.llega||''}</div>
+          <div class="pdf-fl-times">Sale ${f.sale||''} · Llega ${f.llega||''}${f.llegaDia && f.llegaDia!=='0' ? ' ('+ajustarFechaStr(f.fecha, parseInt(f.llegaDia))+')' : ''}</div>
         </div>`;
       };
       flightsHTML = (it.idas||[]).map(f=>mkRow(f,'Ida')).join('') + (it.regresos||[]).map(f=>mkRow(f,'Regreso')).join('');
@@ -3333,14 +3333,18 @@ function buildPDFHTML() {
             <div style="width:72px;min-width:72px;overflow:hidden;display:flex;align-items:center;">${logoH}</div>
             <div style="width:40px;color:#8898AA;">${op.fecha||''}</div>
             <div style="flex:1;color:#4A5568;">${ruta}</div>
-            <div style="color:#8898AA;width:130px;white-space:nowrap;">${op.sale?'Sale '+op.sale:''} ${op.llega?'– Llega '+op.llega:''}</div>
+            <div style="color:#8898AA;width:150px;white-space:nowrap;">${op.sale?'Sale '+op.sale:''} ${op.llega?'– Llega '+op.llega+(op.llegaDia && op.llegaDia!=='0' ? ' ('+ajustarFechaStr(op.fecha, parseInt(op.llegaDia))+')' : ''):''}</div>
             <div style="text-align:right;">${preciosHTML}</div>
           </div>`;
         }).join('');
         return segHeader + (opRows || `<div style="padding:6px 10px;font-size:10px;color:#8898AA;font-style:italic;">Sin opciones</div>`);
       }).join('');
     }
-    const multiLegendPDF = it.type === 'multi' ? '<div style="font-size:10px;font-style:italic;color:#1A4E8C;margin-bottom:6px;padding:4px 8px;background:#EBF4FF;border-radius:4px;">✦ Independientemente del vuelo de ida o regreso que selecciones, el precio será el mismo.</div>' : '';
+    const multiLegendPDF = it.type === 'multi' 
+      ? '<div style="font-size:10px;font-style:italic;color:#1A4E8C;margin-bottom:6px;padding:4px 8px;background:#EBF4FF;border-radius:4px;">✦ Independientemente del vuelo de ida o regreso que selecciones, el precio será el mismo.</div>' 
+      : it.type === 'lc_tramos'
+      ? '<div style="font-size:10px;font-style:italic;color:#1A4E8C;margin-bottom:6px;padding:4px 8px;background:#EBF4FF;border-radius:4px;">✦ Para obtener el precio total del itinerario, suma el costo del vuelo que elijas en cada tramo.</div>'
+      : '';
     const condRowsHTML = (it.condRows || []).map((row, ri) => {
       const text = buildCondRowText(row);
       const precio = row.precio ? `<strong>${row.moneda} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</strong>` : '';
