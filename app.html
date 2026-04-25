@@ -1150,6 +1150,51 @@ function delCliente(id) {
 
 // ── GUARDAR COTIZACIÓN ────────────────────────────────────────────
 function getCotizacionData() {
+  // Sync lowcost (manual) fields from DOM into itins[] before reading
+  // This ensures origen/destino/fecha/sale/llega/llegaDia are captured
+  // even if callbacks didn't fire
+  itins.forEach(it => {
+    if (it.type === 'lowcost') {
+      ['ida','regreso'].forEach(dir => {
+        const key = dir === 'ida' ? 'idas' : 'regresos';
+        if (!it[key] || !it[key].length) it[key] = [newLCFlight()];
+        const f = it[key][0];
+        // Read fecha
+        const fidFecha = `lc-${dir}-fecha-${it.id}`;
+        const elFecha = document.getElementById(fidFecha);
+        if (elFecha && elFecha.value) f.fecha = elFecha.value;
+        // Read origen — use dataset.code if available (from autocomplete selection)
+        const fidOrig = `lc-${dir}-orig-${it.id}`;
+        const elOrig = document.getElementById(fidOrig);
+        if (elOrig) {
+          const code = elOrig.dataset.code || elOrig.value.split(' — ')[0].trim().toUpperCase();
+          if (code && code.length <= 3) f.origen = code;
+        }
+        // Read destino
+        const fidDest = `lc-${dir}-dest-${it.id}`;
+        const elDest = document.getElementById(fidDest);
+        if (elDest) {
+          const code = elDest.dataset.code || elDest.value.split(' — ')[0].trim().toUpperCase();
+          if (code && code.length <= 3) f.destino = code;
+        }
+        // Read sale
+        const fidSale = `lc-${dir}-sale-${it.id}`;
+        const elSale = document.getElementById(fidSale);
+        if (elSale && elSale.value) f.sale = elSale.value;
+        // Read llega
+        const fidLlega = `lc-${dir}-llega-${it.id}`;
+        const elLlega = document.getElementById(fidLlega);
+        if (elLlega && elLlega.value) f.llega = elLlega.value;
+        // Read llegaDia from select
+        const selects = document.querySelectorAll(`[onchange*="updateLCSimple(${it.id},'${dir}','llegaDia'"]`);
+        if (selects.length) f.llegaDia = selects[0].value;
+        // Read airline from select
+        const alSelect = document.querySelector(`[onchange*="updateLCSimple(${it.id},'${dir}','airline'"]`);
+        if (alSelect && alSelect.value) f.airline = alSelect.value;
+      });
+    }
+  });
+
   const empresaId = document.getElementById('cot-empresa')?.value || null;
   // Support both UUID strings and legacy numeric IDs
   const empresa = clientes.find(c => String(c.id) === String(empresaId));
@@ -1158,7 +1203,7 @@ function getCotizacionData() {
   const parentId = document.getElementById('cot-parent-id')?.value || null;
   return {
     id:        currentId,
-    parentId,                        // which original COT this is a revision of
+    parentId,
     fecha:     document.getElementById('cot-fecha').value,
     fechaISO:  new Date().toISOString(),
     cliente:   document.getElementById('cot-cliente').value,
