@@ -2374,15 +2374,17 @@ function buildItinHTML(it, idx) {
 function buildMultiHTML(it, idx) {
   const alCode = it.airline || it.airlineManual || '';
   const renderFlightGroup = (flights, label) => flights.length
-    ? flights.map((f,i) => `
+    ? flights.map((f,i) => {
+        const flAl = f.aerolinea || alCode;
+        return `
       <tr style="border-left:3px solid ${label==='Ida'?'var(--brand-blue)':'var(--brand-red)'};">
-        <td class="fl-logo">${getLogoHTML(alCode)}</td>
+        <td class="fl-logo">${getLogoHTML(flAl)}</td>
         <td class="fl-fecha" style="color:${label==='Ida'?'var(--brand-blue)':'var(--brand-red)'};width:60px;">${label} ${String(i+1).padStart(2,'0')}</td>
         <td class="fl-fecha">${f.fecha}</td>
         <td class="fl-ruta">${f.ruta}</td>
         <td class="fl-sale">Sale ${f.salida}</td>
         <td class="fl-llega">Llega ${f.llegadaStr}</td>
-      </tr>`).join('')
+      </tr>`;}).join('')
     : ``;
 
   const airlineCodes = ['AM','CM','UA','IB','LH','TK','AF','AV','KL','AA','DL','LA','UX','AC','BA','VB','Y4','FR','U2'];
@@ -3262,24 +3264,28 @@ function buildPDFHTML() {
           <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
         </div>`).join('');
     } else if (it.type === 'multi') {
-      const al = it.airline || it.airlineManual || '';
-      const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:70px;max-height:18px;width:auto;height:auto;object-fit:contain;display:block;" />` : `<span class="pdf-fl-badge">${al}</span>`;
-      const idaRows = (it.flightsIda||[]).map((f,i) => `
+      const idaRows = (it.flightsIda||[]).map((f,i) => {
+        const al = f.aerolinea || it.airline || it.airlineManual || '';
+        const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:70px;max-height:18px;width:auto;height:auto;object-fit:contain;display:block;" />` : `<span class="pdf-fl-badge">${al}</span>`;
+        return `
         <div class="pdf-flight-item">
           <div class="pdf-fl-logo">${logoH}</div>
           <div class="pdf-fl-date" style="color:var(--brand-blue);font-weight:700;">Ida ${String(i+1).padStart(2,'0')}</div>
           <div class="pdf-fl-date">${f.fecha}</div>
           <div class="pdf-fl-route">${f.ruta}</div>
           <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
-        </div>`).join('');
-      const regRows = (it.flightsRegreso||[]).map((f,i) => `
+        </div>`;}).join('');
+      const regRows = (it.flightsRegreso||[]).map((f,i) => {
+        const al = f.aerolinea || it.airline || it.airlineManual || '';
+        const logoH = logos[al] ? `<img src="${logos[al]}" alt="${al}" style="max-width:70px;max-height:18px;width:auto;height:auto;object-fit:contain;display:block;" />` : `<span class="pdf-fl-badge">${al}</span>`;
+        return `
         <div class="pdf-flight-item">
           <div class="pdf-fl-logo">${logoH}</div>
           <div class="pdf-fl-date" style="color:var(--brand-red);font-weight:700;">Reg ${String(i+1).padStart(2,'0')}</div>
           <div class="pdf-fl-date">${f.fecha}</div>
           <div class="pdf-fl-route">${f.ruta}</div>
           <div class="pdf-fl-times">Sale ${f.salida} · Llega ${f.llegadaStr}</div>
-        </div>`).join('');
+        </div>`;}).join('');
       flightsHTML = idaRows + regRows;
     } else if (it.type === 'lowcost') {
       const mkRow = (f, label) => {
