@@ -2553,6 +2553,15 @@ function buildLCTramosHTML(it, idx) {
             <input type="text" id="op-llega-${op.id}" placeholder="1110" value="${op.llega}" maxlength="4"
               onchange="updateOpcion(${it.id},${seg.id},${op.id},'llega',this.value)" />
           </div>
+          <div class="cond-group" style="min-width:100px;">
+            <label>Día llegada</label>
+            <select onchange="updateOpcion(${it.id},${seg.id},${op.id},'llegaDia',this.value)" style="font-size:11px;padding:3px 5px;">
+              <option value="0" ${(op.llegaDia||'0')==='0'?'selected':''}>Mismo día</option>
+              <option value="-1" ${op.llegaDia==='-1'?'selected':''}>Día anterior</option>
+              <option value="1" ${op.llegaDia==='1'?'selected':''}>Día siguiente</option>
+              <option value="2" ${op.llegaDia==='2'?'selected':''}>2 días después</option>
+            </select>
+          </div>
           ${precios}
           <button class="del-btn" style="margin-bottom:4px;" onclick="removeOpcion(${it.id},${seg.id},${op.id})">×</button>
         </div>
@@ -3227,12 +3236,12 @@ function getLogoHTML(code) {
 
 // ── PDF ──────────────────────────────────────────────────────────
 function ajustarFechaStr(fechaBase, dias) {
-  if (!fechaBase || dias === 0) return '';
+  if (!fechaBase || !dias || dias === 0) return '';
   const dia = parseInt(fechaBase.slice(0,2));
-  const mesStr = fechaBase.slice(2);
-  const mesNum = MESES_NUM[mesStr] || '01';
-  const anio = new Date().getFullYear();
-  const d = new Date(anio, parseInt(mesNum)-1, dia + dias);
+  const mesStr = fechaBase.slice(2).toUpperCase();
+  const mesNum = parseInt(MESES_NUM[mesStr] || '01') - 1; // 0-based
+  // Use a fixed year (2000) to avoid year-boundary issues
+  const d = new Date(2000, mesNum, dia + dias);
   const mesesES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
   return String(d.getDate()).padStart(2,'0') + mesesES[d.getMonth()];
 }
