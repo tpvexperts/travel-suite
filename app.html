@@ -2718,6 +2718,15 @@ function buildLowcostHTML(it, idx) {
             onkeydown="tabToNext(event, this.dataset.isida==='1' ? 'lc-regreso-fecha-'+this.dataset.itid : '','${fidSale}')"
             data-isida="${isIda ? '1' : '0'}" data-itid="${it.id}" />
         </div>
+        <div class="cond-group" style="min-width:90px;">
+          <label>Día llegada</label>
+          <select onchange="updateLCSimple(${it.id},'${dir}','llegaDia',this.value)" style="font-size:11px;padding:4px 6px;">
+            <option value="0" ${(f&&f.llegaDia||'0')==='0'?'selected':''}>Mismo día</option>
+            <option value="-1" ${(f&&f.llegaDia)=== '-1'?'selected':''}>Día anterior</option>
+            <option value="1" ${(f&&f.llegaDia)==='1'?'selected':''}>Día siguiente</option>
+            <option value="2" ${(f&&f.llegaDia)==='2'?'selected':''}>2 días después</option>
+          </select>
+        </div>
       </div>
       ${f&&f.fecha&&f.origen&&f.destino ? `
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface);border-radius:5px;font-size:12px;">
@@ -3108,13 +3117,25 @@ function parseLine(linea) {
   const salida  = sal.replace(/[#\-\*]/g,'');
   const simbolo = llegRaw[0];
   const llegada = llegRaw.replace(/[#\-\*]/g,'');
+
+  // Calcular fecha de llegada sumando/restando días
+  function ajustarFecha(fechaBase, dias) {
+    const dia = parseInt(fechaBase.slice(0,2));
+    const mesStr = fechaBase.slice(2);
+    const mesNum = MESES_NUM[mesStr] || '01';
+    const anio = new Date().getFullYear();
+    const d = new Date(anio, parseInt(mesNum)-1, dia + dias);
+    const mesesES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    return String(d.getDate()).padStart(2,'0') + mesesES[d.getMonth()];
+  }
+
   let llegadaStr = llegada;
   if (simbolo === '#') {
-    llegadaStr = `${llegada} <span style="font-size:9px;color:#E8323C;font-weight:700;">+1</span>`;
+    llegadaStr = llegada + ' (' + ajustarFecha(fecha, 1) + ')';
   } else if (simbolo === '*') {
-    llegadaStr = `${llegada} <span style="font-size:9px;color:#E8323C;font-weight:700;">+2</span>`;
+    llegadaStr = llegada + ' (' + ajustarFecha(fecha, 2) + ')';
   } else if (simbolo === '-') {
-    llegadaStr = `${llegada} <span style="font-size:9px;color:#E8323C;font-weight:700;">-1</span>`;
+    llegadaStr = llegada + ' (' + ajustarFecha(fecha, -1) + ')';
   }
   return { aerolinea, fecha, ruta: origen + ' › ' + destino, salida, llegadaStr };
 }
@@ -3125,6 +3146,17 @@ function getLogoHTML(code) {
 }
 
 // ── PDF ──────────────────────────────────────────────────────────
+function ajustarFechaStr(fechaBase, dias) {
+  if (!fechaBase || dias === 0) return '';
+  const dia = parseInt(fechaBase.slice(0,2));
+  const mesStr = fechaBase.slice(2);
+  const mesNum = MESES_NUM[mesStr] || '01';
+  const anio = new Date().getFullYear();
+  const d = new Date(anio, parseInt(mesNum)-1, dia + dias);
+  const mesesES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  return String(d.getDate()).padStart(2,'0') + mesesES[d.getMonth()];
+}
+
 function getAgente() {
   const sel = document.getElementById('cot-agente');
   const id = sel.value;
