@@ -2395,7 +2395,20 @@ function buildMultiHTML(it, idx) {
       ${alCode ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:8px;">
         ${logos[alCode] ? `<img src="${logos[alCode]}" style="max-width:60px;max-height:20px;object-fit:contain;">` : `<span style="font-size:12px;font-weight:700;">${alCode}</span>`}
         <span style="font-size:11px;color:var(--text3);">Aerolínea detectada del GDS</span>
-      </div>` : `<div style="font-size:11px;color:var(--text3);margin-bottom:12px;">La aerolínea se detectará automáticamente al formatear el GDS.</div>`}
+        <button onclick="updateItinField(${it.id},'airline','');renderItins();" style="font-size:10px;background:none;border:none;color:var(--text3);cursor:pointer;margin-left:auto;">Cambiar</button>
+      </div>` : `<div class="form-row cols-2" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label>Aerolínea</label>
+          <select id="multi-airline-${it.id}" onchange="updateItinField(${it.id},'airline',this.value);renderItins();">
+            <option value="">-- Seleccionar --</option>
+            ${getAllAirlines().map(a => `<option value="${a.code}" ${it.airline===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Código manual (si no está en lista)</label>
+          <input type="text" maxlength="2" style="text-transform:uppercase;" value="${it.airlineManual||''}" placeholder="XX" onchange="updateItinField(${it.id},'airlineManual',this.value);renderItins();" />
+        </div>
+      </div>`}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;">
         <div class="form-group">
           <label>Opciones de Ida (una por línea)</label>
@@ -2935,9 +2948,14 @@ function parseMulti(id, dir) {
 function parseMultiAmbos(id) {
   const it = itins.find(i => i.id === id);
   if (!it) return;
-  // Parse BOTH directions before re-rendering — fixes the overwrite bug
+  // Parse BOTH directions before re-rendering
   parseMultiDir(it, 'ida');
   parseMultiDir(it, 'regreso');
+  // Auto-detect airline from parsed flights
+  const allFlights = [...(it.flightsIda||[]), ...(it.flightsRegreso||[])];
+  if (allFlights.length && allFlights[0].aerolinea) {
+    it.airline = allFlights[0].aerolinea;
+  }
   renderItins();
   const block = document.getElementById('itin-' + id);
   if (block) block.classList.remove('collapsed');
