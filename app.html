@@ -882,6 +882,14 @@ function actualizarTituloCotizador(numero) {
 }
 
 function showSaveMsg(html, color) {
+  // Show in floating bar (always visible)
+  const floatMsg = document.getElementById('float-save-msg');
+  if (floatMsg) {
+    floatMsg.style.color = color || '#16a34a';
+    floatMsg.innerHTML = html;
+    setTimeout(() => { floatMsg.innerHTML = ''; }, 4000);
+  }
+  // Also show in panel
   const msg = document.getElementById('save-msg');
   if (msg) {
     msg.style.display = 'block';
@@ -1543,7 +1551,8 @@ function reabrirCotizacion(id) {
     return;
   }
   document.getElementById('cot-num').value = h.id;
-  // Set parent ID so next save creates a new version
+  cotActiva = true;
+  actualizarTituloCotizador(h.id);
   const parentInput = document.getElementById('cot-parent-id');
   if (parentInput) parentInput.value = getBaseId(h.id);
   const now = new Date();
@@ -1555,14 +1564,15 @@ function reabrirCotizacion(id) {
   itins = JSON.parse(JSON.stringify(h.itins || []));
   renderItins();
   checkItinLimit();
+  // Mostrar botones cerrar e ignorar
+  const btnCerrar = document.getElementById('btn-cerrar-cot');
+  if (btnCerrar) btnCerrar.style.display = 'inline-flex';
+  const btnIgnorar = document.getElementById('btn-ignorar-cot');
+  if (btnIgnorar) btnIgnorar.style.display = 'inline-flex';
   showPanel('cotizador', null);
-  document.querySelector('.main').scrollTop = 0;
-  // Show indicator that this is a revision
-  const msg = document.getElementById('save-msg');
-  if (msg) {
-    msg.style.display = 'block';
-    msg.innerHTML = `📝 Editando <strong>${h.id}</strong> — al guardar se creará una nueva versión`;
-  }
+  toggleFloatingBar(true);
+  document.querySelector('.main')?.scrollTo(0,0);
+  showSaveMsg(`📝 Editando <strong>${h.id}</strong> — al guardar se creará una nueva versión`);
 }
 
 function regenPDF(id) {
@@ -2337,20 +2347,10 @@ function buildMultiHTML(it, idx) {
   <div class="itin-block" id="itin-${it.id}">
     ${itinHeader(it, idx, 'Múltiples vuelos')}
     <div class="itin-body">
-      <div class="form-row cols-2" style="margin-bottom:12px;">
-        <div class="form-group">
-          <label>Aerolínea</label>
-          <select onchange="updateItinField(${it.id},'airline',this.value);renderItins();">
-            <option value="">-- Seleccionar --</option>
-            ${airlineCodes.map(c => `<option value="${c}" ${it.airline===c?'selected':''}>${c} — ${airlineNames[c]||c}</option>`).join('')}
-            <option value="OTRA">Otra</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Código manual (si no está en lista)</label>
-          <input type="text" maxlength="2" style="text-transform:uppercase;" value="${it.airlineManual||''}" placeholder="XX" onchange="updateItinField(${it.id},'airlineManual',this.value)" />
-        </div>
-      </div>
+      ${alCode ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:8px;">
+        ${logos[alCode] ? `<img src="${logos[alCode]}" style="max-width:60px;max-height:20px;object-fit:contain;">` : `<span style="font-size:12px;font-weight:700;">${alCode}</span>`}
+        <span style="font-size:11px;color:var(--text3);">Aerolínea detectada del GDS</span>
+      </div>` : `<div style="font-size:11px;color:var(--text3);margin-bottom:12px;">La aerolínea se detectará automáticamente al formatear el GDS.</div>`}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;">
         <div class="form-group">
           <label>Opciones de Ida (una por línea)</label>
@@ -2774,9 +2774,12 @@ function updateLCSimple(itinId, dir, field, value) {
   const key = dir === 'ida' ? 'idas' : 'regresos';
   if (!it[key] || !it[key].length) it[key] = [newLCFlight()];
   it[key][0][field] = value;
-  // Solo re-render para destino (para actualizar el PDF preview)
-  // NO re-render para airline — evita borrar campos de ida/regreso
+  // Solo re-render para destino — no para airline ni origen (evita borrar campos)
   if (field === 'destino') renderItins();
+  // Para origen, solo actualizar el input visualmente sin re-render
+  if (field === 'origen') {
+    // Value already saved in it[key][0] — no re-render needed
+  }
 }
 
 function buildLCFlightRow(itinId, f, fi, dir) {
