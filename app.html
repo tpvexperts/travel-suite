@@ -3618,7 +3618,7 @@ function buildPDFHTML() {
 
       const rows = validRows.map((row, ri) => {
         const precio = row.precio
-          ? `<span style="font-size:15px;font-weight:700;color:#0D1B2E;white-space:nowrap;">${row.moneda||'USD'} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`
+          ? `<span style="font-size:13px;font-weight:600;color:#0D1B2E;white-space:nowrap;">${row.moneda||'USD'} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`
           : '';
 
         // Chips de condiciones
