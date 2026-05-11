@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Tu Cotización de Viaje</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:    #1A4E8C;
+  --dark:    #0D1B2E;
+  --mid:     #1E3A5F;
+  --red:     #D0202A;
+  --gold:    #C8A45A;
+  --bg:      #F4F6FA;
+  --surface: #FFFFFF;
+  --border:  #D8E0EC;
+  --text:    #0D1B2E;
+  --text2:   #4A5568;
+  --text3:   #8898AA;
+  --radius:  12px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ── Header agencia ── */
+.agency-header {
+  background: linear-gradient(135deg, var(--dark) 0%, var(--mid) 100%);
+  padding: 20px 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.agency-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--red);
+}
+.agency-logo {
+  width: 52px; height: 52px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.agency-logo img {
+  max-width: 48px; max-height: 48px;
+  width: auto; height: auto; object-fit: contain;
+}
+.agency-logo-placeholder {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px; font-weight: 800;
+  color: white; letter-spacing: -1px;
+}
+.agency-info { flex: 1; }
+.agency-name {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px; font-weight: 800;
+  color: #fff; line-height: 1.2;
+}
+.agency-sub {
+  font-size: 10px; color: rgba(255,255,255,0.5);
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-top: 2px;
+}
+.cot-badge {
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 6px 10px;
+  text-align: right; flex-shrink: 0;
+}
+.cot-badge-num {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px; font-weight: 700;
+  color: #fff;
+}
+.cot-badge-date {
+  font-size: 10px; color: rgba(255,255,255,0.5);
+  margin-top: 2px;
+}
+
+/* ── Info cliente ── */
+.client-card {
+  margin: 16px 16px 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.client-field-label {
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text3); margin-bottom: 3px;
+}
+.client-field-value {
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Nota general ── */
+.nota-general {
+  margin: 12px 16px 0;
+  background: #FFF8E6;
+  border: 1px solid #F0D070;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #856404;
+  line-height: 1.5;
+}
+
+/* ── Sección título ── */
+.section-title {
+  margin: 20px 16px 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text3);
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::after {
+  content: ''; flex: 1;
+  height: 1px; background: var(--border);
+}
+
+/* ── Opción card ── */
+.option-card {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(13,27,46,0.07);
+}
+.option-header {
+  background: linear-gradient(135deg, var(--dark), var(--mid));
+  padding: 12px 16px;
+  display: flex; align-items: center;
+  justify-content: space-between;
+}
+.option-num {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.option-tag {
+  background: rgba(255,255,255,0.12);
+  border-radius: 6px; padding: 3px 8px;
+  font-size: 10px; color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
+/* ── Vuelos ── */
+.flights-section { padding: 12px 14px 8px; }
+.flight-dir-label {
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 4px 0 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.flight-dir-label.ida  { color: var(--blue); }
+.flight-dir-label.reg  { color: var(--red); margin-top: 10px; }
+.flight-dir-label::after {
+  content: ''; flex: 1;
+  height: 1px; background: var(--border);
+}
+.flight-row {
+  display: flex; align-items: center;
+  gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid #EEF1F7;
+}
+.flight-row:last-child { border-bottom: none; }
+.fl-logo {
+  width: 52px; min-width: 52px;
+  display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.fl-logo img {
+  max-width: 50px; max-height: 20px;
+  width: auto; height: auto; object-fit: contain;
+}
+.fl-badge {
+  background: var(--blue); color: #fff;
+  font-size: 9px; font-weight: 700;
+  border-radius: 4px; padding: 3px 6px;
+}
+.fl-info { flex: 1; min-width: 0; }
+.fl-date {
+  font-size: 10px; font-weight: 700;
+  color: var(--text3); margin-bottom: 1px;
+}
+.fl-route {
+  font-size: 13px; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+  white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fl-times {
+  font-size: 11px; color: var(--text2);
+  margin-top: 2px;
+}
+.fl-times .time-sep {
+  color: var(--text3); margin: 0 3px;
+}
+.fl-times .next-day {
+  font-size: 9px; font-weight: 700;
+  color: var(--red); margin-left: 3px;
+  background: rgba(208,32,42,0.08);
+  padding: 1px 4px; border-radius: 3px;
+}
+
+/* ── Visado ── */
+.visado-warning {
+  margin: 0 14px 10px;
+  background: #FEF3CD;
+  border: 1px solid #F0A000;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px; font-weight: 700;
+  color: #856404;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── Notas de opción ── */
+.option-notes {
+  margin: 0 14px 10px;
+  background: #FFFBEA;
+  border: 1px solid #F0D070;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px; color: #856404;
+  line-height: 1.5;
+}
+
+/* ── Leyenda multi ── */
+.multi-legend {
+  margin: 4px 14px 8px;
+  background: #EBF4FF;
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 11px; color: var(--blue);
+  font-style: italic; line-height: 1.4;
+}
+
+/* ── Condiciones / Precio ── */
+.cond-section {
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  background: #FAFBFE;
+}
+.cond-row {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 11.5px; line-height: 1.6;
+  display: flex; align-items: baseline;
+  justify-content: space-between; gap: 8px;
+}
+.cond-row:last-child { border-bottom: none; }
+.cond-tarifa-label {
+  font-size: 9px; font-weight: 700;
+  color: var(--blue); margin-right: 5px;
+  text-transform: uppercase;
+}
+.cond-text { color: var(--text2); flex: 1; font-style: italic; }
+.cond-price {
+  font-size: 14px; font-weight: 700;
+  color: var(--dark); white-space: nowrap;
+}
+
+/* ── Footer agente ── */
+.agent-footer {
+  margin: 24px 16px 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+}
+.agent-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--dark), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+.agent-info { flex: 1; }
+.agent-name {
+  font-size: 13px; font-weight: 700;
+  color: var(--text); margin-bottom: 2px;
+}
+.agent-contact {
+  font-size: 11px; color: var(--text3);
+  line-height: 1.6;
+}
+.agent-contact a {
+  color: var(--blue); text-decoration: none;
+}
+
+/* ── CTA WhatsApp ── */
+.cta-wrap {
+  margin: 16px 16px 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.btn-whatsapp {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 14px;
+  background: #25D366;
+  color: white; border: none; border-radius: var(--radius);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s;
+}
+.btn-whatsapp:hover { background: #1ebe5c; }
+.btn-whatsapp svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+/* ── Legal footer ── */
+.legal-footer {
+  margin: 20px 16px 0;
+  font-size: 10px; color: var(--text3);
+  line-height: 1.6; text-align: center;
+}
+.legal-footer a { color: var(--blue); }
+
+/* ── Loading / Error ── */
+.state-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 60vh; padding: 40px 20px;
+  text-align: center;
+}
+.state-icon { font-size: 48px; margin-bottom: 16px; }
+.state-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--dark); margin-bottom: 8px;
+}
+.state-sub { font-size: 13px; color: var(--text3); }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Tramos (lc_tramos) ── */
+.tramo-header {
+  background: linear-gradient(135deg, var(--dark), var(--mid));
+  padding: 6px 12px;
+  font-size: 11px; font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  display: flex; align-items: center; gap: 6px;
+}
+.tramo-op-row {
+  display: flex; align-items: center;
+  gap: 8px; padding: 7px 12px;
+  border-bottom: 1px solid #EEF1F7;
+  font-size: 11px;
+}
+.tramo-op-row:last-child { border-bottom: none; }
+.tramo-price {
+  font-weight: 700; color: var(--dark);
+  white-space: nowrap; margin-left: auto;
+}
+.lc-badge {
+  display: inline-block; border-radius: 4px;
+  padding: 1px 5px; font-size: 9.5px; font-weight: 600;
+  margin-right: 4px;
+}
+.lc-zero    { background: #FEF3CD; color: #856404; }
+.lc-basica  { background: #D1ECF1; color: #0C5460; }
+.lc-plus    { background: #D4EDDA; color: #155724; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="state-wrap">
+    <div class="spinner"></div>
+    <div class="state-title">Cargando tu cotización…</div>
+    <div class="state-sub">Un momento por favor</div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG SUPABASE ──────────────────────────────────────────────
+const { createClient } = supabase;
+const sb = createClient(
+  'https://vexuglctjkwdpcfmomot.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZleHVnbGN0amt3ZHBjZm1vbW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0ODcxNjUsImV4cCI6MjA5MjA2MzE2NX0.6_Tdwl48lE2puZv4hKTMpt4kBIlYbCZatdEtbiA1FUo'
+);
+
+// ── LOGOS AEROLÍNEAS ─────────────────────────────────────────────
+const logos = {
+  AM: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Aeromexico_Logo.svg/200px-Aeromexico_Logo.svg.png',
+  AA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/American_Airlines_logo_2013.svg/200px-American_Airlines_logo_2013.svg.png',
+  UA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/United_Airlines_Logo.svg/200px-United_Airlines_Logo.svg.png',
+  DL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Delta_logo.svg/200px-Delta_logo.svg.png',
+  LH: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Lufthansa_Logo_2018.svg/200px-Lufthansa_Logo_2018.svg.png',
+  BA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/British_Airways_Logo.svg/200px-British_Airways_Logo.svg.png',
+  AF: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Air_France_Logo.svg/200px-Air_France_Logo.svg.png',
+  KL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/KLM_Royal_Dutch_Airlines_logo.svg/200px-KLM_Royal_Dutch_Airlines_logo.svg.png',
+  IB: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Iberia_logo_%282013%29.svg/200px-Iberia_logo_%282013%29.svg.png',
+  EK: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Emirates_logo.svg/200px-Emirates_logo.svg.png',
+  QR: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Qatar_Airways_Logo.svg/200px-Qatar_Airways_Logo.svg.png',
+  EY: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Etihad_Airways_Logo.svg/200px-Etihad_Airways_Logo.svg.png',
+  CX: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Cathay_Pacific_logo.svg/200px-Cathay_Pacific_logo.svg.png',
+  SQ: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Singapore_Airlines_Logo_2.svg/200px-Singapore_Airlines_Logo_2.svg.png',
+  AV: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Avianca_logo.svg/200px-Avianca_logo.svg.png',
+  CM: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Copa_Airlines_Logo.svg/200px-Copa_Airlines_Logo.svg.png',
+  LA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/LATAM_Airlines_logo.svg/200px-LATAM_Airlines_logo.svg.png',
+  JJ: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/LATAM_Airlines_logo.svg/200px-LATAM_Airlines_logo.svg.png',
+  VB: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/VivaAerobus_logo.svg/200px-VivaAerobus_logo.svg.png',
+  Y4: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Volaris_logo.svg/200px-Volaris_logo.svg.png',
+  W6: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Wizz_Air_logo.svg/200px-Wizz_Air_logo.svg.png',
+  FR: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Ryanair.svg/200px-Ryanair.svg.png',
+  U2: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Easyjet_logo.svg/200px-Easyjet_logo.svg.png',
+  TK: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Turkish_Airlines_logo.svg/200px-Turkish_Airlines_logo.svg.png',
+  AC: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Air_Canada_Logo.svg/200px-Air_Canada_Logo.svg.png',
+  NH: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Ana_Logo_%282012%29.svg/200px-Ana_Logo_%282012%29.svg.png',
+  JL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Japan-airlines-logo.svg/200px-Japan-airlines-logo.svg.png',
+};
+
+const ciudades = {
+  MEX:'Ciudad de México',GDL:'Guadalajara',MTY:'Monterrey',CUN:'Cancún',TIJ:'Tijuana',
+  MID:'Mérida',OAX:'Oaxaca',PVR:'Puerto Vallarta',ZIH:'Zihuatanejo',HMO:'Hermosillo',
+  MZT:'Mazatlán',VER:'Veracruz',TAM:'Tampico',AGU:'Aguascalientes',BJX:'León/Guanajuato',
+  LAX:'Los Ángeles',JFK:'Nueva York (JFK)',EWR:'Nueva York (EWR)',ORD:'Chicago',
+  MIA:'Miami',DFW:'Dallas',IAH:'Houston',SFO:'San Francisco',LAS:'Las Vegas',
+  ATL:'Atlanta',DEN:'Denver',SEA:'Seattle',BOS:'Boston',YYZ:'Toronto',YVR:'Vancouver',
+  LHR:'Londres',CDG:'París',FRA:'Frankfurt',AMS:'Ámsterdam',MAD:'Madrid',
+  BCN:'Barcelona',FCO:'Roma',MXP:'Milán',ZRH:'Zúrich',VIE:'Viena',IST:'Estambul',
+  DXB:'Dubai',DOH:'Doha',AUH:'Abu Dabi',
+  NRT:'Tokio (Narita)',HND:'Tokio (Haneda)',ICN:'Seúl',HKG:'Hong Kong',
+  SIN:'Singapur',BKK:'Bangkok',SYD:'Sídney',
+  GRU:'São Paulo',EZE:'Buenos Aires',BOG:'Bogotá',LIM:'Lima',SCL:'Santiago',
+  UIO:'Quito',GYE:'Guayaquil',PTY:'Ciudad de Panamá',SJO:'San José (Costa Rica)',
+  HAV:'La Habana',PUJ:'Punta Cana',MBJ:'Montego Bay',
+  HNL:'Honolulu',
+};
+
+const LC_CODES = ['Y4','VB','W6','FR','U2','NK','F9','G4','SY'];
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function getToken() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('token');
+}
+
+function logoHTML(code, size = 'normal') {
+  const maxW = size === 'small' ? '44px' : '50px';
+  const maxH = size === 'small' ? '16px' : '20px';
+  if (logos[code]) {
+    return `<img src="${logos[code]}" alt="${code}"
+      style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
+      onerror="this.style.display='none';this.nextSibling.style.display='inline-block';" />
+      <span class="fl-badge" style="display:none;">${code}</span>`;
+  }
+  return `<span class="fl-badge">${code}</span>`;
+}
+
+function ciudad(code) {
+  return ciudades[(code||'').toUpperCase()] || code || '';
+}
+
+function formatFecha(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+  } catch { return iso; }
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+function renderFlightRow(f, dir) {
+  const al = f.aerolinea || f.airline || '';
+  const ruta = f.ruta || (ciudad(f.origen) + ' › ' + ciudad(f.destino));
+  const hasNextDay = (f.llegadaStr||'').includes('d ·') || (f.llegadaStr||'').includes('+') || (f.llegadaStr||'').includes('-');
+  const llegadaClean = (f.llegadaStr||'').replace(/\s*\(.*\)/, '');
+  const llegadaTag   = hasNextDay ? (f.llegadaStr||'').match(/\(([^)]+)\)/)?.[0] || '' : '';
+
+  return `
+  <div class="flight-row">
+    <div class="fl-logo">${logoHTML(al)}</div>
+    <div class="fl-info">
+      <div class="fl-date">${f.fecha || ''}</div>
+      <div class="fl-route">${ruta}</div>
+      <div class="fl-times">
+        Sale <strong>${f.salida || f.sale || ''}</strong>
+        <span class="time-sep">·</span>
+        Llega <strong>${llegadaClean}</strong>
+        ${llegadaTag ? `<span class="next-day">${llegadaTag}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderOpcion(it, idx) {
+  let flightsHTML = '';
+
+  if (it.type === 'gds' && it.parsed?.length) {
+    flightsHTML = `<div class="flights-section">
+      ${it.parsed.map(f => renderFlightRow(f)).join('')}
+    </div>`;
+
+  } else if (it.type === 'multi') {
+    const ida = it.flightsIda || [];
+    const reg = it.flightsRegreso || [];
+    const idaHTML = ida.length ? `
+      <div class="flight-dir-label ida">✈ Vuelos de Ida</div>
+      ${ida.map(f => renderFlightRow(f, 'ida')).join('')}` : '';
+    const regHTML = reg.length ? `
+      <div class="flight-dir-label reg">✈ Vuelos de Regreso</div>
+      ${reg.map(f => renderFlightRow(f, 'reg')).join('')}` : '';
+    flightsHTML = `<div class="flights-section">${idaHTML}${regHTML}</div>`;
+
+  } else if (it.type === 'lowcost') {
+    const ida = it.idas || [];
+    const reg = it.regresos || [];
+    const mkRow = f => renderFlightRow({
+      aerolinea: f.airline,
+      fecha: f.fecha,
+      ruta: ciudad(f.origen) + ' › ' + ciudad(f.destino),
+      salida: f.sale,
+      llegadaStr: f.llega,
+    });
+    flightsHTML = `<div class="flights-section">
+      ${ida.length ? `<div class="flight-dir-label ida">✈ Vuelos de Ida</div>${ida.map(mkRow).join('')}` : ''}
+      ${reg.length ? `<div class="flight-dir-label reg">✈ Vuelos de Regreso</div>${reg.map(mkRow).join('')}` : ''}
+    </div>`;
+
+  } else if (it.type === 'lc_tramos') {
+    const mon = it.moneda || 'MXN';
+    const ordinals = ['1er','2do','3er','4to','5to','6to','7mo','8vo','9no','10mo'];
+    const tramosHTML = (it.segmentos || []).filter(s => s.visible !== false).map((seg, si) => {
+      const segLabel = seg.origen && seg.destino
+        ? `${ciudad(seg.origen)} › ${ciudad(seg.destino)}` : `Tramo ${si+1}`;
+      const opRows = (seg.opciones || []).map(op => {
+        const al = op.airline || '';
+        const isLC = LC_CODES.includes(al);
+        const ruta = ciudad(op.origen || seg.origen) + ' › ' + ciudad(op.destino || seg.destino);
+        const precios = isLC
+          ? [op.tarifaZero   ? `<span class="lc-badge lc-zero">Zero: ${mon} ${op.tarifaZero}</span>` : '',
+             op.tarifaBasica ? `<span class="lc-badge lc-basica">Básica: ${mon} ${op.tarifaBasica}</span>` : '',
+             op.tarifaPlus   ? `<span class="lc-badge lc-plus">Plus: ${mon} ${op.tarifaPlus}</span>` : ''].filter(Boolean).join(' ')
+          : op.precioTotal ? `<span class="tramo-price">${mon} ${op.precioTotal}</span>` : '';
+        return `<div class="tramo-op-row">
+          <div class="fl-logo" style="width:44px;min-width:44px;">${logoHTML(al,'small')}</div>
+          <div class="fl-info" style="flex:1;min-width:0;">
+            <div class="fl-date">${op.fecha||''}</div>
+            <div class="fl-route" style="font-size:12px;">${ruta}</div>
+            <div class="fl-times">${op.sale?'Sale '+op.sale:''} ${op.llega?'· Llega '+op.llega:''}</div>
+          </div>
+          <div style="text-align:right;">${precios}</div>
+        </div>`;
+      }).join('');
+      return `
+        <div class="tramo-header">
+          <span>${ordinals[si]||si+1+'°'} Tramo</span>
+          <span style="opacity:0.6;font-size:10px;margin-left:6px;">— ${segLabel}</span>
+        </div>
+        ${opRows || '<div style="padding:8px 12px;font-size:11px;color:#8898AA;font-style:italic;">Sin opciones</div>'}`;
+    }).join('');
+    flightsHTML = `<div>${tramosHTML}</div>`;
+  }
+
+  // Leyenda multi / tramos
+  const leyenda = it.type === 'multi'
+    ? `<div class="multi-legend">✦ Independientemente del vuelo de ida o regreso que selecciones, el precio será el mismo.</div>`
+    : it.type === 'lc_tramos'
+    ? `<div class="multi-legend">✦ Para obtener el precio total, suma el costo del vuelo que elijas en cada tramo.</div>`
+    : '';
+
+  // Visado
+  const visado = it.visado
+    ? `<div class="visado-warning">⚠ Esta opción requiere visado.</div>`
+    : '';
+
+  // Notas de opción
+  const notasOp = it.notas
+    ? `<div class="option-notes">📝 ${it.notas}</div>`
+    : '';
+
+  // Condiciones / precios
+  const condRows = (it.condRows || []).filter(r => r.clase || r.precio);
+  const condHTML = condRows.length ? `
+    <div class="cond-section">
+      ${condRows.map((row, ri) => {
+        const parts = [];
+        if (row.clase) parts.push(`Tarifa en clase <strong>${row.clase}</strong>`);
+        if (row.equipaje) parts.push(`incluye ${row.equipaje}`);
+        if (row.cambios) {
+          const cMap = {'no-cambios':'no permite cambios','cambios-penalidad':'permite cambios con penalidad','cambios-sin-penalidad':'permite cambios sin penalidad'};
+          parts.push(cMap[row.cambios]||row.cambios);
+        }
+        const text = parts.join(', ');
+        const precio = row.precio
+          ? `<span class="cond-price">${row.moneda||'MXN'} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`
+          : '';
+        return `<div class="cond-row">
+          <div>
+            ${condRows.length > 1 ? `<span class="cond-tarifa-label">TARIFA ${ri+1}</span>` : ''}
+            ${text ? `<span class="cond-text">${text}.</span>` : ''}
+          </div>
+          ${precio}
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  return `
+  <div class="option-card">
+    <div class="option-header">
+      <span class="option-num">Opción ${idx+1}${it.title ? ' — '+it.title : ''}</span>
+      ${it.type === 'multi' ? '<span class="option-tag">Múltiples vuelos</span>' : ''}
+      ${it.type === 'lc_tramos' ? '<span class="option-tag">Por tramos</span>' : ''}
+    </div>
+    ${flightsHTML}
+    ${visado}
+    ${notasOp}
+    ${leyenda}
+    ${condHTML}
+  </div>`;
+}
+
+function renderPage(cot, agencia) {
+  const itins = cot.itinerarios || [];
+  const validItins = itins.filter(it =>
+    (it.parsed?.length) || (it.flightsIda?.length) || (it.flightsRegreso?.length) ||
+    (it.idas?.length) || (it.segmentos?.length) ||
+    (it.condRows?.some(r => r.clase || r.precio))
+  );
+
+  const logoArea = agencia?.logo_url
+    ? `<div class="agency-logo"><img src="${agencia.logo_url}" alt="${agencia.nombre||''}" /></div>`
+    : `<div class="agency-logo"><div class="agency-logo-placeholder">${(agencia?.nombre||'T').charAt(0)}</div></div>`;
+
+  const agenteName = cot.agente_nombre || cot.agente_id || '';
+  const agentPhone = cot.agente_phone || '';
+  const agentEmail = cot.agente_email || '';
+  const agentInitial = agenteName.charAt(0).toUpperCase() || '?';
+
+  const waPhone = agentPhone.replace(/\D/g,'');
+  const waMsg = encodeURIComponent(`Hola ${agenteName ? agenteName.split(' ')[0] : ''}, tengo una pregunta sobre mi cotización ${cot.numero || ''}.`);
+  const waLink = waPhone
+    ? `https://wa.me/${waPhone}?text=${waMsg}`
+    : `https://wa.me/?text=${waMsg}`;
+
+  const optionsHTML = validItins.map((it, i) => renderOpcion(it, i)).join('');
+
+  document.getElementById('app').innerHTML = `
+    <!-- Header agencia -->
+    <div class="agency-header">
+      ${logoArea}
+      <div class="agency-info">
+        <div class="agency-name">${agencia?.nombre || 'Agencia de Viajes'}</div>
+        <div class="agency-sub">Cotización de Viaje</div>
+      </div>
+      <div class="cot-badge">
+        <div class="cot-badge-num">${cot.numero || ''}</div>
+        <div class="cot-badge-date">${formatFecha(cot.fecha_iso)}</div>
+      </div>
+    </div>
+
+    <!-- Info cliente -->
+    <div class="client-card">
+      <div>
+        <div class="client-field-label">Cliente</div>
+        <div class="client-field-value">${cot.cliente_nombre || '—'}</div>
+      </div>
+      <div>
+        <div class="client-field-label">Empresa</div>
+        <div class="client-field-value">${cot.empresa_nombre || '—'}</div>
+      </div>
+      <div>
+        <div class="client-field-label">Agente</div>
+        <div class="client-field-value">${agenteName || '—'}</div>
+      </div>
+      <div>
+        <div class="client-field-label">Cotización</div>
+        <div class="client-field-value">${cot.numero || '—'}</div>
+      </div>
+    </div>
+
+    ${cot.notas ? `<div class="nota-general">📝 ${cot.notas}</div>` : ''}
+
+    <!-- Opciones -->
+    <div class="section-title">Opciones de vuelo</div>
+    ${optionsHTML || '<div style="margin:0 16px;color:var(--text3);font-size:13px;">Sin opciones disponibles.</div>'}
+
+    <!-- Agente -->
+    <div class="section-title">Tu agente</div>
+    <div class="agent-footer">
+      <div class="agent-avatar">${agentInitial}</div>
+      <div class="agent-info">
+        <div class="agent-name">${agenteName}</div>
+        <div class="agent-contact">
+          ${agentPhone ? `<a href="tel:${agentPhone}">${agentPhone}</a><br>` : ''}
+          ${agentEmail ? `<a href="mailto:${agentEmail}">${agentEmail}</a>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <a class="btn-whatsapp" href="${waLink}" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Contactar a mi agente
+      </a>
+    </div>
+
+    <!-- Legal -->
+    <div class="legal-footer">
+      Precios expresados por persona. Tarifas sujetas a disponibilidad al momento de la emisión.<br>
+      Los precios pueden variar sin previo aviso.<br>
+      MXN = Peso Mexicano · USD = Dólar Americano · EUR = Euro<br><br>
+      <a href="https://apply.joinsherpa.com/travel-restrictions?affiliateId=tuproximoviaje&language=es-XL" target="_blank">
+        Revisa los documentos necesarios para tu viaje →
+      </a>
+    </div>
+  `;
+}
+
+function showError(msg) {
+  document.getElementById('app').innerHTML = `
+    <div class="state-wrap">
+      <div class="state-icon">✈️</div>
+      <div class="state-title">Cotización no encontrada</div>
+      <div class="state-sub">${msg}</div>
+    </div>`;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+async function init() {
+  const token = getToken();
+  if (!token) {
+    showError('El link no tiene un token válido. Pide a tu agente que te reenvíe el link correcto.');
+    return;
+  }
+
+  // Cargar cotización por token público
+  const { data: cot, error } = await sb
+    .from('cotizaciones')
+    .select('*')
+    .eq('public_token', token)
+    .single();
+
+  if (error || !cot) {
+    showError('No encontramos esta cotización. Es posible que el link haya expirado o sea incorrecto.');
+    return;
+  }
+
+  // Cargar datos de agencia
+  let agencia = null;
+  if (cot.agencia_id) {
+    const { data: ag } = await sb
+      .from('agencias')
+      .select('nombre, logo_url')
+      .eq('id', cot.agencia_id)
+      .single();
+    agencia = ag;
+  }
+
+  // Cargar datos del agente si hay agente_id
+  if (cot.agente_id) {
+    const { data: agente } = await sb
+      .from('usuarios')
+      .select('nombre, phone, email')
+      .eq('id', cot.agente_id)
+      .single();
+    if (agente) {
+      cot.agente_nombre = agente.nombre;
+      cot.agente_phone  = agente.phone;
+      cot.agente_email  = agente.email;
+    }
+  }
+
+  renderPage(cot, agencia);
+}
+
+init();
+</script>
+</body>
+</html>

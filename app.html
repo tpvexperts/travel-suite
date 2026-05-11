@@ -1304,7 +1304,8 @@ async function guardarCotizacion() {
     agenteId:  currentUser.id,
     itins:     data.itins,
     status:    'pendiente',
-    locked:    false,
+    locked:      false,
+    publicToken: saved.public_token,
   };
   historial.unshift(localRecord);
   updateHistBadge();
@@ -1316,9 +1317,64 @@ async function guardarCotizacion() {
   const btnIgnorar = document.getElementById('btn-ignorar-cot');
   if (btnIgnorar) btnIgnorar.style.display = 'none';
 
+  // Mostrar botón compartir si hay token
+  if (saved.public_token) {
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/cotizacion.html?token=${saved.public_token}`;
+    showShareBtn(shareUrl, data.id);
+  }
+
   showSaveMsg(isFirstSave
     ? `✓ Cotización guardada — <strong>${data.id}</strong>`
     : `✓ Nueva versión guardada — <strong>${data.id}</strong>`);
+}
+
+// ── COMPARTIR WHATSAPP ────────────────────────────────────────────
+function showShareBtn(url, cotId) {
+  // Remover botón previo si existe
+  const prev = document.getElementById('share-float-btn');
+  if (prev) prev.remove();
+
+  const btn = document.createElement('div');
+  btn.id = 'share-float-btn';
+  btn.style.cssText = `
+    position:fixed; bottom:24px; right:24px; z-index:9999;
+    display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+  `;
+  btn.innerHTML = `
+    <button onclick="compartirWhatsApp('${url}','${cotId}')"
+      style="display:flex;align-items:center;gap:10px;padding:12px 20px;
+             background:#25D366;color:white;border:none;border-radius:50px;
+             font-family:'Inter',sans-serif;font-size:13px;font-weight:700;
+             cursor:pointer;box-shadow:0 4px 20px rgba(37,211,102,0.4);
+             transition:all 0.2s;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      Compartir por WhatsApp
+    </button>
+    <button onclick="copiarLink('${url}')"
+      style="display:flex;align-items:center;gap:8px;padding:8px 16px;
+             background:white;color:var(--brand-dark);border:1px solid var(--border);
+             border-radius:50px;font-family:'Inter',sans-serif;font-size:12px;
+             font-weight:600;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+      🔗 Copiar link
+    </button>
+  `;
+  document.body.appendChild(btn);
+}
+
+function compartirWhatsApp(url, cotId) {
+  const msg = encodeURIComponent(`Hola, te comparto tu cotización de viaje ${cotId}:\n${url}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+function copiarLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    showSaveMsg('🔗 Link copiado al portapapeles');
+  }).catch(() => {
+    prompt('Copia este link:', url);
+  });
 }
 
 function updateHistBadge() {
@@ -1842,6 +1898,83 @@ function apKeydown(e, dropId) {
 }
 
 // ── REPORTES ─────────────────────────────────────────────────────
+// ── RANKING DE AGENTES ────────────────────────────────────────────
+function buildRankingAgentes(cots, agentes, monedaLabel, fmt) {
+  if (agentes.length < 2) return '';
+  const rankData = agentes.map(ag => {
+    const agCots   = cots.filter(h => h.agenteId == ag.id);
+    const agComp   = agCots.filter(h => h.status === 'comprada');
+    const agCierre = agCots.length > 0 ? Math.round((agComp.length / agCots.length) * 100) : 0;
+    const agVenta  = agComp.filter(h => h.monto && !isNaN(parseFloat(h.monto))).reduce((s,h) => s + parseFloat(h.monto), 0);
+    return { nombre: ag.name, total: agCots.length, compradas: agComp.length, cierre: agCierre, venta: agVenta };
+  }).filter(ag => ag.total > 0).sort((a,b) => b.compradas - a.compradas);
+  if (!rankData.length) return '';
+  const medals = ['🥇','🥈','🥉'];
+  let rows = '';
+  rankData.forEach((ag, i) => {
+    const medal = medals[i] || ((i+1) + '°');
+    const cierreColor = ag.cierre >= 60 ? '#155724' : ag.cierre >= 30 ? '#856404' : '#721C24';
+    rows += '<tr style="border-bottom:1px solid var(--border);">'
+      + '<td style="padding:6px 8px;font-size:14px;">' + medal + '</td>'
+      + '<td style="padding:6px 8px;font-weight:600;color:var(--text);">' + ag.nombre + '</td>'
+      + '<td style="padding:6px 8px;text-align:center;color:var(--text2);">' + ag.total + '</td>'
+      + '<td style="padding:6px 8px;text-align:center;color:#155724;font-weight:600;">' + ag.compradas + '</td>'
+      + '<td style="padding:6px 8px;text-align:center;font-weight:700;color:' + cierreColor + ';">' + ag.cierre + '%</td>'
+      + '<td style="padding:6px 8px;text-align:right;font-weight:600;">' + (ag.venta > 0 ? (monedaLabel + ' ' + fmt(ag.venta)) : '—') + '</td>'
+      + '</tr>';
+  });
+  return '<div class="rep-section" style="margin-top:16px;">'
+    + '<div class="rep-section-title">🏆 Ranking de agentes</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+    + '<thead><tr style="border-bottom:1px solid var(--border);">'
+    + '<th style="text-align:left;padding:6px 8px;color:var(--text3);font-size:10.5px;">#</th>'
+    + '<th style="text-align:left;padding:6px 8px;color:var(--text3);font-size:10.5px;">Agente</th>'
+    + '<th style="text-align:center;padding:6px 8px;color:var(--text3);font-size:10.5px;">Cotizaciones</th>'
+    + '<th style="text-align:center;padding:6px 8px;color:var(--text3);font-size:10.5px;">Cerradas</th>'
+    + '<th style="text-align:center;padding:6px 8px;color:var(--text3);font-size:10.5px;">% Cierre</th>'
+    + '<th style="text-align:right;padding:6px 8px;color:var(--text3);font-size:10.5px;">Venta total</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody></table></div>';
+}
+
+// ── TENDENCIA MENSUAL ─────────────────────────────────────────────
+function buildTendenciaMensual(cots) {
+  const hoy = new Date();
+  const mesesData = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    const key = d.toISOString().slice(0,7);
+    const label = d.toLocaleDateString('es-MX', { month:'short', year:'2-digit' });
+    const mesTotal = cots.filter(h => (h.fechaISO||'').slice(0,7) === key).length;
+    const mesComp  = cots.filter(h => (h.fechaISO||'').slice(0,7) === key && h.status === 'comprada').length;
+    mesesData.push({ key, label, total: mesTotal, compradas: mesComp });
+  }
+  if (!mesesData.some(m => m.total > 0)) return '';
+  const maxVal = Math.max(...mesesData.map(m => m.total), 1);
+  const barH = 80, barW = 44, gap = 14;
+  const totalW = mesesData.length * (barW + gap) - gap;
+  let bars = '';
+  mesesData.forEach((m, i) => {
+    const x      = i * (barW + gap);
+    const hTotal = Math.round((m.total / maxVal) * barH);
+    const hComp  = Math.round((m.compradas / maxVal) * barH);
+    const yTotal = barH - hTotal;
+    const yComp  = barH - hComp;
+    if (hTotal > 0) bars += '<rect x="' + x + '" y="' + yTotal + '" width="' + barW + '" height="' + hTotal + '" rx="3" fill="#D8E0EC"/>';
+    if (hComp  > 0) bars += '<rect x="' + x + '" y="' + yComp  + '" width="' + barW + '" height="' + hComp  + '" rx="3" fill="#1A4E8C"/>';
+    if (m.total > 0) bars += '<text x="' + (x + barW/2) + '" y="' + (yTotal - 4) + '" text-anchor="middle" font-size="10" fill="#4A5568" font-family="Inter,sans-serif">' + m.total + '</text>';
+    bars += '<text x="' + (x + barW/2) + '" y="' + (barH + 14) + '" text-anchor="middle" font-size="10" fill="#8898AA" font-family="Inter,sans-serif">' + m.label + '</text>';
+  });
+  return '<div class="rep-section" style="margin-top:16px;">'
+    + '<div class="rep-section-title">📈 Tendencia mensual — últimos 6 meses</div>'
+    + '<div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">'
+    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><div style="width:12px;height:12px;background:#D8E0EC;border-radius:2px;"></div> Cotizadas</div>'
+    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><div style="width:12px;height:12px;background:#1A4E8C;border-radius:2px;"></div> Compradas</div>'
+    + '</div>'
+    + '<svg width="100%" viewBox="0 0 ' + totalW + ' ' + (barH + 24) + '" style="overflow:visible;">' + bars + '</svg>'
+    + '</div>';
+}
+
 function renderReportes() {
   const filtAgente  = document.getElementById('rep-filter-agente')?.value || '';
   const filtMes     = document.getElementById('rep-filter-mes')?.value || '';
@@ -1993,7 +2126,10 @@ function renderReportes() {
           </tr>`).join('')}
         </tbody>
       </table>
-    </div>` : ''}`;
+    </div>` : ''}
+    ${buildRankingAgentes(cots, agentes, monedaLabel, fmt)}
+    ${buildTendenciaMensual(cots)}
+  `;
 }
 
 async function init() {
@@ -2942,7 +3078,7 @@ function parseMultiDir(it, dir) {
   const resKey = dir === 'ida' ? 'flightsIda' : 'flightsRegreso';
   const ta = document.getElementById(`ta-${it.id}-${dir}`);
   if (ta) it[rawKey] = ta.value;
-  let flights = (it[rawKey]||'').split('\n').map(parseMultiLine).filter(Boolean);
+  let flights = limpiarGDS(it[rawKey]||'').split('\n').map(parseMultiLine).filter(Boolean);
   flights.sort((a,b) => sortKey(a.fecha,a.salida).localeCompare(sortKey(b.fecha,b.salida)));
   it[resKey] = flights;
 }
@@ -3167,12 +3303,64 @@ function buildCondRowText(row) {
   return parts.join(', ') + '.';
 }
 
+// ── PRE-PROCESADOR DE TEXTO GDS ──────────────────────────────────
+// Limpia el texto pegado desde Amadeus antes de parsear.
+// 1. Elimina lineas de ruido (SEE RTSVC, ADD PASSPORT, ADV PAX, codeshares, etc)
+// 2. Junta segmentos partidos en dos lineas (ej: "3  UA 822 ...4*MEX" + "SFO DK1 ...")
+function limpiarGDS(raw) {
+  if (!raw) return '';
+  const RUIDO = [
+    /^\s*SEE RTSVC/i,
+    /^\s*ADD PASSPORT/i,
+    /^\s*ADV PAX/i,
+    /^\s*\*\s+[A-Z ]+,/,
+    /^\s*\d{3}\s+[A-Z]{2}\s+\d+/,
+    /^\s*OPERATED BY/i,
+    /^\s*SUBJ TO/i,
+    /^\s*NOTE:/i,
+    /^\s*FARE/i,
+    /^\s*ENDOS/i,
+    /^\s*ATTN/i,
+    /^\s*TICKET/i,
+    /^\s*RESTRICTIONS/i,
+  ];
+  const lineas = raw.split('\n');
+  const limpias = [];
+  for (let i = 0; i < lineas.length; i++) {
+    const l = lineas[i];
+    if (RUIDO.some(r => r.test(l))) continue;
+    if (!l.trim()) continue;
+    // Detectar segmento Amadeus partido (tiene numero+aerolinea+fecha+origen pero no horario)
+    const esSegAmadeus = /^\s*\d+\s+[A-Z]{2}\s*\d+\s+\S+\s+\d{2}[A-Z]{3}\s+\d+\*?\s*[A-Z]{3}/.test(l);
+    const tieneHorario = /\d{1,4}[AP]\s*\d{1,4}[AP]|\d{4}\s+[#\-\*]?\d{4}/.test(l);
+    if (esSegAmadeus && !tieneHorario) {
+      // Buscar continuacion en lineas siguientes
+      let cont = l.trimEnd();
+      let j = i + 1;
+      while (j < lineas.length) {
+        const sig = lineas[j].trim();
+        if (RUIDO.some(r => r.test(lineas[j])) || !sig) { j++; continue; }
+        // La continuacion empieza con los 3 chars de destino + DK o HS
+        if (/^[A-Z]{3}\s+DK\d|^[A-Z]{3}\s+HS\d/.test(sig)) {
+          cont = cont + sig;
+          i = j;
+        }
+        break;
+      }
+      limpias.push(cont);
+    } else {
+      limpias.push(l);
+    }
+  }
+  return limpias.join('\n');
+}
+
 function parseItin(id) {
   const it = itins.find(i => i.id === id);
   if (!it) return;
   const textarea = document.querySelector(`#itin-${id} textarea`);
   it.rawText = textarea ? textarea.value : it.rawText;
-  it.parsed = it.rawText.split('\n').map(parseLine).filter(Boolean);
+  it.parsed = limpiarGDS(it.rawText).split('\n').map(parseLine).filter(Boolean);
   renderItins();
 }
 
@@ -3194,39 +3382,99 @@ function traducirMes(fecha) {
   return fecha.slice(0,2) + (MESES_ES[mes] || mes);
 }
 
+// ── HELPERS DE FECHA ─────────────────────────────────────────────
+function ajustarFechaGlobal(fechaBase, dias) {
+  // fechaBase = "10JUN" (DDMMM en inglés o español)
+  if (!fechaBase || dias === 0) return '';
+  const dia = parseInt(fechaBase.slice(0,2));
+  const mesStr = fechaBase.slice(2).toUpperCase();
+  const mesNum = parseInt(MESES_NUM[mesStr] || '01') - 1;
+  const d = new Date(2000, mesNum, dia + dias);
+  const mesesES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  return String(d.getDate()).padStart(2,'0') + mesesES[d.getMonth()];
+}
+
+// Convierte hora Amadeus 12h → 24h
+// "645P"→"1845", "1215A"→"0015", "500A"→"0500", "1020P"→"2220"
+function convertir12a24(raw) {
+  raw = raw.trim().toUpperCase();
+  const esPM = raw.endsWith('P');
+  const esAM = raw.endsWith('A');
+  if (!esPM && !esAM) return raw.padStart(4,'0'); // ya en formato 24h
+  const numStr = raw.slice(0,-1);
+  let hh, mm;
+  if (numStr.length <= 2) { hh = parseInt(numStr); mm = 0; }
+  else { mm = parseInt(numStr.slice(-2)); hh = parseInt(numStr.slice(0,-2)); }
+  if (esPM && hh !== 12) hh += 12;
+  if (esAM && hh === 12) hh = 0;
+  return String(hh).padStart(2,'0') + String(mm).padStart(2,'0');
+}
+
+// Separa el bloque de horarios Amadeus que puede venir con o sin espacio:
+// "645P1215A" → ["645P","1215A"]   "500A 845A" → ["500A","845A"]
+function separarHorarios(bloque) {
+  bloque = bloque.trim();
+  const conEspacio = bloque.match(/^(\d{1,4}[AP])\s+(\d{1,4}[AP])$/i);
+  if (conEspacio) return [conEspacio[1], conEspacio[2]];
+  const sinEspacio = bloque.match(/^(\d{1,4}[AP])(\d{1,4}[AP])$/i);
+  if (sinEspacio) return [sinEspacio[1], sinEspacio[2]];
+  return [bloque, bloque];
+}
+
+// ── PARSER PRINCIPAL — detecta Travelport o Amadeus automáticamente ──
 function parseLine(linea) {
   linea = linea.trim();
   if (!linea) return null;
-  const m = linea.match(/^\d+\s*\.\s*([A-Z0-9]{2})\s+\d+\s+\S+\s+(\d{2}\w{3})\s+(\w{3})(\w{3})\s+\S+\s+(\S+)\s+([#\-\*]?\d{4})/);
-  if (!m) return null;
-  const [, aerolinea, fechaRaw, orig, dest, sal, llegRaw] = m;
-  const fecha   = traducirMes(fechaRaw);
-  const origen  = ciudades[orig.toUpperCase()] || orig.toUpperCase();
-  const destino = ciudades[dest.toUpperCase()] || dest.toUpperCase();
-  const salida  = sal.replace(/[#\-\*]/g,'');
-  const simbolo = llegRaw[0];
-  const llegada = llegRaw.replace(/[#\-\*]/g,'');
 
-  // Calcular fecha de llegada sumando/restando días
-  function ajustarFecha(fechaBase, dias) {
-    const dia = parseInt(fechaBase.slice(0,2));
-    const mesStr = fechaBase.slice(2);
-    const mesNum = MESES_NUM[mesStr] || '01';
-    const anio = new Date().getFullYear();
-    const d = new Date(anio, parseInt(mesNum)-1, dia + dias);
-    const mesesES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-    return String(d.getDate()).padStart(2,'0') + mesesES[d.getMonth()];
+  // ── TRAVELPORT ──────────────────────────────────────────────────
+  // "2 . CX 881 Q 05AUG LAXHKG HS1 0125 #0645 O WE/TH 1"
+  // El punto después del número de segmento es el identificador clave
+  const mTP = linea.match(
+    /^\d+\s*\.\s*([A-Z]{2})\s+\d+\s+\S+\s+(\d{2}[A-Z]{3})\s+([A-Z]{3})([A-Z]{3})\s+\S+\s+(\d{4})\s+([#\-\*]?\d{4})/
+  );
+  if (mTP) {
+    const [, aerolinea, fechaRaw, orig, dest, sal, llegRaw] = mTP;
+    const fecha   = traducirMes(fechaRaw);
+    const origen  = ciudades[orig] || orig;
+    const destino = ciudades[dest] || dest;
+    const simbolo = llegRaw[0];
+    const llegada = llegRaw.replace(/[#\-\*]/g,'');
+    let llegadaStr = llegada;
+    if      (simbolo === '#') llegadaStr = llegada + ' (+1d · ' + ajustarFechaGlobal(fechaRaw,  1) + ')';
+    else if (simbolo === '*') llegadaStr = llegada + ' (+2d · ' + ajustarFechaGlobal(fechaRaw,  2) + ')';
+    else if (simbolo === '-') llegadaStr = llegada + ' (-1d · ' + ajustarFechaGlobal(fechaRaw, -1) + ')';
+    return { aerolinea, fecha, ruta: origen + ' › ' + destino, salida: sal, llegadaStr };
   }
 
-  let llegadaStr = llegada;
-  if (simbolo === '#') {
-    llegadaStr = llegada + ' (' + ajustarFecha(fecha, 1) + ')';
-  } else if (simbolo === '*') {
-    llegadaStr = llegada + ' (' + ajustarFecha(fecha, 2) + ')';
-  } else if (simbolo === '-') {
-    llegadaStr = llegada + ' (' + ajustarFecha(fecha, -1) + ')';
+  // ── AMADEUS ─────────────────────────────────────────────────────
+  // Cubre todos los casos:
+  //   "1  EK 256 Y 10JUN 3 MEXDXB DK1   645P1215A 12JUN"   (horario pegado, +2d)
+  //   "2  CX 880 Y 15JUN 1 HKGLAX DK1  1205A1035P 14JUN"   (llega día anterior)
+  //   "3  UA 822 Y 18JUN 4*MEXSFO DK1   500A 845A 18JUN"    (* = casado, mismo día)
+  //   "4  UA2380 Y 18JUN 4*SFOHNL DK1  1045A 120P 18JUN"    (vuelo nro pegado)
+  //   "5  AM 025 Y 18JUN 4 MEXAMS DK1  1020P 520P 19JUN"    (+1d)
+  const mAM = linea.match(
+    /^\s*\d+\s+([A-Z]{2})\s*\d+\s+\S+\s+(\d{2}[A-Z]{3})\s+\d+\*?\s*([A-Z]{3})([A-Z]{3})\s+\S+\s+(\d{1,4}[AP]\s*\d{1,4}[AP]|\d{1,4}[AP]\d{1,4}[AP])\s+(\d{2}[A-Z]{3})/i
+  );
+  if (mAM) {
+    const [, aerolinea, fechaSalidaRaw, orig, dest, horarioBloque, fechaLlegadaRaw] = mAM;
+    const [salRaw, llegRaw] = separarHorarios(horarioBloque);
+    const fechaSalida  = traducirMes(fechaSalidaRaw);
+    const fechaLlegada = traducirMes(fechaLlegadaRaw);
+    const origen  = ciudades[orig] || orig;
+    const destino = ciudades[dest] || dest;
+    const salida  = convertir12a24(salRaw);
+    const llegada = convertir12a24(llegRaw);
+    let llegadaStr = llegada;
+    if (fechaLlegada !== fechaSalida) {
+      const pf = (f) => { const d=parseInt(f.slice(0,2)), m=parseInt(MESES_NUM[f.slice(2).toUpperCase()]||'01')-1; return new Date(2000,m,d); };
+      const diff = Math.round((pf(fechaLlegadaRaw) - pf(fechaSalidaRaw)) / 86400000);
+      llegadaStr = llegada + ' (' + (diff > 0 ? '+' : '') + diff + 'd · ' + fechaLlegada + ')';
+    }
+    return { aerolinea, fecha: fechaSalida, ruta: origen + ' › ' + destino, salida, llegadaStr };
   }
-  return { aerolinea, fecha, ruta: origen + ' › ' + destino, salida, llegadaStr };
+
+  return null;
 }
 
 function getLogoHTML(code) {
@@ -3354,16 +3602,77 @@ function buildPDFHTML() {
       : it.type === 'lc_tramos'
       ? '<div style="font-size:10px;font-style:italic;color:#1A4E8C;margin-bottom:6px;padding:4px 8px;background:#EBF4FF;border-radius:4px;">✦ Para obtener el precio total del itinerario, suma el costo del vuelo que elijas en cada tramo.</div>'
       : '';
-    const condRowsHTML = (it.condRows || []).map((row, ri) => {
-      const text = buildCondRowText(row);
-      const precio = row.precio ? `<strong>${row.moneda} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</strong>` : '';
-      if (!text && !precio) return '';
-      return `<div style="padding:6px 0;border-bottom:1px dashed #D8E0EC;font-size:10.5px;line-height:1.6;">
-        ${(it.condRows.length > 1) ? `<span style="font-size:9px;font-weight:700;color:#1A4E8C;margin-right:6px;">TARIFA ${ri+1}</span>` : ''}
-        ${text ? `<span style="font-style:italic;color:#4A5568;">${text}</span>` : ''}
-        ${precio ? `<span style="margin-left:10px;color:#0D1B2E;">${precio}</span>` : ''}
-      </div>`;
-    }).join('');
+    // ── CONDICIONES CON ICONOS (Forma A: vuelos una vez, tarifas abajo) ──
+    const condRowsHTML = (() => {
+      const validRows = (it.condRows || []).filter(r => r.clase || r.precio);
+      if (!validRows.length) return '';
+      const multiTarifa = validRows.length > 1;
+
+      // Icono SVG inline para equipaje, cambios, reembolso
+      const icoMaleta    = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>';
+      const icoMochila   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10H4V10z"/><path d="M9 6V4a3 3 0 0 1 6 0v2"/><line x1="12" y1="12" x2="12" y2="16"/></svg>';
+      const icoCambios   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>';
+      const icoX         = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D0202A" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      const icoCheck     = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1A7A4A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>';
+      const icoSilla     = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M6 2v11m0 0H3m3 0h3m6-11v11m0 0h-3m3 0h3"/><path d="M6 13v6m12-6v6M4 19h16"/></svg>';
+
+      const rows = validRows.map((row, ri) => {
+        const precio = row.precio
+          ? `<span style="font-size:15px;font-weight:700;color:#0D1B2E;white-space:nowrap;">${row.moneda||'USD'} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`
+          : '';
+
+        // Chips de condiciones
+        const chips = [];
+
+        // Clase con ícono de silla
+        if (row.clase) {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#4A5568;">${icoSilla}${row.clase}</span>`);
+        }
+
+        // Equipaje
+        if (row.equipaje === 'solo maleta de mano') {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#4A5568;">${icoMochila}Solo mano</span>`);
+        } else if (row.equipaje === 'equipaje documentado incluido') {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#4A5568;">${icoMaleta}Equipaje incluido</span>`);
+        }
+
+        // Cambios
+        if (row.cambios === 'no-cambios') {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#D0202A;">${icoX}Sin cambios</span>`);
+        } else if (row.cambios === 'cambios-penalidad') {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#4A5568;">${icoCambios}Cambios c/penalidad</span>`);
+        } else if (row.cambios === 'cambios-sin-penalidad') {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#1A7A4A;">${icoCambios}Cambios sin penalidad</span>`);
+        }
+
+        // Reembolso
+        if (row.reembolso === 'no reembolsable') {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#D0202A;">${icoX}No reembolsable</span>`);
+        } else if (row.reembolso === 'reembolsable con penalidad') {
+          chips.push(`<span style="display:inline-flex;align-items:center;font-size:10px;color:#4A5568;">${icoCheck}Reembolsable c/penalidad</span>`);
+        }
+
+        const chipsHTML = chips.length
+          ? `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${chips.join('')}</div>`
+          : '';
+
+        const tarifaLabel = multiTarifa
+          ? `<span style="font-size:9px;font-weight:700;color:#1A4E8C;background:#EBF4FF;border-radius:3px;padding:2px 6px;margin-right:8px;white-space:nowrap;">TARIFA ${ri+1}</span>`
+          : '';
+
+        const borderBottom = ri < validRows.length - 1 ? 'border-bottom:1px solid #D8E0EC;' : '';
+
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;${borderBottom}">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;flex:1;">
+            ${tarifaLabel}
+            ${chipsHTML}
+          </div>
+          ${precio}
+        </div>`;
+      }).join('');
+
+      return `<div style="margin-top:0;padding:4px 0;">${rows}</div>`;
+    })();
     return `
     <div class="pdf-option">
       <div class="pdf-opt-header">
@@ -3373,7 +3682,8 @@ function buildPDFHTML() {
         ${flightsHTML}
         ${it.visado ? `<div style="background:#FEF3CD;border:1px solid #F0A000;border-radius:5px;padding:6px 10px;margin-top:8px;font-size:11px;font-weight:700;color:#856404;">⚠ Esta opción requiere visado.</div>` : ''}
         ${it.notas ? `<div style="background:#FFFBEA;border:1px solid #F0D070;border-radius:5px;padding:6px 10px;margin-top:8px;font-size:10.5px;color:#856404;">📝 ${it.notas}</div>` : ''}
-        ${(multiLegendPDF || condRowsHTML) ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #D8E0EC;">${multiLegendPDF}${condRowsHTML}</div>` : ''}
+        ${multiLegendPDF ? `<div style="margin-top:8px;">${multiLegendPDF}</div>` : ''}
+        ${condRowsHTML ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #D8E0EC;">${condRowsHTML}</div>` : ''}
       </div>
     </div>`;
   }).join('');
