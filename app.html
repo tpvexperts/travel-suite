@@ -735,7 +735,8 @@ async function checkAuth() {
     return false;
   }
   currentUsuario = profile;
-  currentAgenciaId = profile.agencia_id;
+  // Master no tiene agencia — ignorar agencia_id
+  currentAgenciaId = profile.rol === 'master' ? null : profile.agencia_id;
   // Update sidebar
   const nombre = profile.nombre || currentUser.email;
   const initials = nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
