@@ -2739,7 +2739,7 @@ function buildLCTramosHTML(it, idx) {
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
           <div class="cond-group" style="min-width:110px;">
             <label>Aerolínea</label>
-            <select onchange="updateOpcion(${it.id},${seg.id},${op.id},'airline',this.value);renderItins();" onkeydown="if(event.key==='Tab'){event.preventDefault();var f=document.getElementById('op-fecha-'+String(${op.id}));if(f)f.focus();}">
+            <select id="op-airline-${op.id}" onchange="updateOpcion(${it.id},${seg.id},${op.id},'airline',this.value);renderItins();" onkeydown="if(event.key==='Tab'){event.preventDefault();var f=document.getElementById('op-fecha-'+String(${op.id}));if(f)f.focus();}">
               ${allAL.map(a=>`<option value="${a.code}" ${op.airline===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
             </select>
           </div>
@@ -2747,18 +2747,19 @@ function buildLCTramosHTML(it, idx) {
             <label>Fecha</label>
             <input type="text" id="op-fecha-${op.id}" placeholder="12MAY" value="${op.fecha}" style="text-transform:uppercase;"
               onchange="updateOpcion(${it.id},${seg.id},${op.id},'fecha',this.value)"
-              onkeydown="tabToNext(event,'op-sale-${op.id}')" />
+              onkeydown="tabToNext(event,'op-sale-${op.id}','op-airline-${op.id}')" />
           </div>
           <div class="cond-group" style="min-width:72px;">
             <label>Sale</label>
             <input type="text" id="op-sale-${op.id}" placeholder="0910" value="${op.sale}" maxlength="4"
               onchange="updateOpcion(${it.id},${seg.id},${op.id},'sale',this.value)"
-              onkeydown="tabToNext(event,'op-llega-${op.id}')" />
+              onkeydown="tabToNext(event,'op-llega-${op.id}','op-fecha-${op.id}')" />
           </div>
           <div class="cond-group" style="min-width:72px;">
             <label>Llega</label>
             <input type="text" id="op-llega-${op.id}" placeholder="1110" value="${op.llega}" maxlength="4"
-              onchange="updateOpcion(${it.id},${seg.id},${op.id},'llega',this.value)" />
+              onchange="updateOpcion(${it.id},${seg.id},${op.id},'llega',this.value)"
+              onkeydown="tabToNext(event,'','op-sale-${op.id}')" />
           </div>
           <div class="cond-group" style="min-width:100px;">
             <label>Día llegada</label>
