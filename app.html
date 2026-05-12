@@ -2322,6 +2322,13 @@ async function init() {
 
   // Logo se carga cuando la agencia se inicializa abajo
 
+  // Master no tiene agencia — saltar todas las cargas de datos de agencia
+  if (currentUsuario?.rol === 'master') {
+    renderTaisNews();
+    renderAgenciaAvisos();
+    return;
+  }
+
   // Load airports from Supabase (global + custom for this agency)
   const { data: apGlobal } = await sb.from('aeropuertos_global').select('codigo,ciudad').eq('activo', true);
   const { data: apCustom } = await sb.from('aeropuertos_custom').select('codigo,ciudad').eq('agencia_id', currentAgenciaId);
