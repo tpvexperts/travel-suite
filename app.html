@@ -1096,7 +1096,7 @@ function renderSidebarNav() {
   document.getElementById('sidebar-nav').innerHTML = html;
 }
 
-function renderTaisNews() {
+async function renderTaisNews() {
   const el = document.getElementById('tais-news-list');
   const btnNuevoNews = document.getElementById('btn-nuevo-news');
   if (!el) return;
