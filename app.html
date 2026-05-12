@@ -2915,11 +2915,17 @@ function addOpcion(itinId, segId) {
     taisAlert('Define primero el origen y destino del tramo.');
     return;
   }
-  seg.opciones.push(newOpcion(seg.origen, seg.destino));
+  const newOp = newOpcion(seg.origen, seg.destino);
+  seg.opciones.push(newOp);
   seg.opciones.sort((a,b) => sortKey(a.fecha,a.sale).localeCompare(sortKey(b.fecha,b.sale)));
   renderItins();
   const block = document.getElementById('itin-' + itinId);
   if (block) block.classList.remove('collapsed');
+  // Mover foco al select de aerolínea de la nueva opción
+  setTimeout(() => {
+    const sel = document.getElementById('op-airline-' + newOp.id);
+    if (sel) sel.focus();
+  }, 50);
 }
 
 function removeOpcion(itinId, segId, opId) {
