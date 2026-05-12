@@ -3550,8 +3550,31 @@ function ajustarFechaStr(fechaBase, dias) {
 
 function getAgente() {
   const sel = document.getElementById('cot-agente');
-  const id = sel.value;
-  return agentes.find(a => String(a.id) === String(id)) || null;
+  const id = sel ? sel.value : '';
+  // Buscar en array de agentes por ID de la tabla agentes
+  const fromArray = agentes.find(a => String(a.id) === String(id));
+  if (fromArray) return fromArray;
+  // Fallback: si el select tiene el auth UUID del usuario actual, usar currentUsuario
+  if (id && currentUser && String(id) === String(currentUser.id) && currentUsuario) {
+    return {
+      id:      currentUser.id,
+      name:    currentUsuario.nombre || currentUser.email || '',
+      email:   currentUser.email || '',
+      phone:   currentUsuario.telefono || '',
+      company: window.currentAgenciaNombre || '',
+    };
+  }
+  // Último fallback: usar currentUsuario directamente si no hay selección
+  if (!id && currentUsuario) {
+    return {
+      id:      currentUser?.id,
+      name:    currentUsuario.nombre || currentUser?.email || '',
+      email:   currentUser?.email || '',
+      phone:   currentUsuario.telefono || '',
+      company: window.currentAgenciaNombre || '',
+    };
+  }
+  return null;
 }
 
 function buildPDFHTML() {
@@ -3559,7 +3582,13 @@ function buildPDFHTML() {
   const fecha   = document.getElementById('cot-fecha').value;
   const num     = document.getElementById('cot-num').value;
   const notasVal = document.getElementById('cot-notas')?.value || '';
-  const agente  = getAgente();
+  // Agente: usar currentUsuario directamente (es quien genera la cotización)
+  const agente = currentUsuario ? {
+    name:    currentUsuario.nombre || currentUser?.email || '—',
+    email:   currentUser?.email || '',
+    phone:   currentUsuario.telefono || '',
+    company: window.currentAgenciaNombre || '',
+  } : null;
   const empresaId = document.getElementById('cot-empresa')?.value || null;
   const empresaObj = clientes.find(c => String(c.id) === String(empresaId));
   const empresaNombre = empresaObj ? empresaObj.name : '';
