@@ -2657,13 +2657,15 @@ async function init() {
 
   // Load airports from Supabase (global + custom for this agency)
   const { data: apGlobal } = await sb.from('aeropuertos_global').select('codigo,ciudad').eq('activo', true);
-  const { data: apCustom } = await sb.from('aeropuertos_custom').select('codigo,ciudad').eq('agencia_id', currentAgenciaId);
   ciudades = {};
   (apGlobal || []).forEach(a => { ciudades[a.codigo] = a.ciudad; });
-  (apCustom || []).forEach(a => { ciudades[a.codigo] = a.ciudad; });
-  // Also keep any cached local ones
-  const localAP = lsGet('tpv_airports_custom_' + currentAgenciaId, {});
-  Object.assign(ciudades, localAP);
+  // Only load custom airports if not master
+  if (currentAgenciaId) {
+    const { data: apCustom } = await sb.from('aeropuertos_custom').select('codigo,ciudad').eq('agencia_id', currentAgenciaId);
+    (apCustom || []).forEach(a => { ciudades[a.codigo] = a.ciudad; });
+    const localAP = lsGet('tpv_airports_custom_' + currentAgenciaId, {});
+    Object.assign(ciudades, localAP);
+  }
 
   // Load logos from Supabase
   const { data: logosGlobal } = await sb.from('logos_global').select('codigo,url').eq('activo', true);
@@ -2848,11 +2850,18 @@ async function addAirport() {
   const city = document.getElementById('new-ap-city').value.trim();
   if (!code || !city) return;
 
-  const { error } = await sb.from('aeropuertos_custom').insert({
-    agencia_id: currentAgenciaId,
-    codigo:     code,
-    ciudad:     city,
-  });
+  const esMaster = currentUsuario?.rol === 'master';
+  let error;
+
+  if (esMaster) {
+    // Master guarda en tabla global
+    const res = await sb.from('aeropuertos_global').insert({ codigo: code, ciudad: city, activo: true });
+    error = res.error;
+  } else {
+    // Agencia guarda en custom
+    const res = await sb.from('aeropuertos_custom').insert({ agencia_id: currentAgenciaId, codigo: code, ciudad: city });
+    error = res.error;
+  }
 
   if (error) { taisAlert('Error al guardar aeropuerto: ' + error.message); return; }
 
@@ -2864,10 +2873,14 @@ async function addAirport() {
 }
 
 async function delAP(code) {
-  // Only delete from custom table — don't touch global airports
-  await sb.from('aeropuertos_custom').delete()
-    .eq('agencia_id', currentAgenciaId)
-    .eq('codigo', code);
+  const esMaster = currentUsuario?.rol === 'master';
+  if (esMaster) {
+    await sb.from('aeropuertos_global').delete().eq('codigo', code);
+  } else {
+    await sb.from('aeropuertos_custom').delete()
+      .eq('agencia_id', currentAgenciaId)
+      .eq('codigo', code);
+  }
   delete ciudades[code];
   renderAirports();
   showSaved('ap-saved');
@@ -2892,7 +2905,19 @@ function renderLogos() {
     </div>`).join('') : '<span style="font-size:12px;color:var(--text3);">Sin logos cargados aún.</span>';
 }
 
-function delLogo(code) { delete logos[code]; lsSet('tpv_logos', logos); renderLogos(); refreshAllItins(); }
+async function delLogo(code) {
+  const esMaster = currentUsuario?.rol === 'master';
+  if (esMaster) {
+    await sb.from('logos_global').delete().eq('codigo', code);
+  } else {
+    await sb.from('logos_custom').delete()
+      .eq('agencia_id', currentAgenciaId)
+      .eq('codigo', code);
+  }
+  delete logos[code];
+  renderLogos();
+  refreshAllItins();
+}
 
 function handleDrop(e) {
   e.preventDefault();
@@ -2904,7 +2929,16 @@ function handleFiles(files) {
   [...files].forEach(file => {
     const code = file.name.replace(/\.[^.]+$/, '').toUpperCase().slice(0,2);
     const reader = new FileReader();
-    reader.onload = e => { logos[code] = e.target.result; lsSet('tpv_logos', logos); renderLogos(); refreshAllItins(); };
+    reader.onload = async e => {
+      logos[code] = e.target.result;
+      const esMaster = currentUsuario?.rol === 'master';
+      if (esMaster) {
+        await sb.from('logos_global').upsert({ codigo: code, url: e.target.result, activo: true });
+      } else {
+        await sb.from('logos_custom').upsert({ agencia_id: currentAgenciaId, codigo: code, url: e.target.result });
+      }
+      renderLogos(); refreshAllItins();
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -4495,6 +4529,10 @@ async function renderDashboard() {
 // ── MASTER: AGENCIAS ─────────────────────────────────────────────
 async function renderMasterAgencias() {
   const { data: agencias } = await sb.from('agencias').select('id,nombre,email,telefono,plan,activa,vence_at,created_at').order('nombre');
+  // Contar usuarios por agencia
+  const { data: usuariosCount } = await sb.from('usuarios').select('agencia_id');
+  const countMap = {};
+  (usuariosCount || []).forEach(u => { countMap[u.agencia_id] = (countMap[u.agencia_id] || 0) + 1; });
   const el = document.getElementById('master-agencias-list');
   if (!el || !agencias) return;
 
@@ -4508,6 +4546,7 @@ async function renderMasterAgencias() {
       <tr style="border-bottom:2px solid var(--border);text-align:left;">
         <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Agencia</th>
         <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Plan</th>
+        <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Usuarios</th>
         <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Vence</th>
         <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Estado</th>
         <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Acciones</th>
@@ -4524,6 +4563,9 @@ async function renderMasterAgencias() {
           </td>
           <td style="padding:8px;">
             <span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:2px 7px;text-transform:capitalize;">${a.plan || '—'}</span>
+          </td>
+          <td style="padding:8px;text-align:center;">
+            <span style="font-size:12px;font-weight:600;color:var(--brand-dark);">${countMap[a.id] || 0}</span>
           </td>
           <td style="padding:8px;color:var(--text2);">${vence}</td>
           <td style="padding:8px;">
