@@ -461,10 +461,18 @@ function logoHTML(code, size = 'normal') {
   if (!code) return '';
   const maxW = size === 'small' ? '44px' : '50px';
   const maxH = size === 'small' ? '16px' : '20px';
+  // Usar URL exacta del bucket si está disponible (igual que app.html)
+  if (logos[code]) {
+    return `<img src="${logos[code]}" alt="${code}"
+      style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
+      <span class="fl-badge" style="display:none;">${code}</span>`;
+  }
+  // Fallback: construir URL con extensiones
   const base = logoUrl(code);
   return `<img src="${base}.png" alt="${code}"
     style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
-    onerror="var exts=['png','svg','jpg','jpeg','webp'];var e=this.getAttribute('data-ext')||'png';var nx=exts[exts.indexOf(e)+1];if(nx){this.setAttribute('data-ext',nx);this.src='${base}.'+nx;}else{this.style.display='none';this.nextElementSibling.style.display='inline-block';}"
+    onerror="var exts=['png','jpg','jpeg','webp'];var e=this.getAttribute('data-ext')||'png';var nx=exts[exts.indexOf(e)+1];if(nx){this.setAttribute('data-ext',nx);this.src='${base}.'+nx;}else{this.style.display='none';this.nextElementSibling.style.display='inline-block';}"
     data-ext="png" /><span class="fl-badge" style="display:none;">${code}</span>`;
 }
 
@@ -766,8 +774,17 @@ function showError(msg) {
     </div>`;
 }
 
+// ── LOGOS desde Supabase ─────────────────────────────────────────
+const logos = {};
+
+async function cargarLogos() {
+  const { data: globales } = await sb.from('logos_global').select('codigo,url');
+  (globales || []).forEach(l => { logos[l.codigo] = l.url; });
+}
+
 // ── INIT ─────────────────────────────────────────────────────────
 async function init() {
+  await cargarLogos();
   const token = getToken();
   if (!token) {
     showError('El link no tiene un token válido. Pide a tu agente que te reenvíe el link correcto.');
