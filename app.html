@@ -670,6 +670,68 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
     </div>
   </div>
 
+
+  <!-- ── PANEL DASHBOARD (Master) ─────────────────────── -->
+  <div class="panel" id="panel-dashboard">
+    <div class="page-header">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Resumen del sistema TAIS</div>
+    </div>
+    <div id="dashboard-content">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;" id="dash-kpis"></div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px;">Agencias por plan</div>
+        <div id="dash-planes" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title" style="margin-bottom:16px;">Próximos vencimientos</div>
+        <div id="dash-vencimientos"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PANEL AGENCIAS MASTER ─────────────────────────── -->
+  <div class="panel" id="panel-agencias-master">
+    <div class="page-header">
+      <div class="page-title">Agencias activas</div>
+      <div class="page-sub">Gestión de agencias en TAIS</div>
+    </div>
+
+    <!-- Formulario nueva agencia -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:14px;">Nueva agencia</div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Nombre de la agencia</label><input type="text" id="new-ag-nombre" placeholder="TPV Experts" /></div>
+        <div class="form-group"><label>Email del admin</label><input type="text" id="new-ag-email-admin" placeholder="admin@agencia.com" /></div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Teléfono</label><input type="text" id="new-ag-tel" placeholder="5512345678" /></div>
+        <div class="form-group">
+          <label>Plan</label>
+          <select id="new-ag-plan">
+            <option value="basico">Básico — $199 MXN/mes</option>
+            <option value="pro">Pro — $399 MXN/mes</option>
+            <option value="equipo">Equipo — $699 MXN/mes</option>
+            <option value="business">Business — $999 MXN/mes</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Fecha de vencimiento</label>
+          <input type="date" id="new-ag-vence" />
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="crearAgencia()">+ Crear agencia</button>
+    </div>
+
+    <!-- Lista de agencias -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px;">Agencias registradas</div>
+      <div id="master-agencias-list" style="font-size:13px;"></div>
+    </div>
+  </div>
+
 </main>
 </div>
 
@@ -2326,8 +2388,9 @@ async function init() {
 
   // Master no tiene agencia — saltar todas las cargas de datos de agencia
   if (currentUsuario?.rol === 'master') {
+    showPanel('avisos', null);
+    document.getElementById('btn-avisos')?.classList.add('active');
     renderTaisNews();
-    renderAgenciaAvisos();
     return;
   }
 
@@ -2430,11 +2493,15 @@ async function init() {
 function showPanel(name, e) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
+  const panelEl = document.getElementById('panel-' + name);
+  if (!panelEl) { console.warn('Panel no encontrado: panel-' + name); return; }
+  panelEl.classList.add('active');
   const btn = e ? e.currentTarget : document.querySelector(`.nav-btn[onclick*="'${name}'"]`);
   if (btn) btn.classList.add('active');
   if (name === 'reportes') renderReportes();
   if (name === 'avisos') { renderTaisNews(); renderAgenciaAvisos(); }
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'agencias-master') renderMasterAgencias();
   // Mostrar/ocultar barra flotante solo en cotizador
   toggleFloatingBar(name === 'cotizador');
 }
@@ -4101,6 +4168,146 @@ function copiarLink(url) {
     showSaveMsg('🔗 Link copiado al portapapeles');
   }).catch(() => { prompt('Copia este link:', url); });
 }
+
+// ── MASTER: DASHBOARD ────────────────────────────────────────────
+async function renderDashboard() {
+  const { data: agencias } = await sb.from('agencias').select('id,nombre,plan,activa,vence_at').order('nombre');
+  if (!agencias) return;
+
+  const activas  = agencias.filter(a => a.activa !== false);
+  const planes   = { basico:0, pro:0, equipo:0, business:0 };
+  activas.forEach(a => { if (planes[a.plan] !== undefined) planes[a.plan]++; });
+
+  // KPIs
+  const kpiEl = document.getElementById('dash-kpis');
+  if (kpiEl) {
+    const planPrecios = { basico:199, pro:399, equipo:699, business:999 };
+    const mrr = activas.reduce((s,a) => s + (planPrecios[a.plan] || 0), 0);
+    kpiEl.innerHTML = [
+      { num: activas.length,   label: 'Agencias activas' },
+      { num: agencias.length,  label: 'Total registradas' },
+      { num: 'MXN ' + mrr.toLocaleString('es-MX'), label: 'MRR estimado' },
+      { num: activas.filter(a => a.plan === 'business').length, label: 'En Business' },
+    ].map(k => `<div class="card" style="text-align:center;padding:20px;">
+      <div style="font-size:1.8rem;font-weight:700;color:var(--brand-blue);font-family:'Montserrat',sans-serif;">${k.num}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">${k.label}</div>
+    </div>`).join('');
+  }
+
+  // Por plan
+  const planesEl = document.getElementById('dash-planes');
+  if (planesEl) {
+    const planColors = { basico:'var(--text3)', pro:'var(--brand-blue)', equipo:'var(--gold)', business:'var(--brand-red)' };
+    planesEl.innerHTML = Object.entries(planes).map(([plan, count]) =>
+      `<div style="background:var(--surface2);border-radius:8px;padding:12px 20px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:${planColors[plan]};">${count}</div>
+        <div style="font-size:11px;color:var(--text3);text-transform:capitalize;">${plan}</div>
+      </div>`
+    ).join('');
+  }
+
+  // Próximos vencimientos
+  const vencEl = document.getElementById('dash-vencimientos');
+  if (vencEl) {
+    const hoy = new Date();
+    const proximos = activas
+      .filter(a => a.vence_at)
+      .sort((a,b) => new Date(a.vence_at) - new Date(b.vence_at))
+      .slice(0, 5);
+    if (!proximos.length) {
+      vencEl.innerHTML = '<div style="font-size:12px;color:var(--text3);">Sin fechas de vencimiento registradas.</div>';
+    } else {
+      vencEl.innerHTML = proximos.map(a => {
+        const dias = Math.ceil((new Date(a.vence_at) - hoy) / 86400000);
+        const color = dias < 7 ? 'var(--brand-red)' : dias < 30 ? 'var(--gold)' : 'var(--text2)';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+          <div><strong>${a.nombre}</strong> <span style="font-size:10px;color:var(--text3);">${a.plan}</span></div>
+          <div style="color:${color};font-weight:600;">${dias > 0 ? 'En ' + dias + ' días' : 'Vencida'}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+// ── MASTER: AGENCIAS ─────────────────────────────────────────────
+async function renderMasterAgencias() {
+  const { data: agencias } = await sb.from('agencias').select('id,nombre,email,telefono,plan,activa,vence_at,created_at').order('nombre');
+  const el = document.getElementById('master-agencias-list');
+  if (!el || !agencias) return;
+
+  if (!agencias.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);">Sin agencias registradas.</div>';
+    return;
+  }
+
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead>
+      <tr style="border-bottom:2px solid var(--border);text-align:left;">
+        <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Agencia</th>
+        <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Plan</th>
+        <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Vence</th>
+        <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Estado</th>
+        <th style="padding:8px;color:var(--text3);font-size:10px;text-transform:uppercase;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${agencias.map(a => {
+        const vence = a.vence_at ? new Date(a.vence_at).toLocaleDateString('es-MX') : '—';
+        const activa = a.activa !== false;
+        return `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px;">
+            <div style="font-weight:600;">${a.nombre}</div>
+            <div style="font-size:10px;color:var(--text3);">${a.email || ''}</div>
+          </td>
+          <td style="padding:8px;">
+            <span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:2px 7px;text-transform:capitalize;">${a.plan || '—'}</span>
+          </td>
+          <td style="padding:8px;color:var(--text2);">${vence}</td>
+          <td style="padding:8px;">
+            <span style="font-size:10px;font-weight:600;color:${activa ? 'var(--brand-green)' : 'var(--brand-red)'};">${activa ? '● Activa' : '○ Inactiva'}</span>
+          </td>
+          <td style="padding:8px;">
+            <button onclick="toggleAgencia('${a.id}',${activa})" style="font-size:10px;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;">${activa ? 'Desactivar' : 'Activar'}</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function crearAgencia() {
+  const nombre = document.getElementById('new-ag-nombre').value.trim();
+  const email  = document.getElementById('new-ag-email-admin').value.trim();
+  const tel    = document.getElementById('new-ag-tel').value.trim();
+  const plan   = document.getElementById('new-ag-plan').value;
+  const vence  = document.getElementById('new-ag-vence').value;
+
+  if (!nombre || !email) { await taisAlert('El nombre y email son obligatorios.'); return; }
+
+  const { error } = await sb.from('agencias').insert({
+    nombre, email, telefono: tel, plan, activa: true,
+    vence_at: vence || null,
+  });
+  if (error) { await taisAlert('Error al crear agencia: ' + error.message); return; }
+
+  document.getElementById('new-ag-nombre').value = '';
+  document.getElementById('new-ag-email-admin').value = '';
+  document.getElementById('new-ag-tel').value = '';
+  document.getElementById('new-ag-vence').value = '';
+
+  await taisAlert('✓ Agencia creada correctamente.');
+  renderMasterAgencias();
+  renderDashboard();
+}
+
+async function toggleAgencia(id, activa) {
+  const msg = activa ? '¿Desactivar esta agencia? Los usuarios no podrán acceder.' : '¿Activar esta agencia?';
+  if (!(await taisConfirm(msg))) return;
+  await sb.from('agencias').update({ activa: !activa }).eq('id', id);
+  renderMasterAgencias();
+  renderDashboard();
+}
+
 </script>
 <div id="tais-modal-overlay">
   <div id="tais-modal-box">
