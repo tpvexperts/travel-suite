@@ -752,7 +752,6 @@ function agenciaLogoUrl(nombre) {
     .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
   return STORAGE_BASE + '/0-agencia-' + slug;
 }
-// Fallback logo (placeholder SVG inline)
 const LOGO_B64 = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><rect width="44" height="44" rx="8" fill="%231A4E8C"/><text x="50%" y="54%" font-family="Arial" font-size="20" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">T</text></svg>';
 // ── STATE ────────────────────────────────────────────────────────
 let ciudades = {};
@@ -775,7 +774,13 @@ const defaultAgents = [
 // ── STORAGE ──────────────────────────────────────────────────────
 // ── SUPABASE ─────────────────────────────────────────────────────
 const { createClient } = supabase;
-const sb = createClient('https://vexuglctjkwdpcfmomot.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZleHVnbGN0amt3ZHBjZm1vbW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0ODcxNjUsImV4cCI6MjA5MjA2MzE2NX0.6_Tdwl48lE2puZv4hKTMpt4kBIlYbCZatdEtbiA1FUo');
+const sb = createClient('https://vexuglctjkwdpcfmomot.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZleHVnbGN0amt3ZHBjZm1vbW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0ODcxNjUsImV4cCI6MjA5MjA2MzE2NX0.6_Tdwl48lE2puZv4hKTMpt4kBIlYbCZatdEtbiA1FUo', {
+  auth: {
+    storage: window.sessionStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
 
 let currentUser = null;
 let currentUsuario = null; // profile from usuarios table
@@ -814,7 +819,6 @@ async function checkAuth() {
     if (agencia && agencia.nombre) {
       document.getElementById('sidebar-agencia').textContent = agencia.nombre;
       window.currentAgenciaNombre = agencia.nombre;
-      // Usar logo_url de DB, si está vacío construir desde nombre de agencia
       const logoResolved = agencia.logo_url || (agencia.nombre ? agenciaLogoUrl(agencia.nombre) : null);
       window.currentAgenciaLogo = logoResolved;
       if (logoResolved) {
@@ -827,7 +831,7 @@ async function checkAuth() {
           const base = src.slice(0, src.lastIndexOf('.'));
           const next = exts[exts.indexOf(ext) + 1];
           if (next) { this.src = base + '.' + next; }
-          else { this.src = LOGO_B64; this.onerror = null; }
+          else { this.style.visibility = 'hidden'; this.onerror = null; }
         };
       }
     } else {
@@ -2191,7 +2195,7 @@ async function init() {
   const authed = await checkAuth();
   if (!authed) return;
 
-  // Logo se carga cuando la agencia se inicializa abajo
+  // Logo se carga cuando inicializa la agencia
 
   // Load airports from Supabase (global + custom for this agency)
   const { data: apGlobal } = await sb.from('aeropuertos_global').select('codigo,ciudad').eq('activo', true);
