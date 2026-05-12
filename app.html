@@ -316,73 +316,7 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
 
   </div>
   <nav class="sidebar-nav" id="sidebar-nav">
-    <div class="nav-label">Principal</div>
-    <button class="nav-btn" onclick="showPanel('avisos',event)" id="btn-avisos">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-      Centro de Avisos
-    </button>
-    <button class="nav-btn active" onclick="irACotizacionActual(event)" id="btn-cot-actual">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Cotización Actual
-    </button>
-    <button class="nav-btn" onclick="sidebarNuevaCot(event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Nueva Cotización
-    </button>
-    <button class="nav-btn" onclick="showPanel('historial',event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      Historial
-      <span id="hist-badge" style="background:var(--brand-red);color:#fff;font-size:9px;border-radius:10px;padding:1px 6px;margin-left:auto;display:none;"></span>
-    </button>
-    <button class="nav-btn" onclick="showPanel('reportes',event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Reportes
-      <span style="font-size:8px;background:var(--gold);color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;">PRO</span>
-    </button>
-    <div class="nav-label">Clientes</div>
-    <button class="nav-btn" onclick="showPanel('clientes',event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-      Empresas / Clientes
-    </button>
-    <div class="nav-label">Configuración</div>
-    <button class="nav-btn" onclick="showPanel('aeropuertos',event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-      Aeropuertos
-    </button>
-    <button class="nav-btn" onclick="showPanel('logos',event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      Logos Aerolíneas
-    </button>
-    <button class="nav-btn" onclick="showPanel('agentes',event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Agentes
-    </button>
-    <div class="nav-label">Sistema</div>
-    <button class="nav-btn" onclick="exportarConfig()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exportar Config
-    </button>
-    <button class="nav-btn" onclick="document.getElementById('import-config-input').click()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Importar Config
-    </button>
-    <input type="file" id="import-config-input" accept=".json" style="display:none;" onchange="importarConfig(this)"/>
-    <div class="nav-label">Ayuda</div>
-    <button class="nav-btn" onclick="window.open('/manual.html','_blank')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Manual de Usuario
-    </button>
-    <button class="nav-btn" onclick="showPanel('soporte',event)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      Soporte
-    </button>
-    <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;">
-      <button class="nav-btn" onclick="cerrarSesion()" style="color:rgba(255,255,255,0.5);">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;opacity:0.7;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Cerrar Sesión
-      </button>
-      <div id="session-timer" style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;padding:4px 20px;"></div>
-    </div>
+    <!-- Renderizado dinámicamente por renderSidebarNav() según rol -->
   </nav>
 </aside>
 
@@ -414,7 +348,7 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
       </div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:600;color:var(--text2);">Mensaje</label>
-        <textarea id="news-texto" rows="3" placeholder="Descripción del aviso..." style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);resize:vertical;"></textarea>
+        <textarea id="news-texto" rows="3" placeholder="Descripción..." style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);resize:vertical;"></textarea>
       </div>
       <div style="display:flex;gap:8px;">
         <button onclick="publicarNews()" style="background:var(--brand-blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;font-weight:600;">Publicar</button>
@@ -831,9 +765,9 @@ async function checkAuth() {
     const { data: agencia, error: agErr } = await sb.from('agencias').select('nombre,logo_url,plan').eq('id', currentAgenciaId).single();
     if (agencia && agencia.nombre) {
       document.getElementById('sidebar-agencia').textContent = agencia.nombre;
+    renderSidebarNav();
       window.currentAgenciaNombre = agencia.nombre;
       window.currentAgenciaPlan = agencia.plan || 'basico';
-      renderSidebarNav();
       // Usar logo_url de DB, si está vacío construir desde nombre de agencia
       const logoResolved = agencia.logo_url || (agencia.nombre ? agenciaLogoUrl(agencia.nombre) : null);
       window.currentAgenciaLogo = logoResolved;
@@ -852,6 +786,7 @@ async function checkAuth() {
       }
     } else {
       document.getElementById('sidebar-agencia').textContent = currentUsuario.email || 'Mi Agencia';
+  renderSidebarNav();
       window.currentAgenciaNombre = currentUsuario.email || 'Mi Agencia';
       window.currentAgenciaLogo = null;
     }
@@ -860,17 +795,15 @@ async function checkAuth() {
       document.getElementById('sidebar-agencia').textContent = 'Sistema TAIS';
       window.currentAgenciaNombre = 'TAIS';
       window.currentAgenciaPlan = 'master';
-      // Logo TAIS burbujas
       const sidebarImg = document.getElementById('sidebar-logo');
       if (sidebarImg) {
         sidebarImg.style.display = 'none';
-        const existing = document.getElementById('tais-bubbles-logo');
-        if (!existing) {
+        if (!document.getElementById('tais-bubbles-logo')) {
           const bubbles = document.createElement('div');
           bubbles.id = 'tais-bubbles-logo';
           bubbles.style.cssText = 'display:flex;gap:3px;align-items:center;';
           bubbles.innerHTML = ['T','A','I','S'].map(l =>
-            `<div style="width:36px;height:36px;border-radius:50%;border:1.5px solid #C8A45A;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#F7F4EE;flex-shrink:0;">${l}</div>`
+            '<div style="width:36px;height:36px;border-radius:50%;border:1.5px solid #C8A45A;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#F7F4EE;flex-shrink:0;">' + l + '</div>'
           ).join('');
           sidebarImg.parentNode.insertBefore(bubbles, sidebarImg);
         }
@@ -994,9 +927,9 @@ function showSaveMsg(html, color) {
 }
 
 // ── CENTRO DE AVISOS ─────────────────────────────────────────────
-// TAIS_NEWS migrado a tabla Supabase tais_news
+// TAIS_NEWS migrado a Supabase (tabla tais_news)
 
-async 
+
 // ── SIDEBAR DINÁMICO POR ROL ─────────────────────────────────────
 function renderSidebarNav() {
   const rol = currentUsuario?.rol || 'vendedor';
@@ -1004,8 +937,10 @@ function renderSidebarNav() {
   const esMaster = rol === 'master';
   const esAdmin = rol === 'admin';
   const esSupervisor = rol === 'supervisor';
+  const esVendedor = rol === 'vendedor';
   const tieneReportes = esAdmin && plan === 'business';
 
+  // SVG icons reutilizables
   const ico = {
     bell:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
     cotActual: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
@@ -1029,7 +964,9 @@ function renderSidebarNav() {
 
   const btn = (label, action, extra='', id='') =>
     `<button class="nav-btn" onclick="${action}" ${id ? 'id="'+id+'"' : ''}>${extra}${label}</button>`;
+
   const label = (txt) => `<div class="nav-label">${txt}</div>`;
+
   const histBadge = `<span id="hist-badge" style="background:var(--brand-red);color:#fff;font-size:9px;border-radius:10px;padding:1px 6px;margin-left:auto;display:none;"></span>`;
 
   let html = '';
@@ -1038,7 +975,7 @@ function renderSidebarNav() {
     html += label('Principal');
     html += btn(ico.news + ' TAIS News', "showPanel('avisos',event)", '', 'btn-avisos');
     html += btn(ico.dash + ' Dashboard', "showPanel('dashboard',event)");
-    html += label('Clientes');
+    html += label('Agencias');
     html += btn(ico.building + ' Agencias activas', "showPanel('agencias-master',event)");
     html += label('Configuración');
     html += btn(ico.aerop + ' Aeropuertos', "showPanel('aeropuertos',event)");
@@ -1050,21 +987,25 @@ function renderSidebarNav() {
     html += label('Ayuda');
     html += btn(ico.manual + ' Manual de Usuario', "window.open('/manual.html','_blank')");
     html += btn(ico.soporte + ' Soporte recibido', "showPanel('soporte',event)");
+
   } else {
+    // Todos los roles de agencia
     html += label('Principal');
     html += btn(ico.bell + ' Centro de Avisos', "showPanel('avisos',event)", '', 'btn-avisos');
     html += `<button class="nav-btn active" onclick="irACotizacionActual(event)" id="btn-cot-actual">${ico.cotActual} Cotización Actual</button>`;
     html += btn(ico.nueva + ' Nueva Cotización', "sidebarNuevaCot(event)");
     html += `<button class="nav-btn" onclick="showPanel('historial',event)">${ico.hist} Historial ${histBadge}</button>`;
-    if (esAdmin) {
-      if (tieneReportes) {
-        html += btn(ico.rep + ' Reportes', "showPanel('reportes',event)");
-      } else {
-        html += `<button class="nav-btn" onclick="showPanel('reportes',event)">${ico.rep} Reportes <span style="font-size:8px;background:var(--gold);color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;">Business</span></button>`;
-      }
+
+    if (esAdmin && tieneReportes) {
+      html += btn(ico.rep + ' Reportes', "showPanel('reportes',event)");
+    } else if (esAdmin) {
+      html += `<button class="nav-btn" onclick="showPanel('reportes',event)">${ico.rep} Reportes <span style="font-size:8px;background:var(--gold);color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;">Business</span></button>`;
     }
+
     html += label('Clientes');
     html += btn(ico.clientes + ' Empresas / Clientes', "showPanel('clientes',event)");
+
+    // Configuración — solo admin y supervisor
     if (esAdmin || esSupervisor) {
       html += label('Configuración');
       if (esAdmin) {
@@ -1075,12 +1016,15 @@ function renderSidebarNav() {
         html += btn(ico.agentes + ' Invitar Vendedor', "showPanel('invitar',event)");
       }
     }
+
+    // Sistema — solo admin
     if (esAdmin) {
       html += label('Sistema');
       html += btn(ico.export + ' Exportar Config', "exportarConfig()");
       html += `<button class="nav-btn" onclick="document.getElementById('import-config-input').click()">${ico.import} Importar Config</button>`;
       html += `<input type="file" id="import-config-input" accept=".json" style="display:none;" onchange="importarConfig(this)"/>`;
     }
+
     html += label('Ayuda');
     html += btn(ico.manual + ' Manual de Usuario', "window.open('/manual.html','_blank')");
     html += btn(ico.soporte + ' Soporte', "showPanel('soporte',event)");
@@ -1100,35 +1044,23 @@ async function renderTaisNews() {
   const el = document.getElementById('tais-news-list');
   const btnNuevoNews = document.getElementById('btn-nuevo-news');
   if (!el) return;
-
-  // Mostrar botón publicar solo al master
-  if (btnNuevoNews) {
-    btnNuevoNews.style.display = currentUsuario?.rol === 'master' ? 'block' : 'none';
-  }
-
-  // Cargar desde Supabase
-  const { data, error } = await sb.from('tais_news')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(20);
-
+  if (btnNuevoNews) btnNuevoNews.style.display = currentUsuario?.rol === 'master' ? 'block' : 'none';
+  const { data, error } = await sb.from('tais_news').select('*').order('created_at', { ascending: false }).limit(20);
   if (error || !data || !data.length) {
     el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:16px 0;">Sin noticias recientes.</div>';
     return;
   }
-
-  el.innerHTML = data.map(n => `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div style="font-size:12.5px;font-weight:600;color:var(--brand-dark);">${n.titulo}</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="font-size:10px;color:var(--text3);white-space:nowrap;">${formatFechaAviso(n.created_at)}</div>
-          ${currentUsuario?.rol === 'master' ? `<button onclick="eliminarNews('${n.id}')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;">× Eliminar</button>` : ''}
-        </div>
-      </div>
-      <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${n.texto}</div>
-    </div>
-  `).join('');
+  el.innerHTML = data.map(n =>
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+    + '<div style="font-size:12.5px;font-weight:600;color:var(--brand-dark);">' + n.titulo + '</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;">'
+    + '<div style="font-size:10px;color:var(--text3);white-space:nowrap;">' + formatFechaAviso(n.created_at) + '</div>'
+    + (currentUsuario?.rol === 'master' ? '<button onclick="eliminarNews('' + n.id + '')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;">× Eliminar</button>' : '')
+    + '</div></div>'
+    + '<div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">' + n.texto + '</div>'
+    + '</div>'
+  ).join('');
 }
 
 async function eliminarNews(id) {
@@ -1149,7 +1081,7 @@ async function renderAgenciaAvisos() {
   }
 
   // Show new aviso button for supervisor/admin
-  if (btnNuevo && ['supervisor','admin','master'].includes(currentUsuario?.rol)) {
+  if (btnNuevo && ['supervisor','admin'].includes(currentUsuario?.rol)) {
     btnNuevo.style.display = 'block';
   }
 
@@ -1171,7 +1103,7 @@ async function renderAgenciaAvisos() {
         <div style="font-size:10px;color:var(--text3);white-space:nowrap;">${formatFechaAviso(a.created_at)}</div>
       </div>
       <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${a.texto}</div>
-      ${['supervisor','admin','master'].includes(currentUsuario?.rol) ? `<button onclick="eliminarAviso('${a.id}')" style="margin-top:8px;font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;">× Eliminar</button>` : ''}
+      ${['supervisor','admin'].includes(currentUsuario?.rol) ? `<button onclick="eliminarAviso('${a.id}')" style="margin-top:8px;font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;">× Eliminar</button>` : ''}
     </div>
   `).join('');
 }
