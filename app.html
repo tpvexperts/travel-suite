@@ -2406,13 +2406,15 @@ async function init() {
 
   // Load logos from Supabase
   const { data: logosGlobal } = await sb.from('logos_global').select('codigo,url').eq('activo', true);
-  const { data: logosCustom } = await sb.from('logos_custom').select('codigo,url').eq('agencia_id', currentAgenciaId);
   logos = {};
   (logosGlobal || []).forEach(l => { logos[l.codigo] = l.url; });
-  (logosCustom || []).forEach(l => { logos[l.codigo] = l.url; });
-  // Merge with any locally uploaded logos (base64)
-  const localLogos = lsGet('tpv_logos_' + currentAgenciaId, {});
-  Object.assign(logos, localLogos);
+  // Only load custom logos if not master
+  if (currentAgenciaId) {
+    const { data: logosCustom } = await sb.from('logos_custom').select('codigo,url').eq('agencia_id', currentAgenciaId);
+    (logosCustom || []).forEach(l => { logos[l.codigo] = l.url; });
+    const localLogos = lsGet('tpv_logos_' + currentAgenciaId, {});
+    Object.assign(logos, localLogos);
+  }
 
   // Load clientes from Supabase
   const { data: clientesDB } = await sb.from('clientes').select('*').eq('agencia_id', currentAgenciaId).order('nombre');
