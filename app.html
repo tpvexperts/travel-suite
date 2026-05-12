@@ -785,6 +785,28 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
     </div>
   </div>
 
+  <!-- ── PANEL USUARIOS MASTER ─────────────────────────── -->
+  <div class="panel" id="panel-usuarios-master">
+    <div class="page-header">
+      <div class="page-title">Administración de Usuarios</div>
+      <div class="page-sub">Gestión de usuarios Admin por agencia</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <input type="text" id="usuario-master-search" placeholder="Buscar por nombre o email..." 
+          style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;"
+          oninput="renderUsuariosMaster()" />
+        <select id="usuario-master-agencia" onchange="renderUsuariosMaster()"
+          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);">
+          <option value="">Todas las agencias</option>
+        </select>
+      </div>
+      <div id="usuarios-master-list">
+        <div style="font-size:12px;color:var(--text3);">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-agencias-master">
     <div class="page-header">
       <div class="page-title">Agencias activas</div>
@@ -1303,6 +1325,7 @@ function renderSidebarNav() {
     html += btn(ico.dash + ' Dashboard', "showPanel('dashboard',event)");
     html += label('Clientes');
     html += btn(ico.building + ' Agencias activas', "showPanel('agencias-master',event)");
+    html += btn(ico.agentes + ' Usuarios', "showPanel('usuarios-master',event)");
     html += label('Configuración');
     html += btn(ico.aerop + ' Aeropuertos', "showPanel('aeropuertos',event)");
     html += btn(ico.logos + ' Logos Aerolíneas', "showPanel('logos',event)");
@@ -2647,11 +2670,21 @@ async function init() {
 
   // Logo se carga cuando la agencia se inicializa abajo
 
-  // Master no tiene agencia — saltar todas las cargas de datos de agencia
+  // Master no tiene agencia — cargar solo datos globales y salir
   if (currentUsuario?.rol === 'master') {
+    // Cargar aeropuertos globales
+    const { data: apGlobalM } = await sb.from('aeropuertos_global').select('codigo,ciudad').eq('activo', true);
+    ciudades = {};
+    (apGlobalM || []).forEach(a => { ciudades[a.codigo] = a.ciudad; });
+    // Cargar logos globales
+    const { data: logosGlobalM } = await sb.from('logos_global').select('codigo,url').eq('activo', true);
+    logos = {};
+    (logosGlobalM || []).forEach(l => { logos[l.codigo] = l.url; });
     showPanel('avisos', null);
     document.getElementById('btn-avisos')?.classList.add('active');
     renderTaisNews();
+    renderAirports();
+    renderLogos();
     return;
   }
 
@@ -2769,8 +2802,8 @@ function showPanel(name, e) {
   if (name === 'logos') renderLogos();
   if (name === 'agentes') renderUsuariosList();
   if (name === 'agencias-master') renderMasterAgencias();
+  if (name === 'usuarios-master') renderUsuariosMaster();
   if (name === 'dashboard') renderDashboard();
-  if (name === 'agencias-master') renderMasterAgencias();
   // Mostrar/ocultar barra flotante solo en cotizador
   toggleFloatingBar(name === 'cotizador');
 }
@@ -4531,6 +4564,90 @@ async function renderDashboard() {
 }
 
 // ── MASTER: AGENCIAS ─────────────────────────────────────────────
+// ── USUARIOS MASTER ──────────────────────────────────────────────
+async function renderUsuariosMaster() {
+  const el = document.getElementById('usuarios-master-list');
+  const selAgencia = document.getElementById('usuario-master-agencia');
+  const search = (document.getElementById('usuario-master-search')?.value || '').toLowerCase();
+  if (!el) return;
+
+  const { data: agencias } = await sb.from('agencias').select('id,nombre').order('nombre');
+  if (selAgencia && selAgencia.options.length <= 1) {
+    (agencias || []).forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.nombre;
+      selAgencia.appendChild(opt);
+    });
+  }
+
+  let query = sb.from('usuarios').select('id,nombre,email,rol,agencia_id,activo').eq('rol','admin');
+  const agenciaFiltro = selAgencia?.value;
+  if (agenciaFiltro) query = query.eq('agencia_id', agenciaFiltro);
+  const { data: usuarios } = await query.order('nombre');
+
+  let lista = (usuarios || []).filter(u =>
+    !search || u.nombre.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)
+  );
+
+  if (!lista.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:16px 0;">No hay usuarios admin registrados.</div>';
+    return;
+  }
+
+  const agenciaMap = {};
+  (agencias || []).forEach(a => { agenciaMap[a.id] = a.nombre; });
+
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead>
+      <tr style="border-bottom:2px solid var(--border);">
+        <th style="padding:8px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;">Usuario</th>
+        <th style="padding:8px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;">Agencia</th>
+        <th style="padding:8px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;">Estado</th>
+        <th style="padding:8px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${lista.map(u => `
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px;">
+            <div style="font-weight:600;color:var(--brand-dark);">${u.nombre}</div>
+            <div style="font-size:10px;color:var(--text3);">${u.email}</div>
+          </td>
+          <td style="padding:8px;color:var(--text2);">${agenciaMap[u.agencia_id] || '—'}</td>
+          <td style="padding:8px;">
+            <span style="font-size:10px;font-weight:600;color:${u.activo !== false ? '#16a34a' : '#dc2626'};">
+              ${u.activo !== false ? '● Activo' : '○ Inactivo'}
+            </span>
+          </td>
+          <td style="padding:8px;">
+            <div style="display:flex;gap:6px;">
+              <button onclick="toggleUsuarioMaster('${u.id}',${u.activo !== false})"
+                style="font-size:10px;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;">
+                ${u.activo !== false ? 'Desactivar' : 'Activar'}
+              </button>
+              <button onclick="eliminarUsuarioMaster('${u.id}','${u.nombre}')"
+                style="font-size:10px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:4px;padding:2px 8px;cursor:pointer;">
+                Eliminar
+              </button>
+            </div>
+          </td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function toggleUsuarioMaster(id, activo) {
+  await sb.from('usuarios').update({ activo: !activo }).eq('id', id);
+  renderUsuariosMaster();
+}
+
+async function eliminarUsuarioMaster(id, nombre) {
+  if (!confirm('¿Eliminar al usuario ' + nombre + '? Esta acción no se puede deshacer.')) return;
+  await sb.from('usuarios').delete().eq('id', id);
+  renderUsuariosMaster();
+}
+
 async function renderMasterAgencias() {
   const { data: agencias } = await sb.from('agencias').select('id,nombre,email,telefono,plan,activa,vence_at,created_at').order('nombre');
   // Contar usuarios por agencia
