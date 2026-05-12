@@ -2739,7 +2739,7 @@ function buildLCTramosHTML(it, idx) {
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
           <div class="cond-group" style="min-width:110px;">
             <label>Aerolínea</label>
-            <select id="op-airline-${op.id}" onchange="updateOpcion(${it.id},${seg.id},${op.id},'airline',this.value);renderItins();" onkeydown="if(event.key==='Tab'){event.preventDefault();var f=document.getElementById('op-fecha-'+String(${op.id}));if(f)f.focus();}">
+            <select id="op-airline-${op.id}" onchange="updateOpcion(${it.id},${seg.id},${op.id},'airline',this.value);renderItins();setTimeout(function(){var f=document.getElementById('op-airline-${op.id}');if(f)f.focus();},30);" onkeydown="if(event.key==='Tab'){event.preventDefault();var f=document.getElementById('op-fecha-'+String(${op.id}));if(f)f.focus();}">
               ${allAL.map(a=>`<option value="${a.code}" ${op.airline===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
             </select>
           </div>
