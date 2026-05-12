@@ -4532,6 +4532,7 @@ async function renderMasterAgencias() {
           <td style="padding:8px;"><div style="display:flex;gap:6px;align-items:center;">
             <button onclick="editarAgencia('${a.id}')" style="font-size:10px;background:var(--brand-blue);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">Editar</button>
             <button onclick="toggleAgencia('${a.id}',${activa})" style="font-size:10px;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;">${activa ? 'Desactivar' : 'Activar'}</button>
+            <button onclick="abrirInvitarMaster('${a.id}','${a.nombre}')" style="font-size:10px;background:var(--gold);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">+ Usuario</button>
           </div></td>
         </tr>`;
       }).join('')}
