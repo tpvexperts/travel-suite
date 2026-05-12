@@ -1053,18 +1053,21 @@ async function renderTaisNews() {
     el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:16px 0;">Sin noticias recientes.</div>';
     return;
   }
-  el.innerHTML = data.map(n =>
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">'
-    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
-    + '<div style="font-size:12.5px;font-weight:600;color:var(--brand-dark);">' + n.titulo + '</div>'
-    + '<div style="display:flex;align-items:center;gap:8px;">'
-    + '<div style="font-size:10px;color:var(--text3);white-space:nowrap;">' + formatFechaAviso(n.created_at) + '</div>'
-    + (currentUsuario?.rol === 'master' ? '<button onclick="eliminarNews('' + n.id + '')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;">× Eliminar</button>' : '')
-    + '</div></div>'
-    + '<div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">' + n.texto + '</div>'
-    + '</div>'
-  ).join('');
+  const esMaster = currentUsuario?.rol === 'master';
+  el.innerHTML = data.map(function(n) {
+    var delBtn = esMaster ? '<button onclick="eliminarNews(\"' + n.id + '\")" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;">× Eliminar</button>' : '';
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+      + '<div style="font-size:12.5px;font-weight:600;color:var(--brand-dark);">' + n.titulo + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;">'
+      + '<div style="font-size:10px;color:var(--text3);white-space:nowrap;">' + formatFechaAviso(n.created_at) + '</div>'
+      + delBtn
+      + '</div></div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">' + n.texto + '</div>'
+      + '</div>';
+  }).join('');
 }
+
 
 async function eliminarNews(id) {
   if (!(await taisConfirm('¿Eliminar este aviso de TAIS News?'))) return;
