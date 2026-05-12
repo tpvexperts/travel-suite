@@ -492,9 +492,9 @@ function formatFecha(iso) {
 function renderFlightRow(f, dir) {
   const al = f.aerolinea || f.airline || '';
   const ruta = f.ruta || (ciudad(f.origen) + ' › ' + ciudad(f.destino));
-  const hasNextDay = (f.llegadaStr||'').includes('d ·') || (f.llegadaStr||'').includes('+') || (f.llegadaStr||'').includes('-');
-  const llegadaClean = (f.llegadaStr||'').replace(/\s*\(.*\)/, '');
-  const llegadaTag   = hasNextDay ? (f.llegadaStr||'').match(/\(([^)]+)\)/)?.[0] || '' : '';
+  // llegadaStr puede ser "0015 (12JUN)" o "1720 (+1d · 19JUN)" — detectar cualquier paréntesis
+  const llegadaClean = (f.llegadaStr||'').replace(/\s*\(.*\)/, '').trim();
+  const llegadaTag   = (f.llegadaStr||'').match(/\(([^)]+)\)/)?.[0] || '';
 
   return `
   <div class="flight-row">
