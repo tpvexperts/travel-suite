@@ -2242,7 +2242,7 @@ async function init() {
     empresaId:       h.cliente_id,
     notas:           h.notas,
     agenteId:        h.agente_id,
-    agenteName:      h.agente_nombre || (agentes.find(a => a.id === h.agente_id)?.name) || '',
+    agenteName:      h.agente_nombre || (h.agente_id === (window.currentUser?.id) ? (window.currentUsuario?.nombre || '') : '') || '',
     itins:           h.itinerarios || [],
     status:          h.status,
     locked:          h.locked,
@@ -2894,7 +2894,7 @@ function addOpcion(itinId, segId) {
   }
   // Validate segment has origen and destino
   if (!seg.origen || !seg.destino) {
-    alert('Define primero el origen y destino del tramo.');
+    taisAlert('Define primero el origen y destino del tramo.');
     return;
   }
   seg.opciones.push(newOpcion(seg.origen, seg.destino));
@@ -3747,7 +3747,7 @@ function buildPDFHTML() {
     <div class="pdf-topbar">
       <div class="pdf-logo-area">
         <img src="${window.currentAgenciaLogo ? window.currentAgenciaLogo+'.jpg' : LOGO_B64}" alt="Logo"
-          onerror="const exts=['jpg','jpeg','png','webp'];const src=this.src;const ext=src.split('.').pop();const base=src.slice(0,src.lastIndexOf('.'));const next=exts[exts.indexOf(ext)+1];if(next){this.src=base+'.'+next;}else{this.style.display='none';this.onerror=null;}" />
+          onerror="var exts=['jpg','jpeg','png','webp'];var s=this.src;var e=s.split('.').pop();var b=s.slice(0,s.lastIndexOf('.'));var nx=exts[exts.indexOf(e)+1];if(nx){this.src=b+'.'+nx;}else{this.style.display='none';this.onerror=null;}" />
         <div>
           <div class="pdf-brand-name">${window.currentAgenciaNombre || 'TPV Experts'}</div>
           <div class="pdf-brand-sub">TRAVEL SUITE</div>
@@ -3850,8 +3850,8 @@ function toggleFloatingBar(show) {
   if (bar) bar.style.display = show ? 'flex' : 'none';
 }
 
-function resetCotizacion(confirm_needed) {
-  if (confirm_needed !== false && !confirm('¿Iniciar una nueva cotización? Se perderán los datos actuales.')) return;
+async function resetCotizacion(confirm_needed) {
+  if (confirm_needed !== false && !(await taisConfirm('¿Iniciar una nueva cotización? Se perderán los datos actuales.'))) return;
   ignorarCotizacion();
 }
 
