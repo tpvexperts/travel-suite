@@ -1076,6 +1076,8 @@ async function eliminarNews(id) {
 }
 
 async function renderAgenciaAvisos() {
+  // Master no tiene agencia — no cargar avisos de agencia
+  if (currentUsuario?.rol === 'master') return;
   const el = document.getElementById('agencia-avisos-list');
   const titleEl = document.getElementById('conexion-title');
   const btnNuevo = document.getElementById('btn-nuevo-aviso');
