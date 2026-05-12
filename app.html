@@ -2191,8 +2191,7 @@ async function init() {
   const authed = await checkAuth();
   if (!authed) return;
 
-  document.getElementById('sidebar-logo').src = LOGO_B64;
-  // Will be updated after agencia loads
+  // Logo se carga cuando la agencia se inicializa abajo
 
   // Load airports from Supabase (global + custom for this agency)
   const { data: apGlobal } = await sb.from('aeropuertos_global').select('codigo,ciudad').eq('activo', true);
@@ -3748,7 +3747,7 @@ function buildPDFHTML() {
     <div class="pdf-topbar">
       <div class="pdf-logo-area">
         <img src="${window.currentAgenciaLogo ? window.currentAgenciaLogo+'.jpg' : LOGO_B64}" alt="Logo"
-          onerror="const exts=['jpg','jpeg','png','webp'];const src=this.src;const ext=src.split('.').pop();const base=src.slice(0,src.lastIndexOf('.'));const next=exts[exts.indexOf(ext)+1];if(next){this.src=base+'.'+next;}else{this.src='${LOGO_B64}';this.onerror=null;}" />
+          onerror="const exts=['jpg','jpeg','png','webp'];const src=this.src;const ext=src.split('.').pop();const base=src.slice(0,src.lastIndexOf('.'));const next=exts[exts.indexOf(ext)+1];if(next){this.src=base+'.'+next;}else{this.style.display='none';this.onerror=null;}" />
         <div>
           <div class="pdf-brand-name">${window.currentAgenciaNombre || 'TPV Experts'}</div>
           <div class="pdf-brand-sub">TRAVEL SUITE</div>
