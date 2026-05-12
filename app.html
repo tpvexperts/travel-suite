@@ -2765,6 +2765,10 @@ function showPanel(name, e) {
   if (btn) btn.classList.add('active');
   if (name === 'reportes') renderReportes();
   if (name === 'avisos') { renderTaisNews(); renderAgenciaAvisos(); }
+  if (name === 'aeropuertos') renderAirports();
+  if (name === 'logos') renderLogos();
+  if (name === 'agentes') renderUsuariosList();
+  if (name === 'agencias-master') renderMasterAgencias();
   if (name === 'dashboard') renderDashboard();
   if (name === 'agencias-master') renderMasterAgencias();
   // Mostrar/ocultar barra flotante solo en cotizador
