@@ -4266,7 +4266,8 @@ async function renderMasterAgencias() {
           <td style="padding:8px;">
             <span style="font-size:10px;font-weight:600;color:${activa ? 'var(--brand-green)' : 'var(--brand-red)'};">${activa ? '● Activa' : '○ Inactiva'}</span>
           </td>
-          <td style="padding:8px;">
+          <td style="padding:8px;display:flex;gap:6px;align-items:center;">
+            <button onclick="editarAgencia('${a.id}')" style="font-size:10px;background:var(--brand-blue);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">Editar</button>
             <button onclick="toggleAgencia('${a.id}',${activa})" style="font-size:10px;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;">${activa ? 'Desactivar' : 'Activar'}</button>
           </td>
         </tr>`;
@@ -4296,6 +4297,70 @@ async function crearAgencia() {
   document.getElementById('new-ag-vence').value = '';
 
   await taisAlert('✓ Agencia creada correctamente.');
+  renderMasterAgencias();
+  renderDashboard();
+}
+
+async function editarAgencia(id) {
+  const { data: ag } = await sb.from('agencias').select('*').eq('id', id).single();
+  if (!ag) return;
+  const el = document.getElementById('master-agencias-list');
+  // Insertar formulario inline encima de la tabla
+  const formId = 'form-edit-ag-' + id;
+  const existing = document.getElementById(formId);
+  if (existing) { existing.remove(); return; }
+  const form = document.createElement('div');
+  form.id = formId;
+  form.style.cssText = 'background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid var(--border);';
+  form.innerHTML = `
+    <div style="font-size:13px;font-weight:600;color:var(--brand-dark);margin-bottom:12px;">Editando: ${ag.nombre}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);">Nombre</label>
+        <input id="edit-ag-nombre-${id}" type="text" value="${ag.nombre || ''}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);">Email</label>
+        <input id="edit-ag-email-${id}" type="text" value="${ag.email || ''}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);">Teléfono</label>
+        <input id="edit-ag-tel-${id}" type="text" value="${ag.telefono || ''}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);">Plan</label>
+        <select id="edit-ag-plan-${id}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);">
+          <option value="basico" ${ag.plan==='basico'?'selected':''}>Básico — $199</option>
+          <option value="pro" ${ag.plan==='pro'?'selected':''}>Pro — $399</option>
+          <option value="equipo" ${ag.plan==='equipo'?'selected':''}>Equipo — $699</option>
+          <option value="business" ${ag.plan==='business'?'selected':''}>Business — $999</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text2);">Vence el</label>
+        <input id="edit-ag-vence-${id}" type="date" value="${ag.vence_at ? ag.vence_at.slice(0,10) : ''}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);" />
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="guardarEdicionAgencia('${id}')" style="background:var(--brand-blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;font-weight:600;">Guardar</button>
+      <button onclick="document.getElementById('${formId}').remove()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;">Cancelar</button>
+    </div>
+  `;
+  el.insertBefore(form, el.firstChild);
+}
+
+async function guardarEdicionAgencia(id) {
+  const nombre = document.getElementById('edit-ag-nombre-' + id)?.value.trim();
+  const email  = document.getElementById('edit-ag-email-' + id)?.value.trim();
+  const tel    = document.getElementById('edit-ag-tel-' + id)?.value.trim();
+  const plan   = document.getElementById('edit-ag-plan-' + id)?.value;
+  const vence  = document.getElementById('edit-ag-vence-' + id)?.value;
+  if (!nombre) { await taisAlert('El nombre es obligatorio.'); return; }
+  const { error } = await sb.from('agencias').update({
+    nombre, email, telefono: tel, plan, vence_at: vence || null
+  }).eq('id', id);
+  if (error) { await taisAlert('Error al guardar: ' + error.message); return; }
+  document.getElementById('form-edit-ag-' + id)?.remove();
   renderMasterAgencias();
   renderDashboard();
 }
