@@ -639,6 +639,7 @@ function renderPage(cot, agencia) {
 
   // Logo de agencia — intentar con extensiones múltiples si falla
   const agLogoBase = agencia?.logo_url || (agencia?.nombre ? agenciaLogoUrl(agencia.nombre) : null);
+  console.log('[TAIS] Logo agencia URL:', agLogoBase, '| Nombre:', agencia?.nombre);
   const agInitial = (agencia?.nombre||'T').charAt(0).toUpperCase();
   const logoArea = agLogoBase
     ? `<div class="agency-logo">
@@ -782,49 +783,21 @@ async function init() {
     if (row?.nombre) {
       agencia = {
         nombre: row.nombre,
-        logo_url: row.logo_url || agenciaLogoUrl(row.nombre)
+        // Usar logo_url guardado en DB si existe, si no intentar construir desde nombre
+        logo_url: row.logo_url || null
       };
     }
   }
 
-  // Cargar datos del agente — buscar en usuarios (auth.uid) y agentes (agencia)
-  if (cot.agente_id) {
-    // Primero intentar en tabla usuarios (auth users)
-    const { data: usuarioRow } = await sb
-      .from('usuarios')
-      .select('nombre, telefono, email')
-      .eq('id', cot.agente_id)
-      .maybeSingle();
-    if (usuarioRow?.nombre) {
-      cot.agente_nombre = usuarioRow.nombre;
-      cot.agente_phone  = usuarioRow.telefono;
-      cot.agente_email  = usuarioRow.email;
-    } else {
-      // Fallback: buscar en tabla agentes por usuario_id
-      const { data: agenteRow } = await sb
-        .from('agentes')
-        .select('nombre, telefono, email')
-        .eq('usuario_id', cot.agente_id)
-        .maybeSingle();
-      if (agenteRow) {
-        cot.agente_nombre = agenteRow.nombre;
-        cot.agente_phone  = agenteRow.telefono;
-        cot.agente_email  = agenteRow.email;
-      }
-    }
-  }
-  // Si agencia_id está disponible y no tenemos nombre, buscar en agentes por agencia
-  if (!cot.agente_nombre && cot.agencia_id && cot.agente_id) {
-    const { data: agByAgencia } = await sb
-      .from('agentes')
-      .select('nombre, telefono, email')
-      .eq('agencia_id', cot.agencia_id)
-      .eq('usuario_id', cot.agente_id)
-      .maybeSingle();
-    if (agByAgencia) {
-      cot.agente_nombre = agByAgencia.nombre;
-      cot.agente_phone  = agByAgencia.telefono;
-      cot.agente_email  = agByAgencia.email;
+  // Resolver nombre del agente:
+  // 1. Si la cotización ya tiene agente_nombre guardado, usarlo directo
+  // 2. Fallback: RPC pública que busca en tabla usuarios por auth_id
+  if (!cot.agente_nombre && cot.agente_id) {
+    const { data: agRPC } = await sb.rpc('get_agente_publico', { p_auth_id: cot.agente_id });
+    const agRow = Array.isArray(agRPC) ? agRPC[0] : agRPC;
+    if (agRow?.nombre) {
+      cot.agente_nombre = agRow.nombre;
+      cot.agente_email  = agRow.email;
     }
   }
 

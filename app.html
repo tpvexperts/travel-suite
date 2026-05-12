@@ -313,7 +313,7 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
       <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="sidebar-username">...</div>
       <div style="font-size:10px;color:rgba(255,255,255,0.4);" id="sidebar-rol">...</div>
     </div>
-
+    <button onclick="cerrarSesion()" title="Cerrar sesión" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);font-size:16px;padding:2px;line-height:1;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">⏻</button>
   </div>
   <nav class="sidebar-nav">
     <div class="nav-label">Principal</div>
@@ -1297,6 +1297,7 @@ async function guardarCotizacion() {
     parent_id:      parentDbId,
     agencia_id:     currentAgenciaId,
     agente_id:      currentUser.id,
+    agente_nombre:  currentUsuario?.nombre || currentUser.email || '',
     cliente_nombre: data.cliente,
     empresa_nombre: data.empresa,
     cliente_id:     data.empresaId || null,
@@ -1324,7 +1325,7 @@ async function guardarCotizacion() {
     empresaId: data.empresaId,
     notas:     data.notas,
     agenteId:  currentUser.id,
-    agenteName: agentes.find(a => a.id === currentUser.id)?.name || '',
+    agenteName: currentUsuario?.nombre || currentUser.email || '',
     itins:     data.itins,
     status:    'pendiente',
     locked:      false,
@@ -2220,7 +2221,7 @@ async function init() {
     empresaId:       h.cliente_id,
     notas:           h.notas,
     agenteId:        h.agente_id,
-    agenteName:      (agentes.find(a => a.id === h.agente_id)?.name) || '',
+    agenteName:      h.agente_nombre || (agentes.find(a => a.id === h.agente_id)?.name) || '',
     itins:           h.itinerarios || [],
     status:          h.status,
     locked:          h.locked,
