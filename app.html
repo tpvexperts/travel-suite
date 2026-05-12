@@ -1039,8 +1039,8 @@ async function acquireLock() {
     token:      _sessionToken,
     updated_at: new Date().toISOString(),
   });
-  // Verificar cada 30 segundos que seguimos siendo la sesión activa
-  _lockInterval = setInterval(checkLock, 30000);
+  // Verificar cada 10 segundos que seguimos siendo la sesión activa
+  _lockInterval = setInterval(checkLock, 10000);
 }
 
 async function releaseLock() {
@@ -1058,9 +1058,8 @@ async function checkLock() {
     .single();
 
   if (!data || data.token !== _sessionToken) {
-    // Otra sesión tomó el control
     clearInterval(_lockInterval);
-    alert('⚠️ Tu sesión fue iniciada en otro dispositivo. Serás redirigido al login.');
+    await taisAlert('Tu sesión fue iniciada en otro dispositivo. Serás redirigido al login.');
     await sb.auth.signOut();
     window.location.href = '/index.html';
   }
