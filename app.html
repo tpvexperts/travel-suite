@@ -396,24 +396,16 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
   <!-- SOPORTE -->
   <div class="panel" id="panel-soporte">
     <div class="page-header">
-      <div class="page-title">Soporte</div>
-      <div class="page-sub">Reportá una incidencia y nos contactaremos a la brevedad</div>
+      <div class="page-title" id="soporte-title">Soporte</div>
+      <div class="page-sub" id="soporte-sub">Reportá una incidencia y nos contactaremos a la brevedad</div>
     </div>
-    <div style="max-width:560px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-top:8px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Nombre</label>
-          <input type="text" id="sop-nombre" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" readonly />
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Agencia</label>
-          <input type="text" id="sop-agencia" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" readonly />
-        </div>
-      </div>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Tipo de incidencia</label>
-        <select id="sop-tipo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);">
-          <option value="">-- Seleccionar --</option>
+
+    <!-- Vista Master — reportes recibidos -->
+    <div id="soporte-master-view" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <select id="sop-filtro-tipo" onchange="renderSoporteMaster()"
+          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);">
+          <option value="">Todos los tipos</option>
           <option>Error en la aplicación</option>
           <option>Problema con el PDF</option>
           <option>Datos incorrectos</option>
@@ -423,19 +415,58 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
           <option>Solicitud de nueva función</option>
           <option>Otro</option>
         </select>
+        <select id="sop-filtro-resuelto" onchange="renderSoporteMaster()"
+          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);">
+          <option value="">Todos</option>
+          <option value="false">Pendientes</option>
+          <option value="true">Resueltos</option>
+        </select>
       </div>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Descripción</label>
-        <textarea id="sop-descripcion" rows="4" placeholder="Describe el problema con el mayor detalle posible..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+      <div id="soporte-master-list">
+        <div style="font-size:12px;color:var(--text3);">Cargando...</div>
       </div>
-      <div style="margin-bottom:18px;">
-        <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Email de contacto</label>
-        <input type="email" id="sop-email" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" />
+    </div>
+
+    <!-- Vista Agencia — formulario -->
+    <div id="soporte-agencia-view">
+      <div style="max-width:560px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-top:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Nombre</label>
+            <input type="text" id="sop-nombre" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" readonly />
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Agencia</label>
+            <input type="text" id="sop-agencia" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" readonly />
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Tipo de incidencia</label>
+          <select id="sop-tipo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);">
+            <option value="">-- Seleccionar --</option>
+            <option>Error en la aplicación</option>
+            <option>Problema con el PDF</option>
+            <option>Datos incorrectos</option>
+            <option>Problema de acceso</option>
+            <option>Solicitar nuevo aeropuerto</option>
+            <option>Solicitar nuevo logo de aerolínea</option>
+            <option>Solicitud de nueva función</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Descripción</label>
+          <textarea id="sop-descripcion" rows="4" placeholder="Describe el problema con el mayor detalle posible..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Email de contacto</label>
+          <input type="email" id="sop-email" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;" />
+        </div>
+        <button onclick="enviarSoporte()" style="width:100%;padding:11px;background:var(--brand-dark);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+          Enviar reporte
+        </button>
+        <div id="sop-msg" style="display:none;margin-top:12px;font-size:12px;text-align:center;"></div>
       </div>
-      <button onclick="enviarSoporte()" style="width:100%;padding:11px;background:var(--brand-dark);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
-        Enviar reporte
-      </button>
-      <div id="sop-msg" style="display:none;margin-top:12px;font-size:12px;text-align:center;"></div>
     </div>
   </div>
 
@@ -2820,8 +2851,8 @@ async function init() {
 
   // Load historial from Supabase
   let query = sb.from('cotizaciones').select('*').eq('agencia_id', currentAgenciaId).order('created_at', { ascending: false });
-  // Si es agente, solo sus cotizaciones
-  if (currentUsuario.rol === 'agente') {
+  // Vendedor y agente solo ven sus propias cotizaciones
+  if (['vendedor','agente'].includes(currentUsuario.rol)) {
     query = query.eq('agente_id', currentUser.id);
   }
   const { data: histDB } = await query;
@@ -2900,7 +2931,16 @@ function showPanel(name, e) {
   if (name === 'logos') renderLogos();
   if (name === 'mi-plan') renderMiPlan();
   if (name === 'agentes') renderUsuariosList();
-  if (name === 'agencias-master') renderMasterAgencias();
+  if (name === 'soporte') {
+    const esMaster = currentUsuario?.rol === 'master';
+    document.getElementById('soporte-master-view').style.display = esMaster ? 'block' : 'none';
+    document.getElementById('soporte-agencia-view').style.display = esMaster ? 'none' : 'block';
+    if (esMaster) {
+      document.getElementById('soporte-title').textContent = 'Reportes de Soporte';
+      document.getElementById('soporte-sub').textContent = 'Incidencias enviadas por las agencias';
+      renderSoporteMaster();
+    }
+  }
   if (name === 'usuarios-master') renderUsuariosMaster();
   if (name === 'dashboard') renderDashboard();
   // Mostrar/ocultar barra flotante solo en cotizador
@@ -4801,6 +4841,72 @@ async function eliminarUsuarioMaster(id, nombre) {
   if (!confirm('¿Eliminar al usuario ' + nombre + '? Esta acción no se puede deshacer.')) return;
   await sb.from('usuarios').delete().eq('id', id);
   renderUsuariosMaster();
+}
+
+// ── SOPORTE MASTER ───────────────────────────────────────────────
+async function renderSoporteMaster() {
+  const el = document.getElementById('soporte-master-list');
+  if (!el) return;
+
+  const filtroTipo = document.getElementById('sop-filtro-tipo')?.value || '';
+  const filtroResuelto = document.getElementById('sop-filtro-resuelto')?.value;
+
+  let query = sb.from('reportes_soporte').select('*').order('created_at', { ascending: false });
+  if (filtroTipo) query = query.eq('tipo', filtroTipo);
+  if (filtroResuelto !== '') query = query.eq('resuelto', filtroResuelto === 'true');
+
+  const { data, error } = await query;
+
+  if (error || !data || !data.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:16px 0;">Sin reportes pendientes.</div>';
+    return;
+  }
+
+  const tipoColors = {
+    'Solicitar nuevo aeropuerto': '#854F0B',
+    'Solicitar nuevo logo de aerolínea': '#854F0B',
+    'Error en la aplicación': '#DC2626',
+    'Problema con el PDF': '#DC2626',
+    'Problema de acceso': '#DC2626',
+  };
+
+  el.innerHTML = data.map(r => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+        <div>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${r.resuelto ? '#F0FDF4' : '#FEF2F2'};color:${r.resuelto ? '#16a34a' : '#DC2626'};">
+            ${r.resuelto ? '✓ Resuelto' : '● Pendiente'}
+          </span>
+          <span style="font-size:11px;font-weight:600;color:${tipoColors[r.tipo]||'var(--brand-dark)'};margin-left:8px;">${r.tipo || '—'}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);white-space:nowrap;">${new Date(r.created_at).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--brand-dark);">${r.nombre || ''} — ${r.agencia || ''}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${r.descripcion || ''}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">${r.email || ''}</div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button onclick="toggleResueltoDSoporte('${r.id}',${r.resuelto})"
+          style="font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;">
+          ${r.resuelto ? 'Marcar pendiente' : 'Marcar resuelto'}
+        </button>
+        <button onclick="eliminarReporteSoporte('${r.id}')"
+          style="font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid #FECACA;background:#FEF2F2;color:#DC2626;cursor:pointer;">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function toggleResueltoDSoporte(id, resuelto) {
+  await sb.from('reportes_soporte').update({ resuelto: !resuelto }).eq('id', id);
+  renderSoporteMaster();
+}
+
+async function eliminarReporteSoporte(id) {
+  if (!confirm('¿Eliminar este reporte?')) return;
+  await sb.from('reportes_soporte').delete().eq('id', id);
+  renderSoporteMaster();
 }
 
 async function renderMasterAgencias() {
