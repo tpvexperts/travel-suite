@@ -1014,12 +1014,56 @@ async function checkAuth() {
 
   // Start inactivity timer
   resetInactivityTimer();
+  await acquireLock();
   return true;
 }
 
 async function cerrarSesion() {
+  await releaseLock();
   await sb.auth.signOut();
   window.location.href = '/index.html';
+}
+
+// ── SESSION LOCK ──────────────────────────────────────────────────
+let _sessionToken = null;
+let _lockInterval = null;
+
+function generateToken() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+async function acquireLock() {
+  _sessionToken = generateToken();
+  await sb.from('sesiones_activas').upsert({
+    usuario_id: currentUser.id,
+    token:      _sessionToken,
+    updated_at: new Date().toISOString(),
+  });
+  // Verificar cada 30 segundos que seguimos siendo la sesión activa
+  _lockInterval = setInterval(checkLock, 30000);
+}
+
+async function releaseLock() {
+  if (_lockInterval) clearInterval(_lockInterval);
+  if (_sessionToken && currentUser) {
+    await sb.from('sesiones_activas').delete().eq('usuario_id', currentUser.id);
+  }
+}
+
+async function checkLock() {
+  if (!_sessionToken || !currentUser) return;
+  const { data } = await sb.from('sesiones_activas')
+    .select('token')
+    .eq('usuario_id', currentUser.id)
+    .single();
+
+  if (!data || data.token !== _sessionToken) {
+    // Otra sesión tomó el control
+    clearInterval(_lockInterval);
+    alert('⚠️ Tu sesión fue iniciada en otro dispositivo. Serás redirigido al login.');
+    await sb.auth.signOut();
+    window.location.href = '/index.html';
+  }
 }
 
 // ── INVITAR USUARIOS ─────────────────────────────────────────────
