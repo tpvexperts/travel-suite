@@ -1085,6 +1085,22 @@ function getPlanLimits() {
   return PLAN_LIMITS[plan] || PLAN_LIMITS.basico;
 }
 
+async function verificarLimiteUsuarios() {
+  const limits = getPlanLimits();
+  if (limits.usuarios === -1) return true; // ilimitado
+
+  const { count } = await sb.from('usuarios')
+    .select('*', { count: 'exact', head: true })
+    .eq('agencia_id', currentAgenciaId);
+
+  if (count >= limits.usuarios) {
+    const plan = window.currentAgenciaPlan || 'basico';
+    taisAlert(`Tu plan ${plan.toUpperCase()} permite un máximo de ${limits.usuarios} usuario(s). Contactá a TAIS para cambiar de plan.`);
+    return false;
+  }
+  return true;
+}
+
 async function verificarLimiteCotizaciones() {
   const limits = getPlanLimits();
   if (limits.cotizaciones === -1) return true; // ilimitado
@@ -1164,6 +1180,10 @@ async function invitarUsuario() {
     return;
   }
 
+  // Verificar límite de usuarios del plan
+  const puedeInvitar = await verificarLimiteUsuarios();
+  if (!puedeInvitar) return;
+
   msg.style.display = 'block';
   msg.style.color = 'var(--text3)';
   msg.textContent = 'Enviando invitación...';
@@ -1203,6 +1223,10 @@ async function invitarVendedor() {
     msg.textContent = 'Completá nombre y email.';
     return;
   }
+
+  // Verificar límite de usuarios del plan
+  const puedeInvitarVend = await verificarLimiteUsuarios();
+  if (!puedeInvitarVend) return;
 
   msg.style.display = 'block';
   msg.style.color = 'var(--text3)';
