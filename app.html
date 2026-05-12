@@ -492,9 +492,9 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
         </div>
         <div class="form-group">
           <label>Agente</label>
-          <select id="cot-agente" onchange="updateAgente()">
-            <option value="">-- Seleccionar --</option>
-          </select>
+          <input type="text" id="cot-agente-display" readonly
+            style="background:var(--surface2);cursor:default;color:var(--text2);" />
+          <input type="hidden" id="cot-agente" value="" />
         </div>
         <div class="form-group">
           <label>Empresa / Cliente</label>
@@ -840,6 +840,12 @@ async function checkAuth() {
     window.currentAgenciaNombre = 'Sin agencia';
     window.currentAgenciaLogo = null;
   }
+  // Setear campo agente con usuario logueado (readonly)
+  const agenteDisplay = document.getElementById('cot-agente-display');
+  const agenteHidden  = document.getElementById('cot-agente');
+  if (agenteDisplay) agenteDisplay.value = profile.nombre || currentUser.email || '';
+  if (agenteHidden)  agenteHidden.value  = currentUser.id || '';
+
   // Mostrar botón Ignorar cuando el usuario escribe algo
   ['cot-cliente','cot-notas','cot-empresa','cot-agente'].forEach(id => {
     const el = document.getElementById(id);
@@ -868,7 +874,8 @@ function cerrarCotizacion() {
   document.getElementById('cot-cliente').value = '';
   if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = '';
   if (document.getElementById('cot-empresa')) document.getElementById('cot-empresa').value = '';
-  document.getElementById('cot-agente').value = '';
+  document.getElementById('cot-agente').value = currentUser?.id || '';
+  document.getElementById('cot-agente-display').value = currentUsuario?.nombre || currentUser?.email || '';
   const pi = document.getElementById('cot-parent-id'); if(pi) pi.value = '';
   const now = new Date();
   document.getElementById('cot-fecha').value = now.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
@@ -899,7 +906,8 @@ async function ignorarCotizacion() {
   document.getElementById('cot-cliente').value = '';
   if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = '';
   if (document.getElementById('cot-empresa')) document.getElementById('cot-empresa').value = '';
-  document.getElementById('cot-agente').value = '';
+  document.getElementById('cot-agente').value = currentUser?.id || '';
+  document.getElementById('cot-agente-display').value = currentUsuario?.nombre || currentUser?.email || '';
   const pi = document.getElementById('cot-parent-id'); if(pi) pi.value = '';
   itins = [];
   renderItins();
@@ -1715,7 +1723,11 @@ function reabrirCotizacion(id) {
   document.getElementById('cot-cliente').value = h.cliente || '';
   if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = h.notas || '';
   if (h.empresaId) { const sel = document.getElementById('cot-empresa'); if(sel) sel.value = h.empresaId; }
-  if (h.agenteId)  { const sel = document.getElementById('cot-agente');  if(sel) sel.value = h.agenteId; }
+  // Mostrar nombre del agente de la cotización (readonly)
+  const displayEl = document.getElementById('cot-agente-display');
+  const hiddenEl  = document.getElementById('cot-agente');
+  if (displayEl) displayEl.value = h.agenteName || '—';
+  if (hiddenEl)  hiddenEl.value  = h.agenteId   || '';
   itins = JSON.parse(JSON.stringify(h.itins || []));
   renderItins();
   checkItinLimit();
@@ -1745,7 +1757,12 @@ function regenPDF(id) {
   document.getElementById('cot-cliente').value = h.cliente || '';
   if (document.getElementById('cot-notas')) document.getElementById('cot-notas').value = h.notas || '';
   if (document.getElementById('cot-empresa') && h.empresaId) document.getElementById('cot-empresa').value = h.empresaId;
-  if (document.getElementById('cot-agente') && h.agenteId) document.getElementById('cot-agente').value = h.agenteId;
+  if (h.agenteId) {
+    const d = document.getElementById('cot-agente-display');
+    const hd = document.getElementById('cot-agente');
+    if (d)  d.value  = h.agenteName || '—';
+    if (hd) hd.value = h.agenteId   || '';
+  }
   itins = JSON.parse(JSON.stringify(h.itins || []));
   downloadPDF();
   // Restore after PDF opens
@@ -2219,7 +2236,7 @@ async function init() {
 
   // Load agentes from Supabase
   const { data: agentesDB } = await sb.from('agentes').select('*').eq('agencia_id', currentAgenciaId);
-  agentes = (agentesDB || []).map(a => ({ id: a.id, name: a.nombre, company: a.empresa, phone: a.telefono, email: a.email }));
+  agentes = (agentesDB || []).map(a => ({ id: a.id, usuario_id: a.usuario_id, name: a.nombre, company: a.empresa, phone: a.telefono, email: a.email }));
 
   // Load historial from Supabase
   let query = sb.from('cotizaciones').select('*').eq('agencia_id', currentAgenciaId).order('created_at', { ascending: false });
@@ -3582,15 +3599,20 @@ function buildPDFHTML() {
   const fecha   = document.getElementById('cot-fecha').value;
   const num     = document.getElementById('cot-num').value;
   const notasVal = document.getElementById('cot-notas')?.value || '';
-  // Agente: usar currentUsuario directamente (es quien genera la cotización)
-  console.log('[TAIS PDF] currentUsuario:', JSON.stringify(currentUsuario));
-  const agente = currentUsuario ? {
-    name:    currentUsuario.nombre || currentUser?.email || '—',
+  // Agente: usar agenteName de la cotización activa en historial
+  // Así el supervisor ve el nombre del vendedor que creó la cotización, no el suyo
+  const activeNum = document.getElementById('cot-num')?.value || '';
+  const activeHist = historial.find(h => h.id === activeNum);
+  const agenteNameFinal = (activeHist?.agenteName)
+    || currentUsuario?.nombre
+    || currentUser?.email
+    || '—';
+  const agente = {
+    name:    agenteNameFinal,
     email:   currentUser?.email || '',
-    phone:   currentUsuario.telefono || '',
+    phone:   currentUsuario?.telefono || '',
     company: window.currentAgenciaNombre || '',
-  } : null;
-  console.log('[TAIS PDF] agente:', JSON.stringify(agente));
+  };
   const empresaId = document.getElementById('cot-empresa')?.value || null;
   const empresaObj = clientes.find(c => String(c.id) === String(empresaId));
   const empresaNombre = empresaObj ? empresaObj.name : '';
