@@ -461,10 +461,10 @@ function logoHTML(code, size = 'normal') {
   if (!code) return '';
   const maxW = size === 'small' ? '44px' : '50px';
   const maxH = size === 'small' ? '16px' : '20px';
-  const url = logoUrl(code);
-  return `<img src="${url}" alt="${code}"
+  const base = logoUrl(code);
+  return `<img src="${base}.png" alt="${code}"
     style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
-    onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" /><span class="fl-badge" style="display:none;">${code}</span>`;
+    onerror="var exts=['png','svg','jpg','jpeg','webp'];var s=this.src;var e=s.split('.').pop();var b=s.slice(0,s.lastIndexOf('.'));var nx=exts[exts.indexOf(e)+1];if(nx){this.src=b+'.'+nx;}else{this.style.display='none';this.nextElementSibling.style.display='inline-block';}" /><span class="fl-badge" style="display:none;">${code}</span>`;
 }
 
 function ciudad(code) {
@@ -590,28 +590,37 @@ function renderOpcion(it, idx) {
     : '';
 
   // Condiciones / precios
+  const icoMaleta  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>';
+  const icoMochila = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10H4V10z"/><path d="M9 6V4a3 3 0 0 1 6 0v2"/></svg>';
+  const icoCambios = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>';
+  const icoX      = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D0202A" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-3px;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  const icoCheck  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A7A4A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>';
+  const icoSilla  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><path d="M6 2v11m0 0H3m3 0h3m6-11v11m0 0h-3m3 0h3"/><path d="M6 13v6m12-6v6M4 19h16"/></svg>';
+
   const condRows = (it.condRows || []).filter(r => r.clase || r.precio);
+  const multiTarifaCond = condRows.length > 1;
   const condHTML = condRows.length ? `
     <div class="cond-section">
       ${condRows.map((row, ri) => {
-        const parts = [];
-        if (row.clase) parts.push(`Tarifa en clase <strong>${row.clase}</strong>`);
-        if (row.equipaje) parts.push(`incluye ${row.equipaje}`);
-        if (row.cambios) {
-          const cMap = {'no-cambios':'no permite cambios','cambios-penalidad':'permite cambios con penalidad','cambios-sin-penalidad':'permite cambios sin penalidad'};
-          parts.push(cMap[row.cambios]||row.cambios);
-        }
-        const text = parts.join(', ');
+        const chips = [];
+        if (row.clase) chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#4A5568;">' + icoSilla + row.clase + '</span>');
+        if (row.equipaje === 'solo maleta de mano') chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#4A5568;">' + icoMochila + 'Solo mano</span>');
+        else if (row.equipaje === 'equipaje documentado incluido') chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#4A5568;">' + icoMaleta + 'Equipaje incluido</span>');
+        if (row.cambios === 'no-cambios') chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#D0202A;">' + icoX + 'Sin cambios</span>');
+        else if (row.cambios === 'cambios-penalidad') chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#4A5568;">' + icoCambios + 'Cambios c/penalidad</span>');
+        else if (row.cambios === 'cambios-sin-penalidad') chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#1A7A4A;">' + icoCambios + 'Cambios sin penalidad</span>');
+        if (row.reembolso === 'no reembolsable') chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#D0202A;">' + icoX + 'No reembolsable</span>');
+        else if (row.reembolso === 'reembolsable con penalidad') chips.push('<span style="display:inline-flex;align-items:center;font-size:11px;color:#4A5568;">' + icoCheck + 'Reembolsable c/penalidad</span>');
         const precio = row.precio
-          ? `<span class="cond-price">${row.moneda||'MXN'} ${parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`
+          ? '<span class="cond-price">' + (row.moneda||'MXN') + ' ' + parseFloat(row.precio).toLocaleString('es-MX',{minimumFractionDigits:2}) + '</span>'
           : '';
-        return `<div class="cond-row">
-          <div>
-            ${condRows.length > 1 ? `<span class="cond-tarifa-label">TARIFA ${ri+1}</span>` : ''}
-            ${text ? `<span class="cond-text">${text}.</span>` : ''}
-          </div>
-          ${precio}
-        </div>`;
+        const tarifaLabel = multiTarifaCond
+          ? '<span class="cond-tarifa-label">TARIFA ' + (ri+1) + '</span>'
+          : '';
+        return '<div class="cond-row">'
+          + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1;">'
+          + tarifaLabel + chips.join('') + '</div>'
+          + precio + '</div>';
       }).join('')}
     </div>` : '';
 
