@@ -4266,10 +4266,10 @@ async function renderMasterAgencias() {
           <td style="padding:8px;">
             <span style="font-size:10px;font-weight:600;color:${activa ? 'var(--brand-green)' : 'var(--brand-red)'};">${activa ? '● Activa' : '○ Inactiva'}</span>
           </td>
-          <td style="padding:8px;display:flex;gap:6px;align-items:center;">
+          <td style="padding:8px;"><div style="display:flex;gap:6px;align-items:center;">
             <button onclick="editarAgencia('${a.id}')" style="font-size:10px;background:var(--brand-blue);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">Editar</button>
             <button onclick="toggleAgencia('${a.id}',${activa})" style="font-size:10px;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;">${activa ? 'Desactivar' : 'Activar'}</button>
-          </td>
+          </div></td>
         </tr>`;
       }).join('')}
     </tbody>
