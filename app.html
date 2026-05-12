@@ -3583,12 +3583,14 @@ function buildPDFHTML() {
   const num     = document.getElementById('cot-num').value;
   const notasVal = document.getElementById('cot-notas')?.value || '';
   // Agente: usar currentUsuario directamente (es quien genera la cotización)
+  console.log('[TAIS PDF] currentUsuario:', JSON.stringify(currentUsuario));
   const agente = currentUsuario ? {
     name:    currentUsuario.nombre || currentUser?.email || '—',
     email:   currentUser?.email || '',
     phone:   currentUsuario.telefono || '',
     company: window.currentAgenciaNombre || '',
   } : null;
+  console.log('[TAIS PDF] agente:', JSON.stringify(agente));
   const empresaId = document.getElementById('cot-empresa')?.value || null;
   const empresaObj = clientes.find(c => String(c.id) === String(empresaId));
   const empresaNombre = empresaObj ? empresaObj.name : '';
