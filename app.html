@@ -778,6 +778,21 @@ async function checkAuth() {
       document.getElementById('sidebar-agencia').textContent = 'Sistema TAIS';
       window.currentAgenciaNombre = 'TAIS';
       window.currentAgenciaPlan = 'master';
+      // Mostrar logo TAIS como burbujas en el sidebar
+      const sidebarImg = document.getElementById('sidebar-logo');
+      if (sidebarImg) {
+        sidebarImg.style.display = 'none';
+        const existing = document.getElementById('tais-bubbles-logo');
+        if (!existing) {
+          const bubbles = document.createElement('div');
+          bubbles.id = 'tais-bubbles-logo';
+          bubbles.style.cssText = 'display:flex;gap:3px;align-items:center;';
+          bubbles.innerHTML = ['T','A','I','S'].map(l =>
+            `<div style="width:18px;height:18px;border-radius:50%;border:1.5px solid #C8A45A;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#F7F4EE;flex-shrink:0;">${l}</div>`
+          ).join('');
+          sidebarImg.parentNode.insertBefore(bubbles, sidebarImg);
+        }
+      }
     } else {
       document.getElementById('sidebar-agencia').textContent = 'Sin agencia asignada';
       window.currentAgenciaNombre = 'Sin agencia';
