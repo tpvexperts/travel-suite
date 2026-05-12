@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Tu Cotización de Viaje</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
 /* ── Reset ── */
@@ -464,7 +464,8 @@ function logoHTML(code, size = 'normal') {
   const base = logoUrl(code);
   return `<img src="${base}.png" alt="${code}"
     style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
-    onerror="var exts=['png','svg','jpg','jpeg','webp'];var s=this.src;var e=s.split('.').pop();var b=s.slice(0,s.lastIndexOf('.'));var nx=exts[exts.indexOf(e)+1];if(nx){this.src=b+'.'+nx;}else{this.style.display='none';this.nextElementSibling.style.display='inline-block';}" /><span class="fl-badge" style="display:none;">${code}</span>`;
+    onerror="var exts=['png','svg','jpg','jpeg','webp'];var e=this.getAttribute('data-ext')||'png';var nx=exts[exts.indexOf(e)+1];if(nx){this.setAttribute('data-ext',nx);this.src='${base}.'+nx;}else{this.style.display='none';this.nextElementSibling.style.display='inline-block';}"
+    data-ext="png" /><span class="fl-badge" style="display:none;">${code}</span>`;
 }
 
 function ciudad(code) {
