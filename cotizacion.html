@@ -415,7 +415,7 @@ const STORAGE_BASE = 'https://vexuglctjkwdpcfmomot.supabase.co/storage/v1/object
 
 // Construye URL del logo de aerolínea desde el bucket
 function logoUrl(iata) {
-  return STORAGE_BASE + '/' + iata + '.png';
+  return STORAGE_BASE + '/' + iata;
 }
 
 // Construye URL del logo de agencia desde el nombre
@@ -460,10 +460,10 @@ function logoHTML(code, size = 'normal') {
   if (!code) return '';
   const maxW = size === 'small' ? '44px' : '50px';
   const maxH = size === 'small' ? '16px' : '20px';
-  const url = logoUrl(code);
-  return `<img src="${url}" alt="${code}"
+  const base = logoUrl(code);
+  return `<img src="${base}.png" alt="${code}"
     style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
-    onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" /><span class="fl-badge" style="display:none;">${code}</span>`;
+    onerror="var exts=['png','svg','jpg','jpeg','webp'];var s=this.src;var e=s.split('.').pop();var b=s.slice(0,s.lastIndexOf('.'));var nx=exts[exts.indexOf(e)+1];if(nx){this.src=b+'.'+nx;}else{this.style.display='none';this.nextElementSibling.style.display='inline-block';}" /><span class="fl-badge" style="display:none;">${code}</span>`;
 }
 
 function ciudad(code) {
