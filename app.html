@@ -272,6 +272,38 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
 ::-webkit-scrollbar-track { background: var(--surface2); }
 ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand-dark); }
+
+/* ── TAIS MODAL (reemplaza alert/confirm nativos) ── */
+#tais-modal-overlay {
+  display:none; position:fixed; inset:0; z-index:99999;
+  background:rgba(13,27,46,0.55); align-items:center; justify-content:center;
+}
+#tais-modal-overlay.active { display:flex; }
+#tais-modal-box {
+  background:var(--surface); border-radius:14px; padding:28px 28px 22px;
+  max-width:380px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,0.18);
+  font-family:'Inter',sans-serif;
+}
+#tais-modal-brand {
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px;
+  color:var(--brand-blue); margin-bottom:10px;
+}
+#tais-modal-msg {
+  font-size:14px; color:var(--text); line-height:1.6; margin-bottom:20px;
+}
+#tais-modal-btns { display:flex; justify-content:flex-end; gap:10px; }
+.tais-modal-btn {
+  padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600;
+  cursor:pointer; border:none; font-family:'Inter',sans-serif;
+}
+.tais-modal-btn-cancel {
+  background:var(--surface); color:var(--text2);
+  border:1px solid var(--border);
+}
+.tais-modal-btn-ok {
+  background:var(--brand-blue); color:white;
+}
+.tais-modal-btn-ok:hover { opacity:0.9; }
 </style>
 </head>
 <body>
@@ -845,9 +877,9 @@ function cerrarCotizacion() {
   renderAgenciaAvisos();
 }
 
-function ignorarCotizacion() {
+async function ignorarCotizacion() {
   if (cotActiva) {
-    if (!confirm('¿Ignorar esta cotización? Si ya fue guardada, permanecerá en el historial pero el formulario se limpiará.')) return;
+    if (!(await taisConfirm('¿Ignorar esta cotización? Si ya fue guardada, permanecerá en el historial pero el formulario se limpiará.'))) return;
   }
   // Limpiar formulario sin generar nuevo ID
   cotActiva = false;
@@ -989,13 +1021,13 @@ function ocultarFormAviso() {
 async function publicarAviso() {
   const titulo = document.getElementById('aviso-titulo').value.trim();
   const texto = document.getElementById('aviso-texto').value.trim();
-  if (!titulo || !texto) { alert('Completá el título y el mensaje.'); return; }
+  if (!titulo || !texto) { await taisAlert('Completá el título y el mensaje.'); return; }
   const { error } = await sb.from('avisos_agencia').insert({
     agencia_id: currentAgenciaId,
     autor_id:   currentUser.id,
     titulo, texto
   });
-  if (error) { alert('Error al publicar: ' + error.message); return; }
+  if (error) { await taisAlert('Error al publicar: ' + error.message); return; }
   document.getElementById('aviso-titulo').value = '';
   document.getElementById('aviso-texto').value = '';
   ocultarFormAviso();
@@ -1003,7 +1035,7 @@ async function publicarAviso() {
 }
 
 async function eliminarAviso(id) {
-  if (!confirm('¿Eliminar este aviso?')) return;
+  if (!(await taisConfirm('¿Eliminar este aviso?'))) return;
   await sb.from('avisos_agencia').delete().eq('id', id);
   renderAgenciaAvisos();
 }
@@ -1052,7 +1084,7 @@ let inactivityTimer = null;
 let warnTimer = null;
 let sessionEnd = null;
 
-function resetInactivityTimer() {
+async function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
   clearTimeout(warnTimer);
   sessionEnd = Date.now() + INACTIVITY_LIMIT;
@@ -1068,7 +1100,7 @@ function resetInactivityTimer() {
 
   // Cerrar sesión
   inactivityTimer = setTimeout(async () => {
-    alert('Tu sesión expiró por inactividad. Por seguridad, serás redirigido al login.');
+    await taisAlert('Tu sesión expiró por inactividad. Por seguridad, serás redirigido al login.');
     await cerrarSesion();
   }, INACTIVITY_LIMIT);
 
@@ -1129,7 +1161,7 @@ async function addCliente() {
     telefono: document.getElementById('new-cli-phone').value.trim(),
     rfc:      document.getElementById('new-cli-rfc').value.trim().toUpperCase(),
   }).select().single();
-  if (error) { alert('Error al guardar cliente: ' + error.message); return; }
+  if (error) { await taisAlert('Error al guardar cliente: ' + error.message); return; }
   clientes.push({ id: data.id, name: data.nombre, contact: data.contacto, email: data.email, phone: data.telefono, rfc: data.rfc });
   ['new-cli-name','new-cli-contact','new-cli-email','new-cli-phone','new-cli-rfc'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   renderClientes();
@@ -1229,7 +1261,7 @@ function getVersions(baseId) {
 async function guardarCotizacion() {
   const data = getCotizacionData();
   if (!data.cliente && !data.empresa) {
-    alert('Agrega al menos el nombre del cliente o empresa antes de guardar.');
+    await taisAlert('Agrega al menos el nombre del cliente o empresa antes de guardar.');
     return;
   }
 
@@ -1247,7 +1279,7 @@ async function guardarCotizacion() {
       p_agencia: currentAgenciaId,
       p_anio: anio
     });
-    if (seqError) { alert('Error al obtener número: ' + seqError.message); return; }
+    if (seqError) { await taisAlert('Error al obtener número: ' + seqError.message); return; }
     const num = seqData;
     numero = 'COT-' + anio + '-' + String(num).padStart(3, '0');
     data.id = numero;
@@ -1286,7 +1318,7 @@ async function guardarCotizacion() {
   };
 
   const { data: saved, error } = await sb.from('cotizaciones').insert(payload).select().single();
-  if (error) { alert('Error al guardar: ' + error.message); console.error(error); return; }
+  if (error) { await taisAlert('Error al guardar: ' + error.message); console.error(error); return; }
 
   // Agregar al historial local
   const localRecord = {
@@ -1302,6 +1334,7 @@ async function guardarCotizacion() {
     empresaId: data.empresaId,
     notas:     data.notas,
     agenteId:  currentUser.id,
+    agenteName: agentes.find(a => a.id === currentUser.id)?.name || currentUser.email || '',
     itins:     data.itins,
     status:    'pendiente',
     locked:      false,
@@ -1579,7 +1612,7 @@ async function supervisorUnlock(id, e) {
   if (!['supervisor','admin'].includes(currentUsuario?.rol)) {
     const pin = prompt('PIN de supervisor:');
     if (pin === null) return;
-    if (pin !== SUPERVISOR_PIN) { alert('PIN incorrecto.'); return; }
+    if (pin !== SUPERVISOR_PIN) { await taisAlert('PIN incorrecto.'); return; }
   }
   const h = historial.find(x=>x.id===id);
   if (!h) return;
@@ -1629,10 +1662,10 @@ async function eliminarHist(id, e) {
   e.stopPropagation();
   const h = historial.find(x=>x.id===id);
   if (h && h.locked) {
-    alert('Esta cotización está bloqueada. Solo un supervisor puede desbloquearla.');
+    await taisAlert('Esta cotización está bloqueada. Solo un supervisor puede desbloquearla.');
     return;
   }
-  if (!confirm('¿Eliminar esta cotización del historial?')) return;
+  if (!(await taisConfirm('¿Eliminar esta cotización del historial?'))) return;
   // Eliminar en Supabase — borrar todas las versiones del mismo número base
   const baseId = getBaseId(id);
   await sb.from('cotizaciones').delete()
@@ -1644,11 +1677,11 @@ async function eliminarHist(id, e) {
   renderHistorial();
 }
 
-function reabrirCotizacion(id) {
+async function reabrirCotizacion(id) {
   const h = historial.find(x=>x.id===id);
   if (!h) return;
   if (h.locked) {
-    alert('Esta cotización está bloqueada. Solo un supervisor puede desbloquearla.');
+    await taisAlert('Esta cotización está bloqueada. Solo un supervisor puede desbloquearla.');
     return;
   }
   document.getElementById('cot-num').value = h.id;
@@ -1724,7 +1757,7 @@ function exportarConfig() {
   a.click(); URL.revokeObjectURL(url);
 }
 
-function importarConfig(input) {
+async function importarConfig(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -1736,8 +1769,8 @@ function importarConfig(input) {
       if (config.agents)   { agentes = config.agents;    lsSet('tpv_agents', agentes); renderAgentsSelect(); renderAgentsList(); }
       if (config.clients)  { clientes = config.clients;  lsSet('tpv_clientes', clientes); renderClientes(); renderClientesSelect(); }
       if (config.cotNum)   { cotNum = config.cotNum;     lsSet('tpv_cotnum', cotNum); }
-      alert('✓ Configuración importada correctamente');
-    } catch(err) { alert('Error al importar: ' + err.message); }
+      await taisAlert('✓ Configuración importada correctamente');
+    } catch(err) { await taisAlert('Error al importar: ' + err.message); }
   };
   reader.readAsText(file);
   input.value = '';
@@ -2189,6 +2222,7 @@ async function init() {
     empresaId:       h.cliente_id,
     notas:           h.notas,
     agenteId:        h.agente_id,
+    agenteName:      (agentes.find(a => a.id === h.agente_id)?.name) || '',
     itins:           h.itinerarios || [],
     status:          h.status,
     locked:          h.locked,
@@ -2283,7 +2317,7 @@ async function addAgent() {
     email:      email,
   }).select().single();
 
-  if (error) { alert('Error al guardar agente: ' + error.message); return; }
+  if (error) { await taisAlert('Error al guardar agente: ' + error.message); return; }
 
   agentes.push({ id: data.id, name: data.nombre, company: data.empresa, phone: data.telefono, email: data.email });
   renderAgentsSelect();
@@ -2332,7 +2366,7 @@ async function addAirport() {
     ciudad:     city,
   });
 
-  if (error) { alert('Error al guardar aeropuerto: ' + error.message); return; }
+  if (error) { await taisAlert('Error al guardar aeropuerto: ' + error.message); return; }
 
   ciudades[code] = city;
   document.getElementById('new-ap-code').value = '';
@@ -2668,7 +2702,7 @@ function buildLCTramosHTML(it, idx) {
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
           <div class="cond-group" style="min-width:110px;">
             <label>Aerolínea</label>
-            <select onchange="updateOpcion(${it.id},${seg.id},${op.id},'airline',this.value);renderItins();">
+            <select onchange="updateOpcion(${it.id},${seg.id},${op.id},'airline',this.value);renderItins();" onkeydown="if(event.key==='Tab'){event.preventDefault();var f=document.getElementById('op-fecha-${op.id}');if(f)f.focus();}">
               ${allAL.map(a=>`<option value="${a.code}" ${op.airline===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
             </select>
           </div>
@@ -2768,7 +2802,7 @@ function buildLCTramosHTML(it, idx) {
 }
 
 // ── CRUD SEGMENTOS / OPCIONES ─────────────────────────────────────
-function addSegmento(itinId) {
+async function addSegmento(itinId) {
   const it = itins.find(i => i.id === itinId);
   if (!it) return;
   if (!it.segmentos) it.segmentos = [];
@@ -2776,7 +2810,7 @@ function addSegmento(itinId) {
   if (it.segmentos.length > 0) {
     const lastSeg = it.segmentos[it.segmentos.length - 1];
     if (!lastSeg.origen || !lastSeg.destino) {
-      alert('El tramo anterior no tiene origen y destino definidos.');
+      await taisAlert('El tramo anterior no tiene origen y destino definidos.');
       return;
     }
     if (!lastSeg.opciones || lastSeg.opciones.length === 0) {
@@ -3771,7 +3805,16 @@ function downloadPDF() {
       @media print { body { padding: 10px; } }
     </style>`;
   const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${num}</title>${printStyles}</head><body>${html}</body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${num}</title>${printStyles}</head><body>${html}
+<!-- TAIS Modal -->
+<div id="tais-modal-overlay">
+  <div id="tais-modal-box">
+    <div id="tais-modal-brand">✦ Travel Suite te recuerda</div>
+    <div id="tais-modal-msg"></div>
+    <div id="tais-modal-btns"></div>
+  </div>
+</div>
+</body></html>`);
   win.document.close();
   win.onload = () => { win.focus(); win.print(); };
 }
@@ -3801,6 +3844,42 @@ function resetCotizacion(confirm_needed) {
 }
 
 init();
+
+// ── TAIS MODAL — reemplaza alert() y confirm() nativos ──────────
+function taisAlert(msg) {
+  return new Promise(resolve => {
+    document.getElementById('tais-modal-msg').innerHTML = msg;
+    const btns = document.getElementById('tais-modal-btns');
+    btns.innerHTML = '';
+    const ok = document.createElement('button');
+    ok.className = 'tais-modal-btn tais-modal-btn-ok';
+    ok.textContent = 'Aceptar';
+    ok.onclick = () => { document.getElementById('tais-modal-overlay').classList.remove('active'); resolve(); };
+    btns.appendChild(ok);
+    document.getElementById('tais-modal-overlay').classList.add('active');
+    ok.focus();
+  });
+}
+
+function taisConfirm(msg) {
+  return new Promise(resolve => {
+    document.getElementById('tais-modal-msg').innerHTML = msg;
+    const btns = document.getElementById('tais-modal-btns');
+    btns.innerHTML = '';
+    const cancel = document.createElement('button');
+    cancel.className = 'tais-modal-btn tais-modal-btn-cancel';
+    cancel.textContent = 'Cancelar';
+    cancel.onclick = () => { document.getElementById('tais-modal-overlay').classList.remove('active'); resolve(false); };
+    const ok = document.createElement('button');
+    ok.className = 'tais-modal-btn tais-modal-btn-ok';
+    ok.textContent = 'Confirmar';
+    ok.onclick = () => { document.getElementById('tais-modal-overlay').classList.remove('active'); resolve(true); };
+    btns.appendChild(cancel);
+    btns.appendChild(ok);
+    document.getElementById('tais-modal-overlay').classList.add('active');
+    ok.focus();
+  });
+}
 </script>
 </body>
 </html>

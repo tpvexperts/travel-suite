@@ -410,36 +410,25 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZleHVnbGN0amt3ZHBjZm1vbW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0ODcxNjUsImV4cCI6MjA5MjA2MzE2NX0.6_Tdwl48lE2puZv4hKTMpt4kBIlYbCZatdEtbiA1FUo'
 );
 
-// ── LOGOS AEROLÍNEAS ─────────────────────────────────────────────
-const logos = {
-  AM: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Aeromexico_Logo.svg/200px-Aeromexico_Logo.svg.png',
-  AA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/American_Airlines_logo_2013.svg/200px-American_Airlines_logo_2013.svg.png',
-  UA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/United_Airlines_Logo.svg/200px-United_Airlines_Logo.svg.png',
-  DL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Delta_logo.svg/200px-Delta_logo.svg.png',
-  LH: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Lufthansa_Logo_2018.svg/200px-Lufthansa_Logo_2018.svg.png',
-  BA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/British_Airways_Logo.svg/200px-British_Airways_Logo.svg.png',
-  AF: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Air_France_Logo.svg/200px-Air_France_Logo.svg.png',
-  KL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/KLM_Royal_Dutch_Airlines_logo.svg/200px-KLM_Royal_Dutch_Airlines_logo.svg.png',
-  IB: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Iberia_logo_%282013%29.svg/200px-Iberia_logo_%282013%29.svg.png',
-  EK: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Emirates_logo.svg/200px-Emirates_logo.svg.png',
-  QR: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Qatar_Airways_Logo.svg/200px-Qatar_Airways_Logo.svg.png',
-  EY: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Etihad_Airways_Logo.svg/200px-Etihad_Airways_Logo.svg.png',
-  CX: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Cathay_Pacific_logo.svg/200px-Cathay_Pacific_logo.svg.png',
-  SQ: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Singapore_Airlines_Logo_2.svg/200px-Singapore_Airlines_Logo_2.svg.png',
-  AV: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Avianca_logo.svg/200px-Avianca_logo.svg.png',
-  CM: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Copa_Airlines_Logo.svg/200px-Copa_Airlines_Logo.svg.png',
-  LA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/LATAM_Airlines_logo.svg/200px-LATAM_Airlines_logo.svg.png',
-  JJ: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/LATAM_Airlines_logo.svg/200px-LATAM_Airlines_logo.svg.png',
-  VB: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/VivaAerobus_logo.svg/200px-VivaAerobus_logo.svg.png',
-  Y4: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Volaris_logo.svg/200px-Volaris_logo.svg.png',
-  W6: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Wizz_Air_logo.svg/200px-Wizz_Air_logo.svg.png',
-  FR: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Ryanair.svg/200px-Ryanair.svg.png',
-  U2: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Easyjet_logo.svg/200px-Easyjet_logo.svg.png',
-  TK: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Turkish_Airlines_logo.svg/200px-Turkish_Airlines_logo.svg.png',
-  AC: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Air_Canada_Logo.svg/200px-Air_Canada_Logo.svg.png',
-  NH: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Ana_Logo_%282012%29.svg/200px-Ana_Logo_%282012%29.svg.png',
-  JL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Japan-airlines-logo.svg/200px-Japan-airlines-logo.svg.png',
-};
+// ── LOGOS — bucket Supabase ─────────────────────────────────────
+const STORAGE_BASE = 'https://vexuglctjkwdpcfmomot.supabase.co/storage/v1/object/public/logos';
+
+// Construye URL del logo de aerolínea desde el bucket
+function logoUrl(iata) {
+  return STORAGE_BASE + '/' + iata + '.png';
+}
+
+// Construye URL del logo de agencia desde el nombre
+function agenciaLogoUrl(nombre) {
+  if (!nombre) return null;
+  const slug = nombre.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+  return STORAGE_BASE + '/0-agencia-' + slug;
+}
+
+// Extensiones a probar para logos de agencia
+const AGENCIA_EXTS = ['jpeg','jpg','png','webp'];
 
 const ciudades = {
   MEX:'Ciudad de México',GDL:'Guadalajara',MTY:'Monterrey',CUN:'Cancún',TIJ:'Tijuana',
@@ -468,15 +457,13 @@ function getToken() {
 }
 
 function logoHTML(code, size = 'normal') {
+  if (!code) return '';
   const maxW = size === 'small' ? '44px' : '50px';
   const maxH = size === 'small' ? '16px' : '20px';
-  if (logos[code]) {
-    return `<img src="${logos[code]}" alt="${code}"
-      style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
-      onerror="this.style.display='none';this.nextSibling.style.display='inline-block';" />
-      <span class="fl-badge" style="display:none;">${code}</span>`;
-  }
-  return `<span class="fl-badge">${code}</span>`;
+  const url = logoUrl(code);
+  return `<img src="${url}" alt="${code}"
+    style="max-width:${maxW};max-height:${maxH};width:auto;height:auto;object-fit:contain;"
+    onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" /><span class="fl-badge" style="display:none;">${code}</span>`;
 }
 
 function ciudad(code) {
@@ -650,9 +637,25 @@ function renderPage(cot, agencia) {
     (it.condRows?.some(r => r.clase || r.precio))
   );
 
-  const logoArea = agencia?.logo_url
-    ? `<div class="agency-logo"><img src="${agencia.logo_url}" alt="${agencia.nombre||''}" /></div>`
-    : `<div class="agency-logo"><div class="agency-logo-placeholder">${(agencia?.nombre||'T').charAt(0)}</div></div>`;
+  // Logo de agencia — intentar con extensiones múltiples si falla
+  const agLogoBase = agencia?.logo_url || (agencia?.nombre ? agenciaLogoUrl(agencia.nombre) : null);
+  const agInitial = (agencia?.nombre||'T').charAt(0).toUpperCase();
+  const logoArea = agLogoBase
+    ? `<div class="agency-logo">
+        <img id="agency-logo-img" src="${agLogoBase}.jpeg"
+          alt="${agencia?.nombre||''}"
+          onerror="
+            const exts=['jpg','png','webp','jpeg'];
+            const src=this.src;
+            const ext=src.split('.').pop();
+            const base=src.slice(0,src.lastIndexOf('.'));
+            const next=exts[exts.indexOf(ext)+1];
+            if(next){this.src=base+'.'+next;}
+            else{this.style.display='none';this.nextElementSibling.style.display='flex';}
+          " />
+        <div class="agency-logo-placeholder" style="display:none;">${agInitial}</div>
+      </div>`
+    : `<div class="agency-logo"><div class="agency-logo-placeholder">${agInitial}</div></div>`;
 
   const agenteName = cot.agente_nombre || cot.agente_id || '';
   const agentPhone = cot.agente_phone || '';
@@ -771,28 +774,57 @@ async function init() {
     return;
   }
 
-  // Cargar datos de agencia
+  // Cargar datos de agencia via RPC pública (solo nombre y logo_url)
   let agencia = null;
   if (cot.agencia_id) {
-    const { data: ag } = await sb
-      .from('agencias')
-      .select('nombre, logo_url')
-      .eq('id', cot.agencia_id)
-      .single();
-    agencia = ag;
+    const { data: ag } = await sb.rpc('get_agencia_publica', { p_id: cot.agencia_id });
+    const row = Array.isArray(ag) ? ag[0] : ag;
+    if (row?.nombre) {
+      agencia = {
+        nombre: row.nombre,
+        logo_url: row.logo_url || agenciaLogoUrl(row.nombre)
+      };
+    }
   }
 
-  // Cargar datos del agente si hay agente_id
+  // Cargar datos del agente — buscar en usuarios (auth.uid) y agentes (agencia)
   if (cot.agente_id) {
-    const { data: agente } = await sb
+    // Primero intentar en tabla usuarios (auth users)
+    const { data: usuarioRow } = await sb
       .from('usuarios')
-      .select('nombre, phone, email')
+      .select('nombre, telefono, email')
       .eq('id', cot.agente_id)
-      .single();
-    if (agente) {
-      cot.agente_nombre = agente.nombre;
-      cot.agente_phone  = agente.phone;
-      cot.agente_email  = agente.email;
+      .maybeSingle();
+    if (usuarioRow?.nombre) {
+      cot.agente_nombre = usuarioRow.nombre;
+      cot.agente_phone  = usuarioRow.telefono;
+      cot.agente_email  = usuarioRow.email;
+    } else {
+      // Fallback: buscar en tabla agentes por usuario_id
+      const { data: agenteRow } = await sb
+        .from('agentes')
+        .select('nombre, telefono, email')
+        .eq('usuario_id', cot.agente_id)
+        .maybeSingle();
+      if (agenteRow) {
+        cot.agente_nombre = agenteRow.nombre;
+        cot.agente_phone  = agenteRow.telefono;
+        cot.agente_email  = agenteRow.email;
+      }
+    }
+  }
+  // Si agencia_id está disponible y no tenemos nombre, buscar en agentes por agencia
+  if (!cot.agente_nombre && cot.agencia_id && cot.agente_id) {
+    const { data: agByAgencia } = await sb
+      .from('agentes')
+      .select('nombre, telefono, email')
+      .eq('agencia_id', cot.agencia_id)
+      .eq('usuario_id', cot.agente_id)
+      .maybeSingle();
+    if (agByAgencia) {
+      cot.agente_nombre = agByAgencia.nombre;
+      cot.agente_phone  = agByAgencia.telefono;
+      cot.agente_email  = agByAgencia.email;
     }
   }
 
