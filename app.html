@@ -1005,7 +1005,9 @@ async function checkAuth() {
       window.currentAgenciaLogo = logoResolved;
       if (logoResolved) {
         const sidebarImg = document.getElementById('sidebar-logo');
-        sidebarImg.src = logoResolved + '.jpg';
+        // Si logo_url tiene extensión úsala directo, sino agregar .jpg como fallback
+        const logoSrc = logoResolved.match(/\.[a-z]{2,4}$/i) ? logoResolved : logoResolved + '.jpg';
+        sidebarImg.src = logoSrc;
         sidebarImg.onerror = function() {
           const exts = ['jpg','jpeg','png','webp'];
           const src = this.src;
@@ -4519,7 +4521,7 @@ function buildPDFHTML() {
   <div id="pdf-preview">
     <div class="pdf-topbar">
       <div class="pdf-logo-area">
-        <img src="${window.currentAgenciaLogo ? window.currentAgenciaLogo+'.jpg' : LOGO_B64}" alt="Logo"
+        <img src="${window.currentAgenciaLogo ? (window.currentAgenciaLogo.match(/\.[a-z]{2,4}$/i) ? window.currentAgenciaLogo : window.currentAgenciaLogo+'.jpg') : LOGO_B64}" alt="Logo"
           onerror="var exts=['jpg','jpeg','png','webp'];var s=this.src;var e=s.split('.').pop();var b=s.slice(0,s.lastIndexOf('.'));var nx=exts[exts.indexOf(e)+1];if(nx){this.src=b+'.'+nx;}else{this.style.display='none';this.onerror=null;}" />
         <div>
           <div class="pdf-brand-name">${window.currentAgenciaNombre || 'TPV Experts'}</div>
@@ -5152,11 +5154,16 @@ async function guardarEdicionAgencia(id) {
   if (logoInput?.files?.length) {
     const file = logoInput.files[0];
     const ext = file.name.split('.').pop().toLowerCase();
-    const path = `agencias/${id}.${ext}`;
+    // Usar el patrón original: 0-agencia-{slug}.ext
+    const slug = nombre.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+    const path = `0-agencia-${slug}.${ext}`;
     const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: true });
     if (upErr) { await taisAlert('Error al subir logo: ' + upErr.message); return; }
     const { data: urlData } = sb.storage.from('logos').getPublicUrl(path);
-    logo_url = urlData.publicUrl;
+    // Guardar sin extensión en logo_url para que agenciaLogoUrl() funcione igual
+    logo_url = urlData.publicUrl.replace(/\.[^.]+$/, '');
   }
 
   const updates = { nombre, email, telefono: tel, plan, vence_at: vence || null };
