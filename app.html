@@ -467,6 +467,11 @@ td input:focus { background: #fff; border-radius: 4px; outline: 1px solid var(--
         </button>
         <div id="sop-msg" style="display:none;margin-top:12px;font-size:12px;text-align:center;"></div>
       </div>
+      <!-- Mis reportes -->
+      <div style="max-width:560px;margin-top:24px;">
+        <div style="font-size:13px;font-weight:700;color:var(--brand-dark);margin-bottom:12px;">Mis reportes</div>
+        <div id="mis-reportes-list"><div style="font-size:12px;color:var(--text3);">Cargando...</div></div>
+      </div>
     </div>
   </div>
 
@@ -2963,6 +2968,8 @@ function showPanel(name, e) {
       document.getElementById('soporte-title').textContent = 'Reportes de Soporte';
       document.getElementById('soporte-sub').textContent = 'Incidencias enviadas por las agencias';
       renderSoporteMaster();
+    } else {
+      renderMisReportes();
     }
   }
   if (name === 'usuarios-master') renderUsuariosMaster();
@@ -4908,8 +4915,12 @@ async function renderSoporteMaster() {
       <div style="font-size:12px;font-weight:600;color:var(--brand-dark);">${r.nombre || ''} — ${r.agencia || ''}</div>
       <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${r.descripcion || ''}</div>
       <div style="font-size:11px;color:var(--text3);margin-top:4px;">${r.email || ''}</div>
-      <div style="margin-top:10px;display:flex;gap:8px;">
-        <button onclick="toggleResueltoDSoporte('${r.id}',${r.resuelto})"
+      ${r.respuesta ? `<div style="margin-top:8px;padding:8px 12px;background:#F0FDF4;border-radius:6px;font-size:11px;color:#16a34a;"><strong>Respuesta TAIS:</strong> ${r.respuesta}</div>` : ""}
+      <div style="margin-top:10px;">
+        <textarea id="resp-${r.id}" placeholder="Escribir respuesta..." rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;margin-bottom:6px;">${r.respuesta||""}</textarea>
+        <div style="display:flex;gap:8px;">
+          <button onclick="responderSoporte('${r.id}')" style="font-size:11px;padding:4px 12px;border-radius:6px;border:none;background:var(--brand-dark);color:#fff;cursor:pointer;">${r.respuesta ? "Actualizar" : "Enviar respuesta"}</button>
+          <button onclick="toggleResueltoDSoporte('${r.id}',${r.resuelto})"
           style="font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;">
           ${r.resuelto ? 'Marcar pendiente' : 'Marcar resuelto'}
         </button>
@@ -4920,6 +4931,42 @@ async function renderSoporteMaster() {
       </div>
     </div>
   `).join('');
+}
+
+async function renderMisReportes() {
+  const el = document.getElementById('mis-reportes-list');
+  if (!el || !currentUser) return;
+
+  const { data, error } = await sb.from('reportes_soporte')
+    .select('*')
+    .eq('usuario_id', currentUser.id)
+    .order('created_at', { ascending: false });
+
+  if (error || !data || !data.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);">No tenés reportes enviados.</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(r => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:11px;font-weight:600;color:var(--brand-dark);">${r.tipo || '—'}</span>
+        <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:${r.resuelto ? '#F0FDF4' : '#FEF9EC'};color:${r.resuelto ? '#16a34a' : '#854F0B'};">
+          ${r.resuelto ? '✓ Resuelto' : '⏳ Pendiente'}
+        </span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">${r.descripcion || ''}</div>
+      <div style="font-size:10px;color:var(--text3);">${new Date(r.created_at).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</div>
+      ${r.respuesta ? `<div style="margin-top:8px;padding:8px 12px;background:#F0FDF4;border-radius:6px;font-size:11px;color:#16a34a;border:1px solid #BBF7D0;"><strong>Respuesta TAIS:</strong> ${r.respuesta}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function responderSoporte(id) {
+  const respuesta = document.getElementById('resp-' + id)?.value.trim();
+  if (!respuesta) return;
+  await sb.from('reportes_soporte').update({ respuesta, resuelto: true }).eq('id', id);
+  renderSoporteMaster();
 }
 
 async function toggleResueltoDSoporte(id, resuelto) {
