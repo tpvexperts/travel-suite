@@ -526,7 +526,9 @@ async function doForgot(e) {
   if (!email) { showError('Ingresá tu email primero.'); return; }
 
   setLoading(true);
-  const { error } = await sb.auth.resetPasswordForEmail(email);
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://www.tais.mx/set-password.html'
+  });
   setLoading(false);
 
   if (error) { showError('No se pudo enviar el email. Intentá de nuevo.'); return; }
