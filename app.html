@@ -3133,31 +3133,51 @@ function handleDrop(e) {
 }
 
 function handleFiles(files) {
-  [...files].forEach(file => {
+  [...files].forEach(async file => {
     const code = file.name.replace(/\.[^.]+$/, '').toUpperCase().slice(0,2);
-    const reader = new FileReader();
-    reader.onload = async e => {
-      logos[code] = e.target.result;
-      const esMaster = currentUsuario?.rol === 'master';
-      if (esMaster) {
-        await sb.from('logos_global').upsert({ codigo: code, url: e.target.result, activo: true });
-      } else {
+    const esMaster = currentUsuario?.rol === 'master';
+
+    if (esMaster) {
+      // Subir a Supabase Storage
+      const ext = file.name.split('.').pop().toLowerCase();
+      const path = `${code}.${ext}`;
+      const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: true });
+      if (upErr) { taisAlert('Error al subir: ' + upErr.message); return; }
+      const { data: urlData } = sb.storage.from('logos').getPublicUrl(path);
+      const url = urlData.publicUrl;
+      logos[code] = url;
+      await sb.from('logos_global').upsert({ codigo: code, url, activo: true });
+    } else {
+      // Agencia — guardar base64 en logos_custom
+      const reader = new FileReader();
+      reader.onload = async e => {
+        logos[code] = e.target.result;
         await sb.from('logos_custom').upsert({ agencia_id: currentAgenciaId, codigo: code, url: e.target.result });
-      }
-      renderLogos(); refreshAllItins();
-    };
-    reader.readAsDataURL(file);
+        renderLogos(); refreshAllItins();
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+    renderLogos(); refreshAllItins();
   });
 }
 
-function addLogoUrl() {
+async function addLogoUrl() {
   const code = document.getElementById('logo-code-url').value.toUpperCase().trim();
   const url  = document.getElementById('logo-url').value.trim();
   if (!code || !url) return;
+
+  const esMaster = currentUsuario?.rol === 'master';
+  if (esMaster) {
+    await sb.from('logos_global').upsert({ codigo: code, url, activo: true });
+  } else {
+    await sb.from('logos_custom').upsert({ agencia_id: currentAgenciaId, codigo: code, url });
+  }
+
   logos[code] = url;
   document.getElementById('logo-code-url').value = '';
   document.getElementById('logo-url').value = '';
-  lsSet('tpv_logos', logos); renderLogos(); refreshAllItins();
+  renderLogos(); refreshAllItins();
 }
 
 // ── ITIN MANAGEMENT ──────────────────────────────────────────────
