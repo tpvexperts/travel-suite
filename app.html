@@ -5120,6 +5120,13 @@ async function editarAgencia(id) {
         <input id="edit-ag-vence-${id}" type="date" value="${ag.vence_at ? ag.vence_at.slice(0,10) : ''}" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--surface);" />
       </div>
     </div>
+    <!-- Logo de la agencia -->
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Logo de la agencia (aparece en PDF)</label>
+      ${ag.logo_url ? `<img src="${ag.logo_url}" style="max-height:40px;max-width:150px;object-fit:contain;margin-bottom:8px;display:block;" />` : '<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Sin logo cargado</div>'}
+      <input type="file" id="edit-ag-logo-${id}" accept="image/*" style="font-size:12px;" />
+      <div style="font-size:10px;color:var(--text3);margin-top:4px;">PNG, SVG o JPG. Se mostrará en el encabezado del PDF.</div>
+    </div>
     <div style="display:flex;gap:8px;">
       <button onclick="guardarEdicionAgencia('${id}')" style="background:var(--brand-blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;font-weight:600;">Guardar</button>
       <button onclick="document.getElementById('${formId}').remove()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;">Cancelar</button>
@@ -5134,10 +5141,27 @@ async function guardarEdicionAgencia(id) {
   const tel    = document.getElementById('edit-ag-tel-' + id)?.value.trim();
   const plan   = document.getElementById('edit-ag-plan-' + id)?.value;
   const vence  = document.getElementById('edit-ag-vence-' + id)?.value;
+  const logoInput = document.getElementById('edit-ag-logo-' + id);
+
   if (!nombre) { await taisAlert('El nombre es obligatorio.'); return; }
-  const { error } = await sb.from('agencias').update({
-    nombre, email, telefono: tel, plan, vence_at: vence || null
-  }).eq('id', id);
+
+  let logo_url = undefined;
+
+  // Subir logo si se seleccionó uno
+  if (logoInput?.files?.length) {
+    const file = logoInput.files[0];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = `agencias/${id}.${ext}`;
+    const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: true });
+    if (upErr) { await taisAlert('Error al subir logo: ' + upErr.message); return; }
+    const { data: urlData } = sb.storage.from('logos').getPublicUrl(path);
+    logo_url = urlData.publicUrl;
+  }
+
+  const updates = { nombre, email, telefono: tel, plan, vence_at: vence || null };
+  if (logo_url) updates.logo_url = logo_url;
+
+  const { error } = await sb.from('agencias').update(updates).eq('id', id);
   if (error) { await taisAlert('Error al guardar: ' + error.message); return; }
   document.getElementById('form-edit-ag-' + id)?.remove();
   renderMasterAgencias();
